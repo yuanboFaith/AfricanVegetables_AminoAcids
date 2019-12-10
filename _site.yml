@@ -1,0 +1,9 @@
+name: "Free Amino Acids in African Indigenous Vegetables"
+navbar:
+  title: "Amino acids in AIVs"
+  left:
+    - text: "Home"
+      href: index.html
+    - text: "Method development & validation"
+      href: method development and validation.html
+output_dir: "docs"
