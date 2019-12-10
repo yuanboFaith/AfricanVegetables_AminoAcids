@@ -2,14 +2,23 @@
 output: html_document
 ---
 
+<br/>
+
 # **Free Amino Acids in African Indigenous Vegetables**
 
 <br/><br/>
 
-#### This website presents the R script used in two parts of this work on the analysis of free amino acids in African indigenous vetetables (AIVs):   
+##### This website presents the R script used in two parts of this work on the analysis of free amino acids in African indigenous vetetables (AIVs):   
 
-<br/>    
+<br/><br/>    
 
-##### 1) UHPLC HILIC - MS/MS method development and validation
+##### Part I. UHPLC HILIC - MS/MS method development and validation
 
-##### 2) Analysis and machine learning-based classification of AIVs 
+ 
+
+##### Part II. Analysis of AIVs free amino acids and machine learning-based classification
+
+
+<br/><br/>    
+
+##### Follow the senior author of this work [Bo Yuan](https://scholar.google.com/citations?user=aFh0570AAAAJ&hl=en&authuser=1), and principle investigators & corresponding authors [Dr. Qingli Wu](https://plantbiology.rutgers.edu/faculty/wu/Qing-Li_Wu.html) and [Dr. James E. Simon](https://plantbiology.rutgers.edu/faculty/simon/James_Simon.html). Welcome to visit our [Laboratory Website](http://newuseag.rutgers.edu/). 
