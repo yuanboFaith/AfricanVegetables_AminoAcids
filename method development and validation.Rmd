@@ -128,7 +128,7 @@ plt.buffer.area = df.buffer %>%
 
 
 ### Combine RT + width + response
-```{r, warning=F, message=F, fig.width=11, fig.height=7}
+```{r, warning=F, message=F, fig.width=12, fig.height=5}
 ## Plot Area & RT & Width together 
 grid.arrange(plt.buffer.area, plt.buffer.RT, plt.buffer.width, nrow = 1)
 ```
@@ -430,7 +430,7 @@ The intercept reflects the averaged absolute error percentage measured at the fi
 
 
 ### Linearity visualization
-```{r, warning=F, message=F, fig.width=12, fig.height=8}
+```{r, warning=F, message=F, fig.width=12, fig.height=7}
 # import calibration intercept dataset (with 1/x weight)
 df.cal.intercept = read_excel(path, sheet = "Calibration_intercept") 
 
