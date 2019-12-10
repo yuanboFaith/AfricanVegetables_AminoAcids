@@ -1,9 +1,9 @@
 name: "Free Amino Acids in African Indigenous Vegetables"
 navbar:
-  title: "Amino acids in AIVs"
+  title: "Free Amino Acids in African Indigenous Vegetables"
   left:
     - text: "Home"
       href: index.html
     - text: "Method development & validation"
-      href: method development and validation.html
+      href: method-development-and-validation.html
 output_dir: "."
