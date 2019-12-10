@@ -1,0 +1,1274 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Bo Yuan" />
+
+<meta name="date" content="2019-12-10" />
+
+<title>Method Development &amp; Validation</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+.tocify-subheader {
+  display: inline;
+}
+.tocify-subheader .tocify-item {
+  font-size: 0.95em;
+}
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Amino acids in AIVs</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="method development and validation.html">Method development &amp; validation</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Method Development &amp; Validation</h1>
+<h4 class="author">Bo Yuan</h4>
+<h4 class="date">12/10/2019</h4>
+
+</div>
+
+
+<pre class="r"><code>library(readxl)
+library(RColorBrewer)
+library(rebus)
+library(gtools)
+library(gridExtra)
+library(cowplot)
+library(ggrepel)
+library(tidyverse)</code></pre>
+<pre class="r"><code>theme_set(theme_bw() +
+            theme(strip.background = element_blank(),
+                  strip.text = element_text(face = &quot;bold&quot;),
+                  title = element_text(colour = &quot;black&quot;, face = &quot;bold&quot;),
+                  axis.text = element_text(colour = &quot;black&quot;)))</code></pre>
+<pre class="r"><code># All data Excel
+path = &quot;/Users/Boyuan/Desktop/My publication/7th. HILIC amino acid &amp; PCA/Publish-ready files/Method development and validation.xlsx&quot;</code></pre>
+<div id="method-development" class="section level1">
+<h1><span class="header-section-number">1</span> Method Development</h1>
+<div id="mobile-phase-buffer-optimization" class="section level2">
+<h2><span class="header-section-number">1.1</span> Mobile phase buffer optimization</h2>
+<div id="retention-time" class="section level3">
+<h3><span class="header-section-number">1.1.1</span> Retention time</h3>
+<pre class="r"><code>## Read and tidy up data
+df.buffer = read_excel(path, sheet = &quot;mobile phase buffer&quot;) # mobile phase buffer optimization dataset
+df.AA = read_excel(path, sheet = &quot;amino acids&quot;) # amino acids traits dataset
+df.buffer = df.buffer %&gt;% left_join(df.AA, by = &quot;Amino acids&quot;) # combine datasets
+
+df.buffer$`Amino acids` %&gt;% unique() # Check all amino acids are properly registered (ensure there is NO datasets mis-match)</code></pre>
+<pre><code>##  [1] &quot;Alanine&quot;                &quot;Arginine&quot;              
+##  [3] &quot;Asparagine&quot;             &quot;Aspartic acid&quot;         
+##  [5] &quot;Cysteine&quot;               &quot;Glutamic acid&quot;         
+##  [7] &quot;Glutamine&quot;              &quot;Glycine&quot;               
+##  [9] &quot;Histidine&quot;              &quot;Isoleucine&quot;            
+## [11] &quot;Leucine&quot;                &quot;Lysine&quot;                
+## [13] &quot;Methionine&quot;             &quot;Phenylalanine&quot;         
+## [15] &quot;Proline&quot;                &quot;Serine&quot;                
+## [17] &quot;Threonine&quot;              &quot;trans-4-hydroxyproline&quot;
+## [19] &quot;Tryptophan&quot;             &quot;Tyrosine&quot;              
+## [21] &quot;Valine&quot;</code></pre>
+<pre class="r"><code>df.buffer$Conc.mM = df.buffer$Conc.mM %&gt;% 
+  factor(levels = rev(unique(df.buffer$Conc.mM)), ordered = T) # convert buffer conc. into factors
+
+
+## Plot RT over mobile phase buffer concentration
+AA.colors = colorRampPalette(c(&quot;#333333&quot;, brewer.pal(8, &quot;Dark2&quot;)))(21) # set up colors for all 21 amino acids, applied for all following amino acids color assignemnt
+
+dodge.RT = 0.5 # data points random scatterness to avoid overlapping
+
+plt.buffer.RT = df.buffer %&gt;% 
+  ggplot(aes(x = Conc.mM, y = RT, color = `Amino acids`, fill = `Amino acids`, group = `Amino acids`)) +
+  geom_line(alpha = 0.5, position = position_dodge(dodge.RT)) +
+  geom_label(aes(label = Abbrev.I),
+             label.padding = unit(0.1, &quot;lines&quot;), color = &quot;white&quot;, size = 2.8,
+             position = position_dodge(dodge.RT)) +
+  scale_y_continuous(breaks = seq(2, 10, 1)) +
+  theme(axis.text = element_text(size = 10), 
+        axis.title = element_text(size = 10), 
+        legend.position = &quot;None&quot;) +
+  # labs(x = &quot;Ammonium formate concentration (mM)&quot;, y = &quot;Retention time (min)&quot;,  
+  #        caption = &quot;The column void time is 1 min. \nRetention factor could be calculated accordingly. \nSample solvent was 50:50 ACN:H2O&quot;) +
+  scale_color_manual(values = AA.colors) + 
+  scale_fill_manual(values = AA.colors)
+
+# plt.buffer.RT</code></pre>
+</div>
+<div id="peak-width" class="section level3">
+<h3><span class="header-section-number">1.1.2</span> Peak width</h3>
+<pre class="r"><code>## Plot peak width over mobile phase buffer concentration
+dodge.width = 0.4
+plt.buffer.width = df.buffer %&gt;% 
+  ggplot(aes(x = Conc.mM, y = Width, color = `Amino acids`, fill = `Amino acids`, group = `Amino acids`)) +
+  geom_line(alpha = 0.2, position = position_dodge(dodge.width)) +
+  geom_label(aes(label = Abbrev.I), label.padding = unit(0.08, &quot;lines&quot;),
+             color = &quot;white&quot;, position = position_dodge(dodge.width), size = 2.8) +
+  theme(axis.text = element_text(size = 10),
+        axis.title = element_text(size = 10), 
+        legend.position = &quot;None&quot;) +
+  scale_color_manual(values = AA.colors) + 
+  scale_fill_manual(values = AA.colors) + 
+  coord_cartesian(ylim = c(0.028, 0.22))
+# labs(x = &quot;Ammonium formate concentration (mM)&quot;, 
+#      y = &quot;Peak width at half maximum (min)&quot;,
+#      caption = &quot;The column void time is 1 min. \nRetention factor could be calculated accordingly. \nSample solvent was 50:50 ACN:H2O&quot;) 
+
+# plt.buffer.width</code></pre>
+</div>
+<div id="peak-area" class="section level3">
+<h3><span class="header-section-number">1.1.3</span> Peak area</h3>
+<pre class="r"><code>## Plot peak area over mobile phase buffer concentration
+dodge.area.perc = 0.5
+df.buffer = df.buffer %&gt;% group_by(`Amino acids`) %&gt;% 
+  mutate(Area.percent = Area/max(Area)*100) # normalize to percent of maximum for each amino acids
+
+plt.buffer.area = df.buffer %&gt;% 
+  ggplot(aes(x = Conc.mM, y = Area.percent, fill = `Amino acids`, color = `Amino acids`, group = `Amino acids`)) +
+  geom_line(alpha = 0.3, position = position_dodge(dodge.area.perc)) +
+  geom_label(aes(label = Abbrev.I),
+             label.padding = unit(0.1, &quot;lines&quot;), color = &quot;white&quot;, size = 2.8,
+             position = position_dodge(dodge.RT)) +
+  scale_y_continuous(breaks = seq(0, 100, 20)) +
+  theme(axis.text = element_text(size = 10),
+        axis.title = element_text(size = 10), 
+        legend.position = &quot;None&quot;) +
+  scale_color_manual(values = AA.colors) + 
+  scale_fill_manual(values = AA.colors) + 
+  labs(x = &quot;Ammonium formate concentration (mM)&quot;, y = &quot;Area percentage&quot;)  
+# scale_y_log10() + annotation_logticks(sides = &quot;l&quot;)
+
+# plt.buffer.area</code></pre>
+</div>
+<div id="combine-rt-width-response" class="section level3">
+<h3><span class="header-section-number">1.1.4</span> Combine RT + width + response</h3>
+<pre class="r"><code>## Plot Area &amp; RT &amp; Width together 
+grid.arrange(plt.buffer.area, plt.buffer.RT, plt.buffer.width, nrow = 1)</code></pre>
+<p><img src="method-development-and-validation_files/figure-html/unnamed-chunk-7-1.png" width="1056" /></p>
+</div>
+<div id="resolution-of-leu-vs.ile" class="section level3">
+<h3><span class="header-section-number">1.1.5</span> Resolution of Leu vs. Ile</h3>
+<pre class="r"><code>## Plot resolution of leucine vs. Isoleucine
+df.buffer %&gt;% filter(`Amino acids` == &quot;Isoleucine&quot;) %&gt;% 
+  mutate(Resolution = as.numeric(Resolution)) %&gt;% 
+  ggplot(aes(x = Conc.mM, y = Resolution, group = `Amino acids`)) +  
+  geom_bar(stat = &quot;identity&quot;) + 
+  geom_line() +  geom_point()</code></pre>
+<p><img src="method-development-and-validation_files/figure-html/unnamed-chunk-8-1.png" width="960" /></p>
+</div>
+</div>
+<div id="sample-solvent-acidifier-optimization" class="section level2">
+<h2><span class="header-section-number">1.2</span> Sample solvent acidifier optimization</h2>
+<div id="response-linearity" class="section level3">
+<h3><span class="header-section-number">1.2.1</span> Response linearity</h3>
+<pre class="r"><code>## Read data and tidy up
+df.acid.resp = read_excel(path, sheet = &quot;sample solvent acid_response&quot;) # read Exel sheet
+df.acid.resp = df.acid.resp %&gt;% gather(-c(solvent, sample), key = compound, value = resp) # gather compounds
+df.acid.resp = df.acid.resp[complete.cases(df.acid.resp), ]  # remove missing value rows
+
+df.resp.zero = df.acid.resp %&gt;% filter(resp == 0) # mark out resp = 0 rows for deletion in sheet &quot;sample solvent acid_RT&quot; to be analyzed later
+
+df.acid.resp = df.acid.resp %&gt;% 
+  mutate(conc.level = 
+           df.acid.resp$sample %&gt;% str_extract(pattern = &quot;-&quot; %R% one_or_more(DGT)) %&gt;%
+           str_extract(one_or_more(DGT)) %&gt;% as.integer(), # extract concentration level
+         conc = 1000 / 2 ^ (conc.level - 1), # set up concentration 
+         day.rep = df.acid.resp$sample %&gt;% str_extract(pattern = or(&quot;2nd&quot;, &quot;3rd&quot;)) %&gt;% 
+           str_extract(DIGIT) %&gt;% na.replace(&quot;1&quot;) %&gt;% as.character()) %&gt;% # extract day replicate
+  
+  select(-sample) %&gt;% # remove now useless column 
+  filter(resp &gt; 0) # remove undetected entries (shifted outside dMRM time window due to solvent effect; low level of concentration)</code></pre>
+<pre class="r"><code>## Arrange compounds in order of response susceptability to solvent acid composition
+df.acid.susceptibility = df.acid.resp %&gt;%
+  group_by(compound, conc.level) %&gt;% 
+  summarise(resp.var.level.sol = sd(resp)/mean(resp) ) %&gt;%
+  group_by(compound) %&gt;% 
+  summarise(resp.var.sol = mean(resp.var.level.sol)) %&gt;% 
+  arrange(resp.var.sol)
+cmpd.ordered.smpl.acid.susceptable = df.acid.susceptibility$compound</code></pre>
+<pre class="r"><code>## Plot peak area vs. different acid composition for ALL compounds
+acid.color = c(&quot;black&quot;, brewer.pal(9, &quot;Set1&quot;)[ c(1:2) ], &quot;#009900&quot;) # black, (red, blue, from package), and dark green
+
+plt.acid.response.all.compounds = df.acid.resp %&gt;% 
+  mutate(compound = factor(compound, levels = cmpd.ordered.smpl.acid.susceptable, ordered = T)) %&gt;%
+  filter(day.rep != 3) %&gt;% # remove 3rd day replicate as data is not complete over all calibration range
+  
+  ggplot(aes(x = conc, y = resp, shape = day.rep, color = solvent)) + 
+  geom_line(size = .2) + 
+  geom_point() + 
+  facet_wrap(~compound, scales = &quot;free_y&quot;, nrow = 4) + 
+  theme(legend.position = &quot;bottom&quot;, strip.text = element_text( size = 11), 
+        axis.text = element_text(color = &quot;black&quot;, size = 10)) +
+  scale_shape_manual(values = c(16, 17, 18)) + 
+  scale_x_log10() + scale_y_log10() + annotation_logticks() +
+  scale_color_manual( values = acid.color )  +
+  labs(caption = &quot;Arranged in order of increasing susceptability to solvent acid composition,
+       replicated in three days, with injection of the same set of calibration samples stored in 4C autosampler&quot;) 
+
+plt.acid.response.all.compounds</code></pre>
+<p><img src="method-development-and-validation_files/figure-html/unnamed-chunk-11-1.png" width="1344" /></p>
+<pre class="r"><code>## Plot peak area vs. different acid composition for representative compounds (of different susceptability)
+acid.cmpd.selected = factor(
+  c(&quot;Histidine&quot;, &quot;Lysine&quot;, &quot;Arginine&quot;, &quot;Tyrosine&quot;, &quot;Methionine&quot;, &quot;Glutamic acid&quot;, &quot;Threonine&quot;, &quot;Proline&quot;, &quot;Alanine&quot;), 
+  ordered = T)
+
+plt.acid.response.selected.compounds = df.acid.resp %&gt;% 
+  filter(compound %in% acid.cmpd.selected) %&gt;% 
+  mutate(compound = factor(compound, levels = acid.cmpd.selected, ordered = T)) %&gt;%
+  filter(day.rep != 3) %&gt;% # remove 3rd day replicate as data is not complete over all calibration range
+  
+  ggplot(aes(x = conc, y = resp, shape = day.rep, color = solvent)) + 
+  geom_line(size = .2) + 
+  geom_point() + 
+  facet_wrap(~compound, scales = &quot;free_y&quot;, nrow = 3) + 
+  theme(strip.text = element_text(size = 10.5), 
+        
+        axis.text = element_text(size = 11)) +
+  scale_shape_manual(values = c(16, 17, 18)) + 
+  scale_x_log10() + scale_y_log10() + annotation_logticks() +
+  scale_color_manual( values = acid.color )  +
+  labs(caption = &quot;Replicated in three days (4 °C), 
+       with injection of the same set of calibration samples&quot;,
+       title = &quot;Response linearity with different acidifier in sample solvent&quot;) 
+
+# plt.acid.response.selected.compounds</code></pre>
+<p>To faciliate visualization and examination, the calibration is logarithmically transformed. As y = ax + b, b is usually small and negligible, the calibration may be re-written as logy = log(ax) = loga + logx, i.e., the transformed results remain linearity, with the intercept loga reflecting sensiviity.</p>
+</div>
+<div id="retention-time-shift" class="section level3">
+<h3><span class="header-section-number">1.2.2</span> Retention time shift</h3>
+<pre class="r"><code>## Read data and tidy up
+df.acid.RT = read_excel(path, sheet = &quot;sample solvent acid_RT&quot;)
+df.acid.RT = df.acid.RT %&gt;% gather(-c(solvent, sample), key = compound, value = RT) 
+df.acid.RT = anti_join(df.acid.RT, df.resp.zero, by=c(&quot;sample&quot;, &quot;compound&quot;)) # remove response = zero rows (from prior response dataset)
+
+## RT stats summary
+df.acid.RT.summary = df.acid.RT %&gt;% 
+  group_by(compound, solvent) %&gt;% 
+  summarise(RT.mean = mean(RT), RT.std = sd(RT)) %&gt;% 
+  arrange(RT.mean) 
+
+df.acid.RT.FA = df.acid.RT.summary %&gt;%
+  filter(solvent == &quot;0.1% FA&quot;) %&gt;%
+  rename(RT.FA.mean = RT.mean, RT.FA.std = RT.std) %&gt;% 
+  select(-solvent) # 0.1% FA RT as comparison reference
+
+df.acid.RT.summary = df.acid.RT.summary %&gt;% 
+  left_join(df.acid.RT.FA, by = c(&quot;compound&quot;)) 
+
+## RT difference relative to 0.1% FA
+df.acid.RT.diff = df.acid.RT.summary %&gt;% 
+  mutate(RT.diff.mean = RT.mean - RT.FA.mean,  
+         RT.diff.std = sqrt(RT.std^2 + RT.FA.std^2)) %&gt;% # var(X + Y) = var(X) + var(Y), X and Y independent
+  filter(solvent != &quot;0.1% FA&quot;)
+
+## Order sequence in RT diff
+cmpd.ordered.acid.RT.diff = (
+  df.acid.RT.diff %&gt;% 
+    group_by(compound) %&gt;% 
+    summarise(overal.diff = mean(RT.diff.mean)) %&gt;% 
+    arrange(overal.diff))$compound</code></pre>
+<pre class="r"><code>## Plot RT difference using different sample acids relative to using 0.1% FA
+plt.acid.RT.diff = df.acid.RT.diff %&gt;% 
+  ungroup() %&gt;% 
+  mutate(compound = factor(compound, levels = cmpd.ordered.acid.RT.diff, ordered = T)) %&gt;%
+  ggplot(aes(x = compound, y = RT.diff.mean, fill = solvent, color = solvent)) + 
+  geom_bar(stat = &quot;identity&quot;, position = position_dodge(.5), alpha = .6, color = NA) + 
+  coord_flip() +
+  geom_errorbar(aes(ymin = RT.diff.mean - RT.diff.std, ymax = RT.diff.mean + RT.diff.std), 
+                width = .5, position = position_dodge(.5)) +
+  theme(axis.text = element_text(size = 10)) + 
+  scale_y_reverse() +
+  scale_fill_manual(values = acid.color[-1]) + 
+  scale_color_manual(values = acid.color[-1]) 
+
+# plt.acid.RT.diff</code></pre>
+</div>
+<div id="combine-rt-width-response-1" class="section level3">
+<h3><span class="header-section-number">1.2.3</span> Combine RT + width + response</h3>
+<pre class="r"><code>## Plot combined response curve and RT shift
+plot_grid(plt.acid.response.selected.compounds + theme(legend.position = &quot;bottom&quot;), 
+          plt.acid.RT.diff + theme(legend.position = &quot;bottom&quot;), 
+          nrow = 1, rel_widths = c(.6, .35))  # 16.7 X 8.3</code></pre>
+<p><img src="method-development-and-validation_files/figure-html/unnamed-chunk-15-1.png" width="1728" /></p>
+<p>For plot on the right, some compounds shifted outside dMRM detection range at 100 mM HCl, and thus the RT not reported.</p>
+</div>
+</div>
+</div>
+<div id="method-validation" class="section level1">
+<h1><span class="header-section-number">2</span> Method Validation</h1>
+<div id="calibration-curve" class="section level2">
+<h2><span class="header-section-number">2.1</span> Calibration curve</h2>
+<div id="residual-analysis" class="section level3">
+<h3><span class="header-section-number">2.1.1</span> Residual analysis</h3>
+<p>For residual analysis, we use the concept of “calibration accuracy”, which is defined as the back-calculated concentration based on constructed calibration divided by expected concentration.</p>
+<pre class="r"><code>#### PART I: CALIBRATION RESIDUAL ANALYSIS (CALIBRATION ACCURACY)
+
+## Import data and tidy up
+# Dataset of concentration for each level of each amino acid
+df.cal.conc = read_excel(path, sheet = &quot;Calibration conc. ng.mL-1&quot;, range = &quot;A1:W61&quot;) 
+df.cal.conc.tidy = df.cal.conc %&gt;% 
+  gather(-c(`sample name`, level), key = compounds, value = exp.content.ng.perML) 
+
+# Dataset of lowest level of calibration
+df.cal.lowestLevel = read_excel(path, sheet = &quot;Calibration conc. ng.mL-1&quot;, range = &quot;C64:W65&quot;) 
+df.cal.lowestLevel.tidy = df.cal.lowestLevel %&gt;% gather(key = compounds, value = lowestLevel)
+
+# Dataset of calibration accuracy for each amino acid at each level
+df.cal.accuracy = read_excel(path, sheet = &quot;Calibration_accuracy&quot;) 
+df.cal.accuracy.tidy = df.cal.accuracy %&gt;% 
+  gather(-c(`sample name`, `file name`, level), key = compounds, value = accuracy) %&gt;% 
+  filter(accuracy &gt;0) # remove accuracy = 0 rows (manually zeroed peak areas for calibrator points not included in the calibration range)
+
+## Dataset of calibration response
+df.cal.resp = read_excel(path, sheet = &quot;Calibration_response&quot;)
+df.cal.resp.tidy = df.cal.resp %&gt;% 
+  gather(-c(`sample name`, `file name`, level), key = compounds, value = resp) %&gt;%
+  filter(resp &gt; 0)  # remove area = 0 rows (manually zeroed peak areas for calibrator points not included in the calibration range)
+
+# augment with actual expected concentration and response 
+df.cal.accuracy.tidy = df.cal.accuracy.tidy %&gt;%
+  left_join(df.cal.conc.tidy, by = c(&quot;compounds&quot;, &quot;level&quot;, &quot;sample name&quot;)) %&gt;%
+  left_join(df.cal.resp.tidy, by = c(&quot;sample name&quot;, &quot;file name&quot;, &quot;compounds&quot;, &quot;level&quot;))</code></pre>
+<pre class="r"><code># Statistical analysis and visualizaiton 
+# Calibration accuracy visualization
+plt.cal.accuracy = df.cal.accuracy.tidy %&gt;% 
+  ggplot(aes(x = exp.content.ng.perML, y = accuracy, color = compounds)) + 
+  
+  geom_segment(aes(x = 0, xend = df.cal.accuracy.tidy$exp.content.ng.perML %&gt;% max(), 
+                   y = 100, yend = 100), 
+               linetype = &quot;dashed&quot;, size = .2, color = &quot;black&quot;) +
+  
+  annotate(geom = &quot;rect&quot;, xmin = 0, xmax = df.cal.accuracy.tidy$exp.content.ng.perML %&gt;% max(), 
+           ymin = 90, ymax = 110, fill = &quot;dark green&quot;, alpha = .1) +
+  
+  geom_point(size = .5, alpha = .8) +
+  scale_x_log10() +
+  annotation_logticks(sides = &quot;b&quot;) +
+  scale_y_continuous(limits = c(0, 200), breaks = seq(0, 200, 20)) + 
+  theme(legend.position = &quot;None&quot;, title = element_text(face = &quot;bold&quot;)) +
+  ggtitle(&quot;Calibration accuracy&quot;) +
+  
+  scale_color_manual(values = AA.colors)
+
+# plt.cal.accuracy</code></pre>
+</div>
+<div id="dilution-error-based-on-residual-analysis" class="section level3">
+<h3><span class="header-section-number">2.1.2</span> Dilution error based on residual analysis</h3>
+<pre class="r"><code>df.dilutionError = df.cal.accuracy.tidy %&gt;%
+  group_by(compounds, level) %&gt;%
+  mutate(error.percent = abs((resp - mean(resp)) / mean(resp)) * 100) %&gt;%  # normalize as percent relative to the mean at each level
+  summarise(error.percent.mean = mean(error.percent)) %&gt;% # normalized response variance
+  ungroup() %&gt;%
+  mutate(level = as.numeric(level),
+         level.max = max(level),
+         dilutionSteps = level.max -level)  # all levels uniformly converted to number of dilution steps 
+
+
+plt.dilutionError = df.dilutionError %&gt;%
+  ggplot(aes(x = dilutionSteps, y = error.percent.mean, color = compounds)) +
+  
+  geom_smooth(method = &quot;lm&quot;, se = F, aes(group = 1), color = &quot;black&quot;, 
+              size = 5, alpha = .05) +
+  geom_smooth(method = &quot;lm&quot;, se = F, aes(group = compounds))  +
+  geom_point() + geom_line(alpha = .2) +
+  
+  scale_color_manual(values = AA.colors) +
+  scale_y_log10() + annotation_logticks(side = &quot;l&quot;) +
+  theme(legend.position = &quot;NA&quot;) +
+  labs(title = &quot;Error propogation in calibration dilution steps&quot;,
+       y = &quot;Error percent&quot;, x = &quot;Dilution steps form stock solution (step 0)&quot;) +
+  
+  # add amino acid label 
+  geom_text(data = df.dilutionError %&gt;% filter(dilutionSteps ==0),
+            aes(x = -0.5, label = compounds), size = 3)
+
+# plt.dilutionError</code></pre>
+<pre class="r"><code>StepError = lm(error.percent.mean ~ dilutionSteps, data = df.dilutionError)  %&gt;%
+  summary()
+StepError</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = error.percent.mean ~ dilutionSteps, data = df.dilutionError)
+## 
+## Residuals:
+##    Min     1Q Median     3Q    Max 
+## -9.990 -3.417 -1.757  1.511 34.033 
+## 
+## Coefficients:
+##               Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)     3.1999     0.6712   4.767 3.17e-06 ***
+## dilutionSteps   0.5224     0.1003   5.208 3.97e-07 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 5.787 on 251 degrees of freedom
+## Multiple R-squared:  0.09753,    Adjusted R-squared:  0.09394 
+## F-statistic: 27.13 on 1 and 251 DF,  p-value: 3.973e-07</code></pre>
+</div>
+<div id="combine-residual-dilution-error-pattern" class="section level3">
+<h3><span class="header-section-number">2.1.3</span> Combine residual + dilution error pattern</h3>
+<pre class="r"><code>plot_grid(plt.cal.accuracy, plt.dilutionError, nrow = 1, align = &quot;h&quot;)</code></pre>
+<p><img src="method-development-and-validation_files/figure-html/unnamed-chunk-20-1.png" width="1152" /></p>
+<p><strong>In plot on the left</strong>: The calibration accuracy is defined as (the back-calculated concentration based on measured peak area and constructed calibration) divided by (expected concentration). Each different color represents one amino acids (color legend not shown), and each amino acid presents two to four (mostly four; significant outliers manually removed) calibrators at each concentration level. For most compounds at majority of levels and most calibrators fall within the ideal 90~110 calibration accuracy range.</p>
+<p>At more diluted level, the accuracy fanned out, because: 1) at low conc. the peak area is more susceptabile to integration inconsistency; 2) perhaps more importantly, as four sets of calibration from the same stock solution were separately prepared, more diluted calibrators presented accumulated error incremented along multiple dilution steps. This effect is demonstrated in the following plot.</p>
+<p><strong>In plot on the right</strong>: Each different color represents one amino acid, with cooresponding label on the left side of the plot. For each amino acids, the absolute error percent at adjacent levels are connected with faint colored line, and the trend of change in the absolute error percent is approximated using simple linear regression. While the intercept and slope differ for varied amino acids, due to their different chromatographic or mass spectrometric performance, the change in error percent generally follows up an increasing linear trend, approximated by the thick black regression line, which roughly reflects the rate of error accumulation at each dilution step. In this case, it is 0.52%.</p>
+<p>The intercept reflects the averaged absolute error percentage measured at the first calibrator, which following calibrators are diluted from. Certain compounds, such as cysteine and glutamic acid has rather high error percentage, due to their degradation occuring between the injections (the injection of each calibrator of the same concentration level was evenly spaced across a total sequence time of 60 hours)</p>
+</div>
+<div id="linearity-visualization" class="section level3">
+<h3><span class="header-section-number">2.1.4</span> Linearity visualization</h3>
+<pre class="r"><code># import calibration intercept dataset (with 1/x weight)
+df.cal.intercept = read_excel(path, sheet = &quot;Calibration_intercept&quot;) 
+
+# augment calibration dataset with cal curve intercept with 1/x weighe
+df.cal.accuracy.tidy = df.cal.accuracy.tidy %&gt;% 
+  left_join(df.cal.intercept, by = &quot;compounds&quot;) %&gt;%
+  # y = ax + b convert to y-b = ax, for visualization purpose
+  mutate(resp.subtractIntercept = resp - `intercept.1/x.weight`) 
+
+
+# plot
+plt.calibrationCurve = df.cal.accuracy.tidy %&gt;%
+  ggplot(aes(x = exp.content.ng.perML, y = resp.subtractIntercept, color = compounds)) + 
+  geom_smooth(method = &quot;lm&quot;, se = F, size = .5, color = &quot;firebrick&quot;) + 
+  geom_point(alpha = .6) +
+  facet_wrap(~compounds, scales = &quot;free&quot;, nrow = 3) +
+  scale_x_log10() + scale_y_log10() + annotation_logticks() +
+  labs(caption = &quot;Each level composed of 2~4 calibrators&quot;) +
+  scale_color_manual(values = AA.colors) +
+  labs(x = &quot;Concentration (ng/mL)&quot;, y = &quot;Response with intercept subtracted&quot;,
+       caption = &quot;Intercept with 1/x weight was subtracted from peak response, 
+       Both x and y scales are logarithmically transformed, 
+       That is, what is plotted is not y = ax + b, but log(y-b) = log(ax) = log(a) + log(x)&quot;) +
+  theme(legend.position = &quot;NA&quot;)
+
+plt.calibrationCurve</code></pre>
+<p><img src="method-development-and-validation_files/figure-html/unnamed-chunk-21-1.png" width="1152" /></p>
+<p>For calibration function, y-b = ax, which is re-written as log (y - b) = log a + log x. Recall that in the previous plot of solvent impact, the intercept b term was ignored; in this case, however, ignoring the b term caused curvature at low level of concentration.</p>
+</div>
+</div>
+<div id="accuracy-and-matrix-effects" class="section level2">
+<h2><span class="header-section-number">2.2</span> Accuracy and matrix effects</h2>
+<div id="accuracy" class="section level3">
+<h3><span class="header-section-number">2.2.1</span> Accuracy</h3>
+<pre class="r"><code># measured injecton concentration
+df.inj.conc = read_excel(path, sheet = &quot;validation injection conc.&quot;, range = &quot;A1:X90&quot;)
+
+# Remove a few significantly bad-performing samples after manual check
+
+df.inj.conc = df.inj.conc %&gt;% filter(!Sample %in% c(&quot;Accuracy_F_r3.d&quot;, &quot;matrix effect_f_r2&quot;, &quot;matrix effect_g_r1&quot;))
+
+
+
+# standard stock concentration
+df.stock.conc = read_excel(path, sheet = &quot;validation spike amount&quot;, range = &quot;A1:B22&quot;)
+# standard stock spike volume
+df.spk.volume = read_excel(path, sheet = &quot;validation spike amount&quot;, range = &quot;A25:B32&quot;)
+
+
+# Compute background. 
+# Note the concentration, ng/mL, track back to original extract, i.e., before 100-fold dilution
+df.background = df.inj.conc %&gt;% filter(Purpose == &quot;Background&quot;) %&gt;%
+  select(-c(Purpose, Sample, Level)) %&gt;%
+  gather(key = compounds, value = background) %&gt;%
+  group_by(compounds) %&gt;% 
+  summarise(
+    # background / background content mean level and dispersion
+    background.mean = mean(background * 100), 
+    background.sd = sd(background * 100))
+
+
+# injection concentration associated with accuracy computation
+df.inj.conc.accuracy = df.inj.conc %&gt;% filter(Purpose == &quot;Accuracy&quot;) %&gt;% 
+  gather(-c(Purpose, Sample, Level), key = compounds, value = conc.inj)
+
+# df.inj.conc.accuracy</code></pre>
+<pre class="r"><code># Compute stats of the quality control sample (QC) spiked with standards
+# Compute final concentration expected, and expected deviation from background
+df.QC = (x = df.inj.conc.accuracy %&gt;% select(Level, compounds))[!duplicated(x), ] %&gt;% # compound-level combination
+  left_join(df.spk.volume, by = &quot;Level&quot;) %&gt;% # spike volume for different levels
+  mutate(plantExtractVol.uL = 800, # plant extract volume
+         # dilute factor after spiking
+         SpikeDiluteFactor = (plantExtractVol.uL + SpikeVol.uL)/SpikeVol.uL, 
+         BackgroundDiluteFactor = (plantExtractVol.uL + SpikeVol.uL)/plantExtractVol.uL) %&gt;%
+  left_join(df.background, by = &quot;compounds&quot;) %&gt;%
+  left_join(df.stock.conc, by = &quot;compounds&quot;) %&gt;%
+  
+  mutate(
+    # the following three lines are the component-wise concentration with correction of dilution effect of spiking
+    # the concentration is that of QC, prior to 100-fold dilution; 
+    # all three conc. marked as &quot;QC&quot;, vs. the original plant extract marked as &quot;background&quot;
+    QC.background.mean = background.mean / BackgroundDiluteFactor,
+    QC.background.sd = background.sd/BackgroundDiluteFactor, # the original background deviation shrinks after spike-induced dilution
+    
+    # spiked amount
+    QC.Spike.Expected = `Stock.conc.ug/mL` / SpikeDiluteFactor * 1000) # converting concentration to ng/mL 
+
+
+# compute expected component-wise concentration at injection 
+df.inj.conc.expected = df.QC %&gt;%
+  # remove some redundant columns
+  select(-contains(&quot;Vol.uL&quot;)) %&gt;% # remove spike and plant extract volume columns
+  select(-c(background.mean, background.sd)) %&gt;% # remove original plant extract mean and deviation (prior to spike)
+  
+  # all three concentration marked as &quot;inj&quot;, after 100-fold dilution
+  mutate(inj.conc.background.mean = QC.background.mean / 100, 
+         inj.conc.background.sd = QC.background.sd / 100,
+         inj.conc.Spike.Expected = QC.Spike.Expected / 100)
+
+# df.inj.conc.expected</code></pre>
+<pre class="r"><code># compute measured concentration at injection
+df.accuracy = df.inj.conc.accuracy %&gt;% 
+  group_by(compounds, Level) %&gt;%
+  summarise(conc.inj.mean = mean(conc.inj),
+            conc.inj.sd = sd(conc.inj)) %&gt;%
+  
+  # combine the expected level
+  left_join(df.inj.conc.expected, by = c(&quot;compounds&quot;, &quot;Level&quot;)) %&gt;%
+  
+  # compute stats summary
+  mutate(Accuracy = (conc.inj.mean - inj.conc.background.mean) / inj.conc.Spike.Expected * 100,
+         Accuracy.sd = sqrt(conc.inj.sd^2 + inj.conc.background.sd^2) / inj.conc.Spike.Expected * 100 )
+
+df.accuracy</code></pre>
+<pre><code>## # A tibble: 147 x 15
+## # Groups:   compounds [21]
+##    compounds Level conc.inj.mean conc.inj.sd SpikeDiluteFact…
+##    &lt;chr&gt;     &lt;chr&gt;         &lt;dbl&gt;       &lt;dbl&gt;            &lt;dbl&gt;
+##  1 alanine   A/a           2189.       59.7               1.8
+##  2 alanine   B/b           1625.       20.2               2.6
+##  3 alanine   C/c            952.       21.9               5  
+##  4 alanine   D/d            621.        7.28              9  
+##  5 alanine   E/e            424.       10.7              17  
+##  6 alanine   F/f            287.        3.98             41  
+##  7 alanine   G/g            242.        7.79             81  
+##  8 arginine  A/a           1590.       50.4               1.8
+##  9 arginine  B/b           1082.       16.8               2.6
+## 10 arginine  C/c            601.       13.4               5  
+## # … with 137 more rows, and 10 more variables:
+## #   BackgroundDiluteFactor &lt;dbl&gt;, `Stock.conc.ug/mL` &lt;dbl&gt;,
+## #   QC.background.mean &lt;dbl&gt;, QC.background.sd &lt;dbl&gt;,
+## #   QC.Spike.Expected &lt;dbl&gt;, inj.conc.background.mean &lt;dbl&gt;,
+## #   inj.conc.background.sd &lt;dbl&gt;, inj.conc.Spike.Expected &lt;dbl&gt;,
+## #   Accuracy &lt;dbl&gt;, Accuracy.sd &lt;dbl&gt;</code></pre>
+<pre class="r"><code># Visualize accuracy
+dg.Acc = .6 # position_dodge value
+errorBarWidth = 1
+plt.accuracy = df.accuracy %&gt;% ggplot(aes(x = compounds, y = Accuracy, color = Level)) + 
+  geom_errorbar(aes(ymin = Accuracy - Accuracy.sd, 
+                    ymax = Accuracy + Accuracy.sd),
+                width = errorBarWidth, position = position_dodge(dg.Acc)) +
+  geom_point(shape = 21, size = 2.5, fill = &quot;white&quot;, position = position_dodge(dg.Acc)) +
+  coord_flip(ylim = c(50, 150)) +
+  annotate(&quot;rect&quot;, xmin = .5, xmax = 21.5, ymin = 80, ymax = 120, alpha = .1, fill = &quot;black&quot;) +
+  annotate(&quot;segment&quot;, x = .5, xend = 21.5, y = 100, yend = 100, linetype = &quot;dashed&quot;, size = .4) +
+  scale_color_brewer(palette = &quot;Dark2&quot;) 
+
+# plt.accuracy</code></pre>
+</div>
+<div id="spike-level-vs.background" class="section level3">
+<h3><span class="header-section-number">2.2.2</span> Spike level vs. background</h3>
+<pre class="r"><code># spike amount vs. background level
+plt.spike.background = df.accuracy %&gt;%
+  mutate(spike.vs.background = inj.conc.Spike.Expected / inj.conc.background.mean) %&gt;%
+  ggplot(aes(x = spike.vs.background, y = compounds, color = Level)) + 
+  geom_point(shape = 21, size = 2.5, stroke = 1) + 
+  scale_x_log10() + annotation_logticks(side = &quot;b&quot;) +
+  scale_color_brewer(palette = &quot;Dark2&quot;)
+
+plt.spike.background</code></pre>
+<p><img src="method-development-and-validation_files/figure-html/unnamed-chunk-26-1.png" width="672" /></p>
+<pre class="r"><code># Accuracy variance vs. (spike amount vs. background) scatter plot
+`plt.AccuracyVariance.vs.(spike vs background).scatter` = 
+  df.accuracy %&gt;% 
+  ggplot(aes(x = inj.conc.Spike.Expected / inj.conc.background.mean, 
+             y = Accuracy.sd, color = Level)) +
+  geom_point(shape = 21, size = 2.5, stroke = 1) + 
+  scale_x_log10() + scale_y_log10() + annotation_logticks() +
+  scale_color_brewer(palette = &quot;Dark2&quot;) +
+  
+  # accuracy standard deviation line: 10%
+  geom_segment(aes(x = .1, xend = 30000, y = 20, yend = 20), linetype = &quot;dashed&quot;, color = &quot;black&quot;, size = .1) +
+  # 50% spike amount vs background ratio
+  geom_segment(aes(x = .5, xend = .5, y = .1, yend = 110), linetype = &quot;dashed&quot;, color = &quot;black&quot;, size = .1) +
+  
+  theme(legend.position = c(.8, .75), panel.grid = element_blank()) +
+  
+  geom_text_repel(data = df.accuracy %&gt;% filter(Accuracy.sd &gt; 20),
+                  aes(label = compounds))
+
+# `plt.AccuracyVariance.vs.(spike vs background).scatter`</code></pre>
+<pre class="r"><code># Accuracy variance vs. (spike amount vs. background) bar plot
+`plt.AccuracyVariance.vs.(spike vs background).barplot` = 
+  df.accuracy %&gt;% 
+  ggplot(aes(x = compounds, 
+             y = inj.conc.Spike.Expected / inj.conc.background.mean, 
+             fill = Level, color = Level)) +
+  geom_bar(stat = &quot;identity&quot;, position = position_dodge(.7), alpha = .6) +
+  
+  scale_color_brewer(palette = &quot;Dark2&quot;) +
+  scale_fill_brewer(palette = &quot;Dark2&quot;) +
+  scale_y_log10() + coord_flip() +
+  labs(y = &quot;Spike amount vs. background level ratio&quot;)
+
+
+# `plt.AccuracyVariance.vs.(spike vs background).barplot`</code></pre>
+<pre class="r"><code>grid.arrange(`plt.AccuracyVariance.vs.(spike vs background).scatter`, 
+             `plt.AccuracyVariance.vs.(spike vs background).barplot`,
+             nrow = 1)</code></pre>
+<p><img src="method-development-and-validation_files/figure-html/unnamed-chunk-29-1.png" width="1056" /></p>
+<pre class="r"><code># Blank measurement contribution to accuracy deviation
+plt.accuracy.variance.decomposition = df.accuracy %&gt;%
+  select(compounds, Level, inj.conc.background.sd, conc.inj.sd) %&gt;%
+  gather(-c(1:2), key = sd.source, value = sd) %&gt;%
+  mutate(sd.squared = sd^2) %&gt;%
+  
+  ggplot(aes(x = compounds, y = sd.squared, fill = sd.source)) +
+  geom_bar(stat = &quot;identity&quot;, position = &quot;fill&quot;) + 
+  facet_wrap(~Level, nrow = 1) + coord_flip() +
+  theme(legend.position = &quot;bottom&quot;,
+        axis.text.x = element_text(angle = 45, vjust = .7),
+        axis.title.x = element_blank()) +
+  labs(title = &quot;Accuracy variance partition into background and spiked QC sample&quot;)
+
+plt.accuracy.variance.decomposition</code></pre>
+<p><img src="method-development-and-validation_files/figure-html/unnamed-chunk-30-1.png" width="1152" /></p>
+<p>At lower spike levels, the measurement variance of the background content contributes increasingly more to the overal accuracy dispersability, and quantification of a small spike amount into a high-level background could be easily interferenced by the background measurement volatility and thus rendered more challenging.</p>
+</div>
+<div id="matrix-effects" class="section level3">
+<h3><span class="header-section-number">2.2.3</span> Matrix effects</h3>
+<pre class="r"><code># Matrix effect
+df.matrix = df.inj.conc %&gt;% filter(Purpose == &quot;Matrix effect&quot;) %&gt;%
+  gather(-c(Purpose, Sample, Level), key = compounds, value = matrix.conc) %&gt;%
+  group_by(compounds, Level) %&gt;%
+  summarise(matrix.conc.mean = mean(matrix.conc),
+            matrix.conc.sd = sd(matrix.conc))
+df.matrix </code></pre>
+<pre><code>## # A tibble: 147 x 4
+## # Groups:   compounds [21]
+##    compounds Level matrix.conc.mean matrix.conc.sd
+##    &lt;chr&gt;     &lt;chr&gt;            &lt;dbl&gt;          &lt;dbl&gt;
+##  1 alanine   A/a             2107.           57.9 
+##  2 alanine   B/b             1449.           60.6 
+##  3 alanine   C/c              787.           28.1 
+##  4 alanine   D/d              458.           26.9 
+##  5 alanine   E/e              224.            5.44
+##  6 alanine   F/f               61.0          25.1 
+##  7 alanine   G/g               45.5           2.41
+##  8 arginine  A/a             1558.           44.4 
+##  9 arginine  B/b             1052.           46.9 
+## 10 arginine  C/c              546.           11.8 
+## # … with 137 more rows</code></pre>
+<pre class="r"><code>df.matrix = df.accuracy %&gt;% 
+  select(-contains(&quot;QC&quot;)) %&gt;% # remove QC stats columns to reduce cumbersomeness...
+  left_join(df.matrix, by = c(&quot;compounds&quot;, &quot;Level&quot;)) %&gt;%
+  mutate(matrixEffect = (conc.inj.mean - inj.conc.background.mean) / matrix.conc.mean * 100,
+         matrixEffect.sd = 
+           # use error propogation rule, refer to https://chem.libretexts.org/Courses/Lakehead_University/Analytical_I/4%3A_Evaluating_Analytical_Data/4.03%3A_Propagation_of_Uncertainty
+           sqrt((conc.inj.sd^2 + inj.conc.background.sd^2) / (conc.inj.mean - inj.conc.background.mean)^2 + 
+                  (matrix.conc.sd / matrix.conc.mean)^2 ) * matrixEffect  ) 
+
+
+plt.matrixEffect = df.matrix %&gt;% 
+  ggplot(aes(x = compounds, y = matrixEffect, color = Level)) + 
+  geom_errorbar(aes(ymin = matrixEffect - matrixEffect.sd,
+                    ymax = matrixEffect + matrixEffect.sd),
+                width = errorBarWidth, position = position_dodge(dg.Acc)) +
+  geom_point(shape = 21, size = 2.5, fill = &quot;white&quot;, position = position_dodge(dg.Acc)) +
+  coord_flip(ylim = c(50, 150)) +
+  annotate(&quot;rect&quot;, xmin = .5, xmax = 21.5, ymin = 80, ymax = 120, alpha = .1, fill = &quot;black&quot;) +
+  annotate(&quot;segment&quot;, x = .5, xend = 21.5, y = 100, yend = 100, linetype = &quot;dashed&quot;, size = .4) +
+  scale_color_brewer(palette = &quot;Dark2&quot;) 
+
+# plt.matrixEffect</code></pre>
+</div>
+<div id="precision" class="section level3">
+<h3><span class="header-section-number">2.2.4</span> Precision</h3>
+<pre class="r"><code># Precision
+df.precision = df.inj.conc %&gt;% filter(Purpose == &quot;Precision&quot;) %&gt;%
+  gather(-c(Purpose, Sample, Level), key = compounds, value = precision.conc) %&gt;%
+  group_by(compounds, Level) %&gt;%
+  summarise(precision.conc.mean = mean(precision.conc),
+            precision.conc.sd = sd(precision.conc),
+            precision = precision.conc.sd / precision.conc.mean * 100)
+
+df.precision  </code></pre>
+<pre><code>## # A tibble: 147 x 5
+## # Groups:   compounds [21]
+##    compounds Level precision.conc.mean precision.conc.sd precision
+##    &lt;chr&gt;     &lt;chr&gt;               &lt;dbl&gt;             &lt;dbl&gt;     &lt;dbl&gt;
+##  1 alanine   A/a                2081.             30.1       1.45 
+##  2 alanine   B/b                1511.             29.2       1.93 
+##  3 alanine   C/c                 740.              7.77      1.05 
+##  4 alanine   D/d                 394.             10.5       2.66 
+##  5 alanine   E/e                 214.              3.57      1.66 
+##  6 alanine   F/f                  89.4             2.27      2.54 
+##  7 alanine   G/g                  43.0             0.654     1.52 
+##  8 arginine  A/a                1534.             14.2       0.926
+##  9 arginine  B/b                1116.              7.68      0.689
+## 10 arginine  C/c                 533.              4.22      0.791
+## # … with 137 more rows</code></pre>
+<pre class="r"><code>plt.precision = df.precision %&gt;% ggplot(aes(x = compounds, y = precision, color = Level)) + 
+  geom_point(shape = 21, size = 2.5, fill = &quot;white&quot;, position = position_dodge(dg.Acc))  +
+  coord_flip() +
+  scale_color_brewer(palette = &quot;Dark2&quot;)</code></pre>
+</div>
+<div id="combine-accuracy-matrix-effects-precision" class="section level3">
+<h3><span class="header-section-number">2.2.5</span> Combine accuracy + matrix effects + precision</h3>
+<pre class="r"><code># Combine accuracy, matrix effect, and precision
+plot_grid(
+  plt.accuracy + theme(legend.position = &quot;NA&quot;, axis.title.y = element_blank()), 
+  
+  plt.matrixEffect + theme(
+    legend.position = &quot;NA&quot;, axis.title.y = element_blank(), axis.text.y = element_blank()), 
+  
+  plt.precision + theme(
+    legend.position = &quot;NA&quot;, axis.title.y = element_blank(), axis.text.y = element_blank()), 
+  
+  `plt.AccuracyVariance.vs.(spike vs background).barplot` + theme(
+    axis.title.y = element_blank(), axis.text.y = element_blank()),
+  
+  nrow = 1, rel_widths = c(4, 3, 2, 2.5))</code></pre>
+<p><img src="method-development-and-validation_files/figure-html/unnamed-chunk-33-1.png" width="1440" /></p>
+</div>
+<div id="summary-table-for-key-validation-results" class="section level3">
+<h3><span class="header-section-number">2.2.6</span> Summary table for key validation results</h3>
+<pre class="r"><code># clean up table for publication in supplementary material
+df.accuracy.reportTable = df.accuracy %&gt;% select(compounds, Level, Accuracy, Accuracy.sd) %&gt;%
+  mutate(Accuracy.all = paste(round(Accuracy, 1), &quot;±&quot;, round(Accuracy.sd, 1))) %&gt;%
+  select(-c(Accuracy, Accuracy.sd)) %&gt;% spread(Level, Accuracy.all)
+df.accuracy.reportTable</code></pre>
+<pre><code>## # A tibble: 21 x 8
+## # Groups:   compounds [21]
+##    compounds   `A/a`    `B/b`    `C/c`   `D/d`   `E/e`    `F/f`    `G/g`   
+##    &lt;chr&gt;       &lt;chr&gt;    &lt;chr&gt;    &lt;chr&gt;   &lt;chr&gt;   &lt;chr&gt;    &lt;chr&gt;    &lt;chr&gt;   
+##  1 alanine     108.1 ±… 111.7 ±… 113.4 … 114.6 … 115.8 ±… 110.7 ±… 108.3 ±…
+##  2 arginine    109.9 ±… 106.2 ±… 108.4 … 109.4 … 111.6 ±… 114.3 ±… 108.4 ±…
+##  3 asparagine  110.1 ±… 108.8 ±… 111 ± … 112.6 … 104.9 ±… 117.8 ±… 104.3 ±…
+##  4 aspartic a… 116.9 ±… 115.6 ±… 114.9 … 110.7 … 111.6 ±… 108.4 ±… 98.7 ± …
+##  5 cysteine    106.8 ±… 110.9 ±… 108.5 … 109.8 … 104.6 ±… 103.8 ±… 106.5 ±…
+##  6 glutamic a… 102.8 ±… 95.3 ± … 93.3 ±… 96.7 ±… 92.6 ± … 93.1 ± … 75 ± 32…
+##  7 glutamine   100.4 ±… 101.4 ±… 101.3 … 106.1 … 104.4 ±… 100.7 ±… 110.5 ±…
+##  8 glycine     109.1 ±… 122.3 ±… 124.4 … 123.3 … 120.9 ±… 121.5 ±… 102.6 ±…
+##  9 histidine   111.8 ±… 102.9 ±… 109.1 … 111 ± … 105.1 ±… 94.3 ± … 121.2 ±…
+## 10 isoleucine  105.4 ±… 110.2 ±… 112.4 … 114.1 … 117.2 ±… 115.9 ±… 122.8 ±…
+## # … with 11 more rows</code></pre>
+<pre class="r"><code>df.matirx.reportTable = df.matrix %&gt;% select(compounds, Level, matrixEffect, matrixEffect.sd) %&gt;%
+  mutate(matrixEffect = paste(round(matrixEffect, 1), &quot;±&quot;, round(matrixEffect.sd, 1))) %&gt;%
+  select(-matrixEffect.sd) %&gt;% spread(Level, matrixEffect)
+df.matirx.reportTable         </code></pre>
+<pre><code>## # A tibble: 21 x 8
+## # Groups:   compounds [21]
+##    compounds   `A/a`    `B/b`    `C/c`    `D/d`    `E/e`    `F/f`   `G/g`  
+##    &lt;chr&gt;       &lt;chr&gt;    &lt;chr&gt;    &lt;chr&gt;    &lt;chr&gt;    &lt;chr&gt;    &lt;chr&gt;   &lt;chr&gt;  
+##  1 alanine     99.7 ± … 103.8 ±… 100.9 ±… 97.4 ± … 106.4 ±… 155 ± … 102.7 …
+##  2 arginine    100.4 ±… 99.6 ± … 101.9 ±… 97.4 ± … 104.6 ±… 126.8 … 99.8 ±…
+##  3 asparagine  100.2 ±… 102.7 ±… 100.4 ±… 98 ± 7   97.8 ± … 111.7 … 116 ± …
+##  4 aspartic a… 99.7 ± … 100.7 ±… 102.7 ±… 96.9 ± … 98.5 ± 5 104.8 … 101.2 …
+##  5 cysteine    99.3 ± … 105.4 ±… 100.8 ±… 98 ± 5.8 97.6 ± … 139 ± … 107.3 …
+##  6 glutamic a… 106.4 ±… 109.2 ±… 100.5 ±… 115.2 ±… 105.7 ±… 142.9 … 83.8 ±…
+##  7 glutamine   100.9 ±… 102.9 ±… 101.4 ±… 103.3 ±… 103.6 ±… 120.9 … 124.8 …
+##  8 glycine     98.3 ± … 111.6 ±… 106.8 ±… 100.4 ±… 109.9 ±… 130.1 … 110.1 …
+##  9 histidine   102.2 ±… 94.7 ± … 102.1 ±… 100.8 ±… 96.6 ± … 126 ± … 82.9 ±…
+## 10 isoleucine  97.2 ± … 101.3 ±… 101.1 ±… 96.4 ± 7 100.5 ±… 152.8 … 121 ± …
+## # … with 11 more rows</code></pre>
+<pre class="r"><code>df.precision.reportTable = df.precision %&gt;% select(compounds, Level, precision) %&gt;%
+  spread(Level, precision)
+df.precision.reportTable</code></pre>
+<pre><code>## # A tibble: 21 x 8
+## # Groups:   compounds [21]
+##    compounds     `A/a` `B/b` `C/c` `D/d` `E/e` `F/f` `G/g`
+##    &lt;chr&gt;         &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+##  1 alanine       1.45  1.93  1.05  2.66   1.66  2.54  1.52
+##  2 arginine      0.926 0.689 0.791 2.20   4.63  5.95  1.43
+##  3 asparagine    1.75  2.19  0.848 4.14   3.88 15.3  10.4 
+##  4 aspartic acid 1.68  2.29  2.25  7.58   5.99  9.89 26.9 
+##  5 cysteine      0.874 1.69  1.40  1.11   2.47  7.20  6.09
+##  6 glutamic acid 1.35  2.80  1.80  4.38   3.28 14.8   6.51
+##  7 glutamine     1.45  1.64  0.951 1.21   3.82  7.98 12.0 
+##  8 glycine       0.688 1.44  1.51  3.63   7.38  9.33 25.2 
+##  9 histidine     1.19  0.876 1.18  3.57  11.4  20.3   9.39
+## 10 isoleucine    2.34  1.70  2.40  0.901  2.00  2.76  5.34
+## # … with 11 more rows</code></pre>
+</div>
+</div>
+<div id="stability-in-pure-solvents" class="section level2">
+<h2><span class="header-section-number">2.3</span> Stability in pure solvents</h2>
+<p>This part of study was conducted in the continuous analysis of 500+ samples in the course of three days. Quality control samples were injected at specified time, monitoring compounds peak response changes.</p>
+<pre class="r"><code>df.stability = read_excel(path, sheet = &quot;Stability (Area)&quot;)
+df.stability.tidy = df.stability %&gt;% 
+  gather(-c(Name, `Data File`, Level), key = compounds, value = stab.conc) 
+
+## Add time line
+df.stab.time = read_excel(path, sheet = &quot;stability time&quot;)
+
+df.stability.tidy = df.stability.tidy %&gt;% 
+  left_join(df.stab.time, by = &quot;Data File&quot;) # combine time line with stability dataset
+
+df.stability.tidy = df.stability.tidy %&gt;%
+  mutate(`Acq. Date-Time.hours` = `Acq. Date-Time` %&gt;% as.numeric(),
+         # calculate time elapsed (in hour)
+         hour.elapsed = (`Acq. Date-Time.hours` - min(`Acq. Date-Time.hours`))/3600 ) %&gt;% arrange(hour.elapsed) 
+
+
+## Add injection sequence number  
+df.stability.tidy$hour.elapsed %&gt;% unique() %&gt;% length() # 44 files (injections)</code></pre>
+<pre><code>## [1] 44</code></pre>
+<pre class="r"><code>df.stability.tidy$inj.seq = rep(1:44, each = 21)
+
+## Normalize peak area for each level (relative to the average level)
+df.stability.tidy = df.stability.tidy %&gt;% 
+  group_by(compounds, Level) %&gt;% 
+  mutate(remain.frac = stab.conc / mean(stab.conc) * 100)</code></pre>
+<pre class="r"><code>## Plot degradation profile (injection error analysis)
+df.stability.tidy %&gt;% 
+  
+  ggplot(aes(x = hour.elapsed, y = remain.frac, color = compounds)) + 
+  geom_point(position = position_dodge(2), size = .5) + 
+  geom_line(aes(group = compounds), position = position_dodge(2), size = .1) +
+  
+  geom_text_repel(data = df.stability.tidy %&gt;% filter(remain.frac &lt; 80),
+                  aes(label = compounds, color = compounds), size = 2) +
+  geom_text_repel(data = df.stability.tidy %&gt;% filter(remain.frac &gt; 115),
+                  aes(label = compounds, color = compounds), size = 2) +
+  
+  geom_segment(aes(x =0, xend = df.stability.tidy$hour.elapsed %&gt;% max(), 
+                   y = 100, yend = 100), size = .3) +
+  geom_segment(aes(x =0, xend = df.stability.tidy$hour.elapsed %&gt;% max(), 
+                   y = 110, yend = 110), size = .2, linetype = &quot;dashed&quot;) +
+  geom_segment(aes(x =0, xend = df.stability.tidy$hour.elapsed %&gt;% max(), 
+                   y = 90, yend = 90), size = .2, linetype = &quot;dashed&quot;) +
+  scale_color_manual(values = AA.colors) + 
+  
+  labs(x = &quot;Number of hours elapsed&quot;, y = &quot;Remaining fraction&quot;, 
+       caption = &quot;Note: Remaining fraction was normalized for each compound-level combination&quot;) +
+  theme(legend.position = &quot;None&quot;)</code></pre>
+<p><img src="method-development-and-validation_files/figure-html/unnamed-chunk-36-1.png" width="960" /></p>
+<pre class="r"><code>## Plot degradation
+df.stability.tidy %&gt;% # filter(inj.seq &gt; 10 ) %&gt;%
+  ggplot(aes(x = hour.elapsed, y = remain.frac, color = Level)) + 
+  geom_point() + geom_line() +
+  facet_wrap(~compounds, nrow = 4) +
+  theme(legend.position = c(.8, .1)) +
+  scale_color_brewer(palette = &quot;Set1&quot;)</code></pre>
+<p><img src="method-development-and-validation_files/figure-html/unnamed-chunk-37-1.png" width="960" /></p>
+</div>
+</div>
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3,h4",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = false;
+    options.smoothScroll = false;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
