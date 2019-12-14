@@ -262,23 +262,6 @@ With 0.5 split ratio, console would pop up error "rank deficiency in group Musta
 
 
 ## Regularized logistic regression
-```{r, message=F, warning=F}
-mdl.logistic.ridge=      glmnet(x = df.train[, -1] %>% as.matrix(), y = df.train$Category, 
-                                family = "multinomial", alpha =  0)
-
-mdl.logistic.elasticNet= glmnet(x = df.train[, -1] %>% as.matrix(), y = df.train$Category, 
-                                family = "multinomial", alpha = .5)
-
-mdl.logistic.lasso=      glmnet(x = df.train[, -1] %>% as.matrix(), y = df.train$Category, 
-                                family = "multinomial", alpha =  1)
-
-# coefficient comparison
-par(mfrow = c(1, 1))
-# plot(mdl.logistic.ridge,      xvar = "lambda", label = T, main = "Ridge", line = 2)
-# plot(mdl.logistic.elasticNet, xvar = "lambda", label = T, main = "Elastic Net (alpha = 0.5)", line = 2)
-# plot(mdl.logistic.lasso,      xvar = "lambda", label = T, main = "Lasso", line = 2)
-```
-
 
 ```{r, message=F, warning=F}
 # cross validation
@@ -307,7 +290,7 @@ df.logisticNets.coefficients =
   data.frame(x[[1]] %>% as.matrix(), x[[2]] %>% as.matrix(),
              x[[3]] %>% as.matrix(), x[[4]] %>% as.matrix()) 
 colnames(df.logisticNets.coefficients) = names(x)
-df.logisticNets.coefficients
+# df.logisticNets.coefficients
 ```
 
 
@@ -350,38 +333,6 @@ cf.stats.ElasticNet = func.regularizedLogistic(input.alpha = 0.5, ModelName = pa
 
 
 ## Random forest
-```{r, message=F, warning=F}
-colnames(df.train) = make.names(colnames(df.train))
-
-# fine tune mtry (# features randomly selected for each split)
-sumErrors.percent = c() # collect error ratio for each mtry value
-
-# loop through different mtry (# of features randomly select and compare for each split)
-mtry = 2:ncol(df.train[, -1]) 
-
-for ( i in mtry ) {
-  mdl.randomForest = randomForest(Category ~., data = df.train, mtry = i, ntree = 500)
-  
-  # predict on the same training set as quick accuracy test
-  # Considering that a third dataset not used due to bootstrap
-  fitted = mdl.randomForest$predicted %>% factor(levels = unique.categories)
-  sumErrors.i = (! fitted == df.train$Category ) %>% sum()
-  sumErrors.percent.i = sumErrors.i / nrow(df.train) * 100
-  sumErrors.percent = append(sumErrors.percent, sumErrors.percent.i)
-}
-sumErrors.percent
-plot(x = mtry, y = sumErrors.percent, pch = 19, 
-     xlab = "Number of features to randomly select for each split", 
-     ylab = "Error percentage (%)", 
-     main = "Random forest hyperparameter tuning")
-lines(x = mtry, y = sumErrors.percent)
-```
-
-Five variables to select from renders the highest accuracy (another random shuffle could give a different answer)
-Overally, the more variables the lower prediction accuracy
-Decide to use four variables as mtry parameter value, which is also reasonably close to square root of total feature numbers
-
-
 ```{r, message=F, warning=F}
 # Predict with train-test split
 colnames(df.train) = make.names(colnames(df.train))
