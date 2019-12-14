@@ -603,20 +603,6 @@ cf.stats.QDA = cf.QDA$byClass %&gt;% func.tidy.cf.statsTable(ModelName = &quot;Q
 </div>
 <div id="regularized-logistic-regression" class="section level2">
 <h2><span class="header-section-number">4.4</span> Regularized logistic regression</h2>
-<pre class="r"><code>mdl.logistic.ridge=      glmnet(x = df.train[, -1] %&gt;% as.matrix(), y = df.train$Category, 
-                                family = &quot;multinomial&quot;, alpha =  0)
-
-mdl.logistic.elasticNet= glmnet(x = df.train[, -1] %&gt;% as.matrix(), y = df.train$Category, 
-                                family = &quot;multinomial&quot;, alpha = .5)
-
-mdl.logistic.lasso=      glmnet(x = df.train[, -1] %&gt;% as.matrix(), y = df.train$Category, 
-                                family = &quot;multinomial&quot;, alpha =  1)
-
-# coefficient comparison
-par(mfrow = c(1, 1))
-# plot(mdl.logistic.ridge,      xvar = &quot;lambda&quot;, label = T, main = &quot;Ridge&quot;, line = 2)
-# plot(mdl.logistic.elasticNet, xvar = &quot;lambda&quot;, label = T, main = &quot;Elastic Net (alpha = 0.5)&quot;, line = 2)
-# plot(mdl.logistic.lasso,      xvar = &quot;lambda&quot;, label = T, main = &quot;Lasso&quot;, line = 2)</code></pre>
 <pre class="r"><code># cross validation
 cv.mdl.logistic.ridge = cv.glmnet(x = df.train[, -1] %&gt;% as.matrix(), y = df.train$Category, 
                                   family = &quot;multinomial&quot;, alpha =  0)
@@ -631,7 +617,7 @@ par(mfrow = c(1, 3))
 plot(cv.mdl.logistic.ridge, main = &quot;Ridge&quot;, line = 2) 
 plot(cv.mdl.logistic.elasticNet, main = &quot;Elastic Net (alpha = 0.5)&quot;, line = 2)
 plot(cv.mdl.logistic.lasso, main = &quot;Lasso&quot;, line = 2)</code></pre>
-<p><img src="Machine_learning_Classification_files/figure-html/unnamed-chunk-13-1.png" width="672" /></p>
+<p><img src="Machine_learning_Classification_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
 <pre class="r"><code>par(mfrow = c(1, 1))</code></pre>
 <pre class="r"><code># check model coefficients
 x = coef(cv.mdl.logistic.elasticNet, s = &quot;lambda.min&quot;)
@@ -640,30 +626,7 @@ df.logisticNets.coefficients =
   data.frame(x[[1]] %&gt;% as.matrix(), x[[2]] %&gt;% as.matrix(),
              x[[3]] %&gt;% as.matrix(), x[[4]] %&gt;% as.matrix()) 
 colnames(df.logisticNets.coefficients) = names(x)
-df.logisticNets.coefficients</code></pre>
-<pre><code>##                    Amaranth       Mustard  Nightshade Spider plant
-## (Intercept)    -0.793172840  0.0006205775  0.14420984   0.64834243
-## leucine         0.233959308  0.0000000000  0.00000000  -0.04801864
-## isoleucine      0.034984423  0.0000000000  0.31383640  -1.22863052
-## tryptophan      0.000000000  0.0000000000  0.07144249  -0.25632374
-## phenylalanine   0.000000000  0.0422543440  0.00000000   0.00000000
-## valine          0.000000000  0.4208733612  0.00000000  -0.47081652
-## methionine      0.000000000  0.0000000000  0.00000000   0.00000000
-## tyrosine       -0.427235398 -0.1866203957  2.24551007   0.00000000
-## proline        -1.210960720  1.4703988049  0.14376903  -0.40320711
-## alanine         0.788495929 -0.8926849795 -0.72853483   0.83272388
-## cysteine        0.000000000  0.0000000000  1.05047259  -0.09467338
-## glycine        -0.303344630  0.0000000000 -0.26977419   0.62923236
-## glutamic acid   0.497337135  0.2407445453 -0.30917680  -0.42890488
-## threonine      -1.822850587  0.9027114097 -0.86479731   1.78493649
-## hydroxyproline -0.013650552  0.1545762017  0.80851897  -0.94944462
-## glutamine       1.993997753  0.0000000000 -1.00534450  -0.08134950
-## aspartic acid  -0.209440068  0.0000000000  0.45468226   0.00000000
-## serine         -0.943232629  0.0000000000 -0.18356413   1.31970511
-## asparagine      0.000000000  0.0000000000  0.68397372   0.00000000
-## arginine        0.007303283 -0.0009883506 -0.31384038   0.30752544
-## histidine      -0.974123216  0.0000000000  0.00000000   0.03392149
-## lysine          0.000000000  0.0000000000  0.00000000   0.30434959</code></pre>
+# df.logisticNets.coefficients</code></pre>
 <pre class="r"><code># Prediction with train-test split, a formal test of model efficiency
 
 # Define function for performing regularized logistic with different alpha values
@@ -701,35 +664,6 @@ cf.stats.ElasticNet = func.regularizedLogistic(input.alpha = 0.5, ModelName = pa
 </div>
 <div id="random-forest" class="section level2">
 <h2><span class="header-section-number">4.5</span> Random forest</h2>
-<pre class="r"><code>colnames(df.train) = make.names(colnames(df.train))
-
-# fine tune mtry (# features randomly selected for each split)
-sumErrors.percent = c() # collect error ratio for each mtry value
-
-# loop through different mtry (# of features randomly select and compare for each split)
-mtry = 2:ncol(df.train[, -1]) 
-
-for ( i in mtry ) {
-  mdl.randomForest = randomForest(Category ~., data = df.train, mtry = i, ntree = 500)
-  
-  # predict on the same training set as quick accuracy test
-  # Considering that a third dataset not used due to bootstrap
-  fitted = mdl.randomForest$predicted %&gt;% factor(levels = unique.categories)
-  sumErrors.i = (! fitted == df.train$Category ) %&gt;% sum()
-  sumErrors.percent.i = sumErrors.i / nrow(df.train) * 100
-  sumErrors.percent = append(sumErrors.percent, sumErrors.percent.i)
-}
-sumErrors.percent</code></pre>
-<pre><code>##  [1] 3.723404 4.521277 3.723404 4.521277 4.255319 4.255319 4.255319 3.989362
-##  [9] 3.989362 4.255319 4.787234 5.053191 4.521277 4.255319 4.521277 4.521277
-## [17] 4.787234 4.787234 4.521277 5.053191</code></pre>
-<pre class="r"><code>plot(x = mtry, y = sumErrors.percent, pch = 19, 
-     xlab = &quot;Number of features to randomly select for each split&quot;, 
-     ylab = &quot;Error percentage (%)&quot;, 
-     main = &quot;Random forest hyperparameter tuning&quot;)
-lines(x = mtry, y = sumErrors.percent)</code></pre>
-<p><img src="Machine_learning_Classification_files/figure-html/unnamed-chunk-16-1.png" width="672" /></p>
-<p>Five variables to select from renders the highest accuracy (another random shuffle could give a different answer) Overally, the more variables the lower prediction accuracy Decide to use four variables as mtry parameter value, which is also reasonably close to square root of total feature numbers</p>
 <pre class="r"><code># Predict with train-test split
 colnames(df.train) = make.names(colnames(df.train))
 colnames(df.test) = make.names(colnames(df.test))
@@ -836,7 +770,7 @@ df.confusionMatrix.all.tidy %&gt;%
         panel.border = element_rect(color = &quot;black&quot;, size = 1),
         title = element_text(face = &quot;bold&quot;)) +
   ggtitle(&quot;Confusion Matrix&quot;)</code></pre>
-<p><img src="Machine_learning_Classification_files/figure-html/unnamed-chunk-21-1.png" width="672" /></p>
+<p><img src="Machine_learning_Classification_files/figure-html/unnamed-chunk-19-1.png" width="672" /></p>
 </div>
 </div>
 

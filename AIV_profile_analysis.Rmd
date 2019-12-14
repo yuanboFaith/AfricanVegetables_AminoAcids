@@ -163,8 +163,7 @@ plt.univariate.boxplot.dot = df.AIV.tidy %>%
   facet_wrap(~compounds, scales = "free", nrow = 4) + 
   theme(axis.text.x = element_blank(), 
         axis.title.x = element_blank(),
-        legend.position = c(.8, .1),
-        legend.position = "right") +
+        legend.position = c(.8, .1)) +
   labs(y = "Content (mg/100g DW)") +
   scale_color_manual(values = color.category)
 plt.univariate.boxplot.dot
