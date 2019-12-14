@@ -1,7 +1,5 @@
 ---
 title: "African vegetables amino acid & exploratory analysis"
-author: "Bo Yuan"
-date: "12/14/2019"
 output: 
   html_document:
     fig_width: 10 
@@ -51,8 +49,7 @@ theme_set(theme_bw() +
                   strip.text = element_text(colour = "black",face = "bold")))
 ```
 
-
-
+<br/>
 
 **Object naming**:
 df.XXX: a data.frame or tibble object; e.g., df.all.data   
@@ -66,7 +63,9 @@ fitted.XXX: predicted class, e.g. fitted.logistic.elasticNet
 cf.XXX: confusion table; e.g., cf.counts.LDA.    
 func.XXX: defined functions; e.g., func.boxplot.Site()   
 
-Special note: function select is used in multiple packages. To avoid confusion, select function is at best specified as dplyr::select(...); or load tidyverse after loading all other packages
+**Note**: function select is used in multiple packages. To avoid confusion, select function is at best specified as dplyr::select(...); or load tidyverse after loading all other packages
+
+<br/>
 
 # Calculation of amino acid content 
 ```{r, message=F, warning=F}

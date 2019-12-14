@@ -1,7 +1,5 @@
 ---
-title: "Method Development & Validation"
-author: "Bo Yuan"
-date: "12/10/2019"
+title: "HILIC UHPLC-MS/MS Method Development & Validation"
 output: 
   html_document:
     toc: true

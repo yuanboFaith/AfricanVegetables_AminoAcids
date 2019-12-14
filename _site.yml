@@ -1,17 +1,13 @@
-name: "Free Amino Acids in African Vegetables"
+name: ""
 navbar:
-  title: "Free Amino Acids in African Vegetables"
+  title: ""
   left:
     - text: "Home"
       href: index.html
-    
     - text: "HILIC UHPLC MS/MS Method R&D"
       href: method-development-and-validation.html
-    
     - text: "AIV amino acids exploratory analysis"
       href: AIV_profile_analysis.html
-    
     - text: "Machine learning-based classification"
       href: Machine_learning_Classification.html
-
 output_dir: "."

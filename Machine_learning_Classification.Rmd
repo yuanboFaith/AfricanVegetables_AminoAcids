@@ -1,7 +1,5 @@
 ---
 title: "AIV classification with machine learning"
-author: "Bo Yuan"
-date: "12/14/2019"
 output: 
   html_document:
     toc: true
@@ -12,6 +10,7 @@ output:
       smooth_scroll: false
 ---
 
+<br/>
 
 **Object naming**:
 
@@ -26,6 +25,7 @@ fitted.XXX: predicted class, e.g. fitted.logistic.elasticNet
 cf.XXX: confusion table; e.g., cf.counts.LDA    
 func.XXX: defined functions; e.g., func.boxplot.Site()    
 
+<br/>
 
 # Packages 
 ```{r, message=F, warning=F}
