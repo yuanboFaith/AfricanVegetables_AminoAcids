@@ -4,6 +4,8 @@ navbar:
   left:
     - text: "Home"
       href: index.html
-    - text: "Method development & validation"
+    - text: "HILIC UHPLC MS/MS Method R&D"
       href: method-development-and-validation.html
+    - text: "AIV amino acids exploratory analysis"
+      href: AIV_profile_analysis.html
 output_dir: "."
