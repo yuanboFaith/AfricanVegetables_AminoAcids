@@ -15,16 +15,16 @@ output:
 
 **Object naming**:
 
-df.XXX: a data.frame or tibble object; e.g., df.all.data
-df.modelname...: a data frame or tibble containing tidied results from a model prediction vs actual
-mat.XXX: a matrix object; e.g., mat.content
-pltXXX: a plot object; e.g., plt.univariate.boxplot.dot
-mdl.trained.XXXX: model from training set; e.g., mdl.trained.LDA
-mdl.fitted.XXX: object with fitted results output from a trained model; e.g., mdl.fitted.LDA
-mdl.XXX: a model object; e.g., mdl.LDA
-fitted.XXX: predicted class, e.g. fitted.logistic.elasticNet
-cf.XXX: confusion table; e.g., cf.counts.LDA
-func.XXX: defined functions; e.g., func.boxplot.Site()
+df.XXX: a data.frame or tibble object; e.g., df.all.data    
+df.modelname...: a data frame or tibble containing tidied results from a model prediction vs actual    
+mat.XXX: a matrix object; e.g., mat.content    
+pltXXX: a plot object; e.g., plt.univariate.boxplot.dot    
+mdl.trained.XXXX: model from training set; e.g., mdl.trained.LDA    
+mdl.fitted.XXX: object with fitted results output from a trained model; e.g., mdl.fitted.LDA    
+mdl.XXX: a model object; e.g., mdl.LDA    
+fitted.XXX: predicted class, e.g. fitted.logistic.elasticNet    
+cf.XXX: confusion table; e.g., cf.counts.LDA    
+func.XXX: defined functions; e.g., func.boxplot.Site()    
 
 
 # Packages 
@@ -45,7 +45,7 @@ library(e1071)
 library(tidyverse)
 ```
 
-# Seed
+
 ```{r, message=F, warning=F}
 set.seed(2020)
 ```
@@ -275,7 +275,7 @@ mdl.logistic.lasso=      glmnet(x = df.train[, -1] %>% as.matrix(), y = df.train
 # coefficient comparison
 par(mfrow = c(1, 1))
 # plot(mdl.logistic.ridge,      xvar = "lambda", label = T, main = "Ridge", line = 2)
-plot(mdl.logistic.elasticNet, xvar = "lambda", label = T, main = "Elastic Net (alpha = 0.5)", line = 2)
+# plot(mdl.logistic.elasticNet, xvar = "lambda", label = T, main = "Elastic Net (alpha = 0.5)", line = 2)
 # plot(mdl.logistic.lasso,      xvar = "lambda", label = T, main = "Lasso", line = 2)
 ```
 
@@ -339,9 +339,9 @@ func.regularizedLogistic = function(
 }
 
 # Test upon different alpha values (important to note that alpha is not a hyper-parameter to optimize!)
-func.regularizedLogistic(input.alpha = 0, ModelName = "Ridge")
-func.regularizedLogistic(input.alpha = 1, ModelName = "Lasso")
-func.regularizedLogistic(input.alpha = 0.5, ModelName = paste("ElasticNet, α = 0.5") )
+# func.regularizedLogistic(input.alpha = 0, ModelName = "Ridge")
+# func.regularizedLogistic(input.alpha = 1, ModelName = "Lasso")
+# func.regularizedLogistic(input.alpha = 0.5, ModelName = paste("ElasticNet, α = 0.5") )
 
 # We'remore interested in the elastic net results
 cf.counts.ElasticNet = func.regularizedLogistic(input.alpha = 0.5, ModelName = paste("ElasticNet") )[[1]]
@@ -403,8 +403,8 @@ cf.counts.randomForest = cf.randomForest$table %>%
 cf.stats.randomForest = cf.randomForest$byClass %>% 
   func.tidy.cf.statsTable(ModelName = "RandomForest")
 
-cf.counts.randomForest
-cf.stats.randomForest
+# cf.counts.randomForest
+# cf.stats.randomForest
 ```
 
 
