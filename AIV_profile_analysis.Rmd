@@ -118,6 +118,7 @@ checkSpeciesCultivar("Mustard")
 ## Specify Colors ----
 # Manual assignment for category (most important one)
 unique.categories = df.AIV.tidy$Category %>% unique()
+
 color.category = c("Black", "Steelblue", "Firebrick" , "Darkgreen") 
 names(color.category) = unique.categories
 

@@ -1,0 +1,1250 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Bo Yuan" />
+
+<meta name="date" content="2019-12-14" />
+
+<title>African vegetables amino acid &amp; exploratory analysis</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<script src="site_libs/htmlwidgets-1.5.1/htmlwidgets.js"></script>
+<script src="site_libs/plotly-binding-4.9.1/plotly.js"></script>
+<script src="site_libs/typedarray-0.1/typedarray.min.js"></script>
+<link href="site_libs/crosstalk-1.0.0/css/crosstalk.css" rel="stylesheet" />
+<script src="site_libs/crosstalk-1.0.0/js/crosstalk.min.js"></script>
+<link href="site_libs/plotly-htmlwidgets-css-1.49.4/plotly-htmlwidgets.css" rel="stylesheet" />
+<script src="site_libs/plotly-main-1.49.4/plotly-latest.min.js"></script>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+.tocify-subheader {
+  display: inline;
+}
+.tocify-subheader .tocify-item {
+  font-size: 0.95em;
+}
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Free Amino Acids in African Vegetables</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="method-development-and-validation.html">HILIC UHPLC MS/MS Method R&amp;D</a>
+</li>
+<li>
+  <a href="AIV_profile_analysis.html">AIV amino acids exploratory analysis</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">African vegetables amino acid &amp; exploratory analysis</h1>
+<h4 class="author">Bo Yuan</h4>
+<h4 class="date">12/14/2019</h4>
+
+</div>
+
+
+<pre class="r"><code># functional packages
+library(readxl)
+library(broom)
+library(rebus)
+library(ggrepel)
+library(RColorBrewer)
+library(ComplexHeatmap)
+library(circlize)
+library(plotly)
+library(gridExtra)
+library(cowplot)
+
+# Machine learning packages
+library(MASS)
+library(glmnet)
+library(caret)
+library(rpart.plot) # for classification tree plot
+library(randomForest)
+library(e1071)
+
+# The core package collection
+# load last, so as the key functions are not masked by others; but instead masking others if any
+library(tidyverse)</code></pre>
+<pre class="r"><code># Set up ggplot global format
+theme_set(theme_bw() + 
+            theme(axis.text = element_text(color = &quot;black&quot;),
+                  axis.title = element_text(colour = &quot;black&quot;, face = &quot;bold&quot;),
+                  strip.background = element_blank(),
+                  strip.text = element_text(colour = &quot;black&quot;,face = &quot;bold&quot;)))</code></pre>
+<p><strong>Object naming</strong>: df.XXX: a data.frame or tibble object; e.g., df.all.data<br />
+df.modelname…: a data frame or tibble containing tidied results from a model prediction vs actual<br />
+mat.XXX: a matrix object; e.g., mat.content<br />
+plt.XXX: a plot object; e.g., plt.univariate.boxplot.dot<br />
+mdl.trained.XXXX: model from training set; e.g., mdl.trained.LDA<br />
+mdl.fitted.XXX: object with fitted results output from a trained model; e.g., mdl.fitted.LDA<br />
+mdl.XXX: a model object; e.g., mdl.LDA<br />
+fitted.XXX: predicted class, e.g. fitted.logistic.elasticNet<br />
+cf.XXX: confusion table; e.g., cf.counts.LDA.<br />
+func.XXX: defined functions; e.g., func.boxplot.Site()</p>
+<p>Special note: function select is used in multiple packages. To avoid confusion, select function is at best specified as dplyr::select(…); or load tidyverse after loading all other packages</p>
+<div id="calculation-of-amino-acid-content" class="section level1">
+<h1><span class="header-section-number">1</span> Calculation of amino acid content</h1>
+<pre class="r"><code># Read dataset and tidy up
+path = &quot;/Users/Boyuan/Desktop/My publication/7th. HILIC amino acid &amp; PCA/Publish-ready files/AIV free amino acids content.xlsx&quot;
+
+# Data frame of injection concentration
+df.inj.conc = read_excel(path , sheet = &quot;injection conc. (ng.mL-1)&quot;) # read injection concentration dataset
+amino.acids = (df.inj.conc %&gt;% colnames())[-c(1:2)] # extract all amino acids analyzed
+
+# Data frame of sample mass and traits 
+df.mass = read_excel(path, sheet = &quot;sample info&quot;) 
+df.mass = df.mass %&gt;% mutate(`Mass (mg)` = as.numeric(`Mass (mg)`)) 
+
+# Combine the two data sets
+df.AIV = df.inj.conc %&gt;% left_join(df.mass, by = &quot;Name&quot;)
+
+# tidy up
+df.AIV.tidy =  df.AIV %&gt;% # 
+  gather(amino.acids, key = compounds, value = inj.conc) %&gt;% # gather compounds
+  # content in mg / 100 g dry sample
+  # x 100 dil factor x 10 mL, convert to mg compound, then normalized by sample mass to 100 g DW
+  mutate(content = inj.conc * (100 * 10) /1000/1000 / `Mass (mg)` * 1000 * 100,
+         Category = factor(Category, levels = c(&quot;Nightshade&quot;, &quot;Amaranth&quot;, &quot;Spider plant&quot;, &quot;Mustard&quot;),
+                           ordered = T))
+df.AIV.tidy</code></pre>
+<pre><code>## # A tibble: 11,424 x 26
+##    Name  `Data File` Category Species Cultivar `storage packs` `sample name`
+##    &lt;chr&gt; &lt;chr&gt;       &lt;ord&gt;    &lt;chr&gt;   &lt;chr&gt;    &lt;chr&gt;           &lt;chr&gt;        
+##  1 A_1   A_1.d       Amaranth Amaran… UG-AM-40 A_A             -            
+##  2 A_2   A_2.d       Amaranth A. cru… AC-45    A_A             -            
+##  3 A_3   A_3.d       Amaranth -       Commerc… A_A             -            
+##  4 A_4   A_4.d       Amaranth A. hyp… AH-TL    A_A             -            
+##  5 A_5   A_5.d       Amaranth -       Local M… A_A             -            
+##  6 A_6   A_6.d       Amaranth Amaran… Ex-Zan   A_A             -            
+##  7 A_7   A_7.d       Amaranth A. tri… RUAM24   A_A             -            
+##  8 A_8   A_8.d       Amaranth A. cru… MADIIRA… A_A             -            
+##  9 A_9   A_9.d       Amaranth A. cru… MADIIRA… A_A             -            
+## 10 A_10  A_10.d      Amaranth A. cru… AC-NL    A_A             -            
+## # … with 11,414 more rows, and 19 more variables: `Plot No.` &lt;chr&gt;,
+## #   Harvest &lt;chr&gt;, Season &lt;chr&gt;, Site &lt;chr&gt;, Rep &lt;chr&gt;, `Mass (mg)` &lt;dbl&gt;,
+## #   Year &lt;dbl&gt;, `Data weighed` &lt;chr&gt;, `Note1_Moldy status` &lt;chr&gt;,
+## #   `Note2_harvest specific date` &lt;chr&gt;, Note3_sites &lt;chr&gt;, `Note4_missing
+## #   row` &lt;chr&gt;, `Note5_Single Reps` &lt;chr&gt;, Note6_fluffy &lt;chr&gt;, `Note7_label
+## #   missing` &lt;chr&gt;, Note8_Color &lt;chr&gt;, compounds &lt;chr&gt;, inj.conc &lt;dbl&gt;,
+## #   content &lt;dbl&gt;</code></pre>
+<pre class="r"><code># Compounds name
+unique.compounds = df.AIV.tidy$compounds %&gt;% unique()</code></pre>
+<pre class="r"><code># check cultivar number
+checkSpeciesCultivar = function(category){
+  x = (df.AIV %&gt;% filter(Category == category))$Cultivar %&gt;% unique() 
+  y = (df.AIV %&gt;% filter(Category == category))$Species %&gt;% unique()
+  return(list(x, y))
+}
+
+checkSpeciesCultivar(&quot;Nightshade&quot;)</code></pre>
+<pre><code>## [[1]]
+##  [1] &quot;SS-49&quot;                &quot;SS-52&quot;                &quot;Commercial&quot;          
+##  [4] &quot;Local Market&quot;         &quot;BG-16&quot;                &quot;EX-HA1&quot;              
+##  [7] &quot;BG-29&quot;                &quot;SS-04-2&quot;              &quot;BG-19&quot;               
+## [10] &quot;Olevolosi&quot;            &quot;Nduruma&quot;              &quot;Simlaw Seeds (kenya)&quot;
+## [13] &quot;-&quot;                   
+## 
+## [[2]]
+## [1] &quot;-&quot;           &quot;S. scabrum&quot;  &quot;S. villosum&quot;</code></pre>
+<pre class="r"><code>checkSpeciesCultivar(&quot;Spider plant&quot;)</code></pre>
+<pre><code>## [[1]]
+##  [1] &quot;ML-SF-17&quot;             &quot;UG-SF-15&quot;             &quot;ML-SF-29&quot;            
+##  [4] &quot;PS&quot;                   &quot;UG-SF-23&quot;             &quot;Local Market&quot;        
+##  [7] &quot;-&quot;                    &quot;Commercial&quot;           &quot;Simlaw Seeds (kenya)&quot;
+## [10] &quot;UGSF15&quot;              
+## 
+## [[2]]
+## [1] &quot;-&quot;</code></pre>
+<pre class="r"><code>checkSpeciesCultivar(&quot;Amaranth&quot;)</code></pre>
+<pre><code>## [[1]]
+##  [1] &quot;UG-AM-40&quot;             &quot;AC-45&quot;                &quot;Commercial&quot;          
+##  [4] &quot;AH-TL&quot;                &quot;Local Market&quot;         &quot;Ex-Zan&quot;              
+##  [7] &quot;RUAM24&quot;               &quot;MADIIRA 2&quot;            &quot;MADIIRA 1&quot;           
+## [10] &quot;AC-NL&quot;                &quot;Simlaw Seeds (kenya)&quot; &quot;MADIIRA 2, AM38&quot;     
+## [13] &quot;MADIIRA 1, EX-ZIM&quot;    &quot;-&quot;                   
+## 
+## [[2]]
+## [1] &quot;Amaranthus sp.&quot;     &quot;A. cruentus&quot;        &quot;-&quot;                 
+## [4] &quot;A. hypochondriacus&quot; &quot;A. tricolor&quot;        &quot;A. dubius&quot;</code></pre>
+<pre class="r"><code>checkSpeciesCultivar(&quot;Mustard&quot;)</code></pre>
+<pre><code>## [[1]]
+##  [1] &quot;Rungwe&quot;       &quot;Chinasaki&quot;    &quot;Arumeru&quot;      &quot;Mbeya Green&quot;  &quot;Mustard 1&quot;   
+##  [6] &quot;RW-B-1&quot;       &quot;Local Market&quot; &quot;Mbeya Purple&quot; &quot;Rw-B-1&quot;       &quot;-&quot;           
+## 
+## [[2]]
+## [1] &quot;-&quot;           &quot;B. carinata&quot;</code></pre>
+</div>
+<div id="global-color-setup" class="section level1">
+<h1><span class="header-section-number">2</span> Global color setup</h1>
+<pre class="r"><code>## Specify Colors ----
+# Manual assignment for category (most important one)
+unique.categories = df.AIV.tidy$Category %&gt;% unique()
+
+color.category = c(&quot;Black&quot;, &quot;Steelblue&quot;, &quot;Firebrick&quot; , &quot;Darkgreen&quot;) 
+names(color.category) = unique.categories
+
+# Manual assignment for cultivars (too many levels...)
+unique.cultivar = df.AIV.tidy$Cultivar %&gt;% unique()
+
+color.cultivar = colorRampPalette(brewer.pal(12, &quot;Paired&quot;))(length(unique.cultivar)) %&gt;% 
+  sample() 
+# pie(x = rep(1, length(color.cultivar)), col = color.cultivar)
+names(color.cultivar) = unique.cultivar
+
+
+# Define function for automatic color assignment
+func.color.assignment = 
+  function(mypalette, variable){ # variable being one of the df.AIV.tidy 
+    unique = df.AIV.tidy[[variable]]  %&gt;% unique() # unique levels
+    color.unique = brewer.pal(n = length(unique), mypalette) # extract colors
+    names(color.unique) = unique # assign unique levels as color name
+    return(color.unique)
+  }
+
+# assign colors using defined function
+# display.brewer.all()
+
+color.species = func.color.assignment(mypalette = &quot;Set3&quot;, variable = &quot;Species&quot;)
+color.year = func.color.assignment(mypalette = &quot;Set2&quot;, variable = &quot;Year&quot;)
+color.site = func.color.assignment(mypalette = &quot;Set1&quot;, variable = &quot;Site&quot;)
+color.harvest = func.color.assignment(mypalette = &quot;Dark2&quot;, variable = &quot;Harvest&quot;)
+color.season = func.color.assignment(mypalette = &quot;Accent&quot;, variable = &quot;Season&quot;)</code></pre>
+</div>
+<div id="univariate-analysis" class="section level1">
+<h1><span class="header-section-number">3</span> Univariate analysis</h1>
+<div id="scatter-boxplot" class="section level2">
+<h2><span class="header-section-number">3.1</span> Scatter-boxplot</h2>
+<pre class="r"><code>plt.univariate.boxplot.dot = df.AIV.tidy %&gt;% 
+  ggplot(aes(x = Category, y = content, color = Category)) + 
+  geom_boxplot(outlier.alpha = 0) +
+  geom_point(size = .1, alpha = .5, position = position_jitter(.25, 0)) + 
+  # geom_rug(alpha = .1) +
+  facet_wrap(~compounds, scales = &quot;free&quot;, nrow = 4) + 
+  theme(axis.text.x = element_blank(), 
+        axis.title.x = element_blank(),
+        # legend.position = c(.8, .1),
+        legend.position = &quot;right&quot;) +
+  labs(y = &quot;Content (mg/100g DW)&quot;) +
+  scale_color_manual(values = color.category)
+plt.univariate.boxplot.dot</code></pre>
+<p><img src="AIV_profile_analysis_files/figure-html/unnamed-chunk-6-1.png" width="960" /></p>
+</div>
+<div id="distribution-analysis" class="section level2">
+<h2><span class="header-section-number">3.2</span> Distribution analysis</h2>
+<pre class="r"><code>plt.univariate.density = df.AIV.tidy %&gt;% 
+  ggplot(aes(x = content, color = Category, fill = Category)) + 
+  geom_density(alpha = .1) +
+  facet_wrap(~compounds, scales = &quot;free&quot;, nrow = 4) + 
+  theme(legend.position = c(.8, .1)) +
+  scale_color_manual(values = color.category) + 
+  scale_fill_manual(values = color.category) +
+  labs(x = &quot;Content (mg/100g DW)&quot;, y = &quot;Distribution density&quot;)
+plt.univariate.density</code></pre>
+<p><img src="AIV_profile_analysis_files/figure-html/unnamed-chunk-7-1.png" width="960" /></p>
+<pre class="r"><code># Rougly follows a normal / bell shaped distribution regardless of the sample diversity. Amaranth apears to have more consistent profile, while mustard and nightshade more spread apart.</code></pre>
+<pre class="r"><code>## Draw distribution based on cultivation site for each category
+# Define plotting function
+func.boxplot.Site = function(CategoryInput){
+  df.AIV.tidy %&gt;%
+    filter(Category == CategoryInput) %&gt;%
+    ggplot(aes(x = Site, y = content, color = Site)) +
+    geom_boxplot(outlier.alpha = 0) +
+    geom_point(position = position_jitter(.3, 0), size = .1) +
+    facet_wrap(~compounds, scales = &quot;free&quot;, nrow = 4) +
+    scale_color_manual(values = color.site) +
+    theme(legend.position = c(.8, .1), title = element_text(face = &quot;bold&quot;)) +
+    labs(y = &quot;Content (mg/100g DW)&quot;, title = CategoryInput) 
+}</code></pre>
+<pre class="r"><code>func.boxplot.Site(CategoryInput = &quot;Nightshade&quot;)</code></pre>
+<p><img src="AIV_profile_analysis_files/figure-html/unnamed-chunk-9-1.png" width="960" /></p>
+<pre class="r"><code>func.boxplot.Site(CategoryInput = &quot;Amaranth&quot;)</code></pre>
+<p><img src="AIV_profile_analysis_files/figure-html/unnamed-chunk-9-2.png" width="960" /></p>
+<pre class="r"><code>func.boxplot.Site(CategoryInput = &quot;Spider plant&quot;)</code></pre>
+<p><img src="AIV_profile_analysis_files/figure-html/unnamed-chunk-9-3.png" width="960" /></p>
+<pre class="r"><code>func.boxplot.Site(CategoryInput = &quot;Mustard&quot;)</code></pre>
+<p><img src="AIV_profile_analysis_files/figure-html/unnamed-chunk-9-4.png" width="960" /></p>
+</div>
+<div id="check-outliers" class="section level2">
+<h2><span class="header-section-number">3.3</span> Check outliers</h2>
+<pre class="r"><code># Check some of the unusually high content of amino acids
+contentThreshold = 5000 # check cases where amino acid content &gt; 5000 mg/ 100 g DW
+
+p = df.AIV.tidy[(df.AIV.tidy$content &gt; contentThreshold), ]
+
+nrow(p)  # a total of 37 cases where certain amino acids are higher than 5000 mg / 100 g DW in a sample</code></pre>
+<pre><code>## [1] 37</code></pre>
+<pre class="r"><code># Check where the unusual results occur -- compute percentage
+df.bizarreContent.percent = p %&gt;% select(Site, Category, Year, compounds) %&gt;% 
+  table() %&gt;% prop.table() %&gt;% round(2) %&gt;%
+  
+  # calculate subtotal from each site
+  as.data.frame() %&gt;% spread(Category, Freq) %&gt;% 
+  mutate(subtotal = Nightshade + Amaranth + `Spider plant` + Mustard) %&gt;%
+  filter(subtotal != 0) %&gt;% 
+  arrange(subtotal)
+
+df.bizarreContent.percent</code></pre>
+<pre><code>##    Site Year  compounds Nightshade Amaranth Spider plant Mustard subtotal
+## 1    TZ 2017    proline       0.00        0            0    0.03     0.03
+## 2 Turbo 2013 asparagine       0.08        0            0    0.00     0.08
+## 3 Turbo 2017    proline       0.00        0            0    0.16     0.16
+## 4 Turbo 2017 asparagine       0.73        0            0    0.00     0.73</code></pre>
+<pre class="r"><code># calcualte total counts for each condition
+df.bizarreContent.counts = p %&gt;% select(Site, Category, Year, compounds) %&gt;% 
+  table() %&gt;% # contingency table
+  as.data.frame() %&gt;% # compile as data frame
+  filter(Freq != 0)
+df.bizarreContent.counts</code></pre>
+<pre><code>##    Site   Category Year  compounds Freq
+## 1 Turbo Nightshade 2013 asparagine    3
+## 2 Turbo Nightshade 2017 asparagine   27
+## 3 Turbo    Mustard 2017    proline    6
+## 4    TZ    Mustard 2017    proline    1</code></pre>
+<pre class="r"><code>p$compounds %&gt;% table()</code></pre>
+<pre><code>## .
+## asparagine    proline 
+##         30          7</code></pre>
+<pre class="r"><code># Compute how likely is the upper result happening by pure chance? 
+nrow(df.AIV.tidy %&gt;% filter(Site == &quot;Turbo&quot; &amp; Year == 2017 &amp; compounds %in% c(&quot;asparagine&quot;, &quot;proline&quot;))
+) / nrow(df.AIV.tidy) </code></pre>
+<pre><code>## [1] 0.03028711</code></pre>
+<p>A combination of (Site = “Turbo”) and (Year = 2017) and (compounds = asparagine or proline) account for only 3% of the total cases. Thus, cases above 5 g/ 100 g DW found in Turbo 2017 is highly unlikely to be happening due to pure chance.</p>
+</div>
+</div>
+<div id="correlation-analysis" class="section level1">
+<h1><span class="header-section-number">4</span> Correlation analysis</h1>
+<pre class="r"><code># Check compound overal correlation scatterplot ----
+df.all.data = df.AIV.tidy %&gt;% 
+  dplyr::select(Name, Category, Species, Cultivar, Rep,# plant varieties
+                Year,  Harvest, Season, Site, # environment
+                compounds, content) %&gt;% 
+  spread(key = compounds, value = content) # each amino acid, each column
+
+category = df.all.data$Category %&gt;% as.factor() # category as a factor vector
+col.pairs = brewer.pal(n_distinct(category), &quot;Set1&quot;) # colors for category
+
+mat.content = df.all.data[, amino.acids] %&gt;% as.matrix() # pure content matrix
+rownames(mat.content) = df.all.data$Category</code></pre>
+<pre class="r"><code># Compute correlation matrix (i.e., the covariance matrix of standardized input matrix) for each category 
+
+# pairs(mat.content, cex = .1, pch = 16, col = col.pairs[category], lower.panel = NULL)
+
+colors = colorRampPalette(brewer.pal(11, &quot;PiYG&quot;))(20)
+# pie(rep(1, length(colors)), col = colors)
+
+# Define heatmap correlation matrix format
+correlationHeatmap = function(mat, category.select){
+  # selected category correlation matrix
+  mat.selected = mat[rownames(mat.content) == category.select, ] %&gt;% cor() 
+  
+  # max and min of correlation values
+  max.cor = mat.selected %&gt;% max()
+  min.cor = mat.selected %&gt;% min;  
+  
+  `breaks&gt;0`= seq(0, max.cor, length.out = 11)
+  `breaks&lt;0`= seq(min.cor, 0, length.out = 10)
+  breaks = c(`breaks&lt;0`, `breaks&gt;0`)[-10]
+  
+  # assign breaking points to color serires 
+  color.func = colorRamp2(breaks = breaks, colors = rev(colors))
+  
+  # Main plot (including column annotation)
+  mainplot = Heatmap(
+    mat.selected, col = color.func,
+    heatmap_legend_param = list(color_bar = &quot;continuous&quot;, 
+                                legend_height = unit(8, &quot;cm&quot;)),
+    column_title = paste(category.select, &quot;amino acid correlation matrix&quot;)
+  )
+  return(mainplot)
+}</code></pre>
+<pre class="r"><code># plot correlation heatmap for each category
+correlationHeatmap(mat = mat.content, category.select = &quot;Amaranth&quot;)</code></pre>
+<p><img src="AIV_profile_analysis_files/figure-html/unnamed-chunk-13-1.png" width="768" /></p>
+<pre class="r"><code>correlationHeatmap(mat = mat.content, category.select = &quot;Spider plant&quot;)</code></pre>
+<p><img src="AIV_profile_analysis_files/figure-html/unnamed-chunk-13-2.png" width="768" /></p>
+<pre class="r"><code>correlationHeatmap(mat = mat.content, category.select = &quot;Nightshade&quot;)</code></pre>
+<p><img src="AIV_profile_analysis_files/figure-html/unnamed-chunk-13-3.png" width="768" /></p>
+<pre class="r"><code>correlationHeatmap(mat = mat.content, category.select = &quot;Mustard&quot;)</code></pre>
+<p><img src="AIV_profile_analysis_files/figure-html/unnamed-chunk-13-4.png" width="768" /></p>
+</div>
+<div id="content-heatmap" class="section level1">
+<h1><span class="header-section-number">5</span> Content heatmap</h1>
+<pre class="r"><code>mat.content.heat = t((mat.content + 1) %&gt;% log10())
+
+# column annotation
+anno.col = HeatmapAnnotation(
+  
+  # specify column annotation items
+  # plant varieties
+  category = df.all.data$Category, species = df.all.data$Species, cultivar = df.all.data$Cultivar,
+  # cultivation environment
+  year = df.all.data$Year, season = df.all.data$Season,
+  harvest = df.all.data$Harvest, site = df.all.data$Site,
+  
+  # not show cultivar legend
+  show_legend = c(T, T, F, T, T, T, T),
+  
+  # # color assignment
+  col = list(
+    category = color.category, species = color.species, cultivar = color.cultivar,
+    year = color.year, season = color.season, harvest = color.harvest, site = color.site
+  ),
+  
+  # distance between each row of column annotation
+  gap = unit(1, &quot;mm&quot;),
+  
+  # legend row control; by default, # rows = # levels
+  annotation_legend_param = list(
+    species = list(nrow = floor(length(color.species) / 2) + 1 )
+  ) 
+)</code></pre>
+<pre class="r"><code># main body color gradient
+# set up color breaks
+content.log.max = mat.content.heat %&gt;% max()
+content.log.min = mat.content.heat %&gt;% min()
+content.log.mean = sum(content.log.max, content.log.min)/2
+
+`content.log.breaks.up`= seq(content.log.mean, content.log.max, length.out = 11)
+`content.log.breaks.low`= seq(content.log.min, content.log.mean, length.out = 10)
+content.log.breaks = c(`content.log.breaks.low`, `content.log.breaks.up`)[-10]
+
+# assign breaking points to color serires 
+mycolor = c(colorRampPalette(brewer.pal(11, &quot;Spectral&quot;))(length(content.log.breaks)))
+content.log.color.func = colorRamp2(breaks = content.log.breaks, colors = rev(mycolor)) 
+
+
+# draw heatmap main plot
+mainplot = Heatmap(
+  mat.content.heat, col = content.log.color.func,
+  top_annotation = anno.col, # column annotation
+  cluster_rows = T, cluster_columns = F, show_column_names = F,
+  column_dend_height = unit(5, &quot;cm&quot;),
+  
+  heatmap_legend_param = list(
+    title = &quot;log10 [mg/100 g DW]&quot;, title_position = &quot;leftcenter-rot&quot;,
+    color_bar = &quot;continuous&quot;, legend_height = unit(8, &quot;cm&quot;),
+    direction = &quot;vertical&quot;,
+    labels_gp = gpar(fontsize = 12))
+)</code></pre>
+<pre class="r"><code>draw(mainplot, 
+     heatmap_legend_side = &quot;right&quot;, annotation_legend_side = &quot;bottom&quot;)</code></pre>
+<p><img src="AIV_profile_analysis_files/figure-html/unnamed-chunk-16-1.png" width="1152" /></p>
+</div>
+<div id="principle-component-analysis-pca-upon-categories" class="section level1">
+<h1><span class="header-section-number">6</span> Principle component analysis (PCA) upon categories</h1>
+<pre class="r"><code>mat.content.scaled = mat.content %&gt;% scale(center = T, scale = T)
+
+# Check eigenvalues
+content.scaled.covarianceMatrix = mat.content.scaled %&gt;% var()
+eigen.values = (content.scaled.covarianceMatrix %&gt;% eigen())$values
+
+# plot contribution percent
+data.frame(PC.no = seq(eigen.values), values = eigen.values) %&gt;%
+  mutate(conc.pct = values / eigen.values %&gt;% sum() * 100) %&gt;%
+  ggplot(aes(x = PC.no, y = conc.pct)) + geom_bar(stat = &quot;identity&quot;) + 
+  geom_line(linetype = &quot;dashed&quot;, color = &quot;firebrick&quot;) + theme_bw()</code></pre>
+<p><img src="AIV_profile_analysis_files/figure-html/unnamed-chunk-17-1.png" width="960" /></p>
+<pre class="r"><code># contribution percentage of the major PC&#39;s
+PC1.percent = (eigen.values[1] / eigen.values %&gt;% sum() * 100) %&gt;% round() 
+PC2.percent = (eigen.values[2] / eigen.values %&gt;% sum() * 100) %&gt;% round()
+PC3.percent = (eigen.values[3] / eigen.values %&gt;% sum() * 100) %&gt;% round() 
+
+
+# Check eigenvectors
+eigen.vectors = (mat.content.scaled %&gt;% var() %&gt;% eigen())$vectors
+eigen.vectors = -eigen.vectors
+rownames(eigen.vectors) = colnames(mat.content.scaled) 
+# Recall that eigenvector elements are the coefficients of corresponding original variables 
+
+mat.PC = mat.content.scaled %*% (eigen.vectors)
+df.PC = df.all.data %&gt;% 
+  dplyr::select(Name, Category, Species, Cultivar, Year, Season, Harvest, Site) %&gt;%
+  cbind(mat.PC[, 1:3]) %&gt;% as_tibble() %&gt;%
+  rename(PC1 = `1`, PC2 = `2`, PC3 = `3`)
+df.PC %&gt;% head(); df.PC %&gt;% tail()</code></pre>
+<pre><code>## # A tibble: 6 x 11
+##   Name  Category Species Cultivar  Year Season Harvest Site    PC1      PC2
+##   &lt;chr&gt; &lt;ord&gt;    &lt;chr&gt;   &lt;chr&gt;    &lt;dbl&gt; &lt;chr&gt;  &lt;chr&gt;   &lt;chr&gt; &lt;dbl&gt;    &lt;dbl&gt;
+## 1 A_1   Amaranth Amaran… UG-AM-40  2016 3      1       Turbo -1.28  0.292  
+## 2 A_10  Amaranth A. cru… AC-NL     2016 3      1       Turbo -2.11  0.0132 
+## 3 A_100 Amaranth Amaran… Ex-Zan    2016 -      1       TZ    -4.67  0.0465 
+## 4 A_101 Amaranth -       AH-TL     2016 -      1       TZ    -4.47  0.0979 
+## 5 A_102 Amaranth Amaran… UG-AM-40  2016 -      1       TZ    -4.65  0.00214
+## 6 A_103 Amaranth A. cru… AC-NL     2016 -      1       TZ    -4.50 -0.0168 
+## # … with 1 more variable: PC3 &lt;dbl&gt;</code></pre>
+<pre><code>## # A tibble: 6 x 11
+##   Name  Category  Species Cultivar  Year Season Harvest Site     PC1   PC2   PC3
+##   &lt;chr&gt; &lt;ord&gt;     &lt;chr&gt;   &lt;chr&gt;    &lt;dbl&gt; &lt;chr&gt;  &lt;chr&gt;   &lt;chr&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+## 1 S_94  Spider p… -       Local M…  2016 3      1       Turbo  4.35  -2.36 1.75 
+## 2 S_95  Spider p… -       ML-SF-17  2016 3      1       Turbo  1.62  -1.23 1.32 
+## 3 S_96  Spider p… -       ML-SF-29  2016 3      1       Turbo -0.688 -1.55 0.830
+## 4 S_97  Spider p… -       UG-SF-23  2016 3      1       Turbo -1.82  -1.30 0.599
+## 5 S_98  Spider p… -       PS        2016 3      1       Turbo  0.298 -1.73 0.869
+## 6 S_99  Spider p… -       Commerc…  2016 3      1       Turbo -0.172 -1.46 0.892</code></pre>
+<div id="d-pca-plot" class="section level2">
+<h2><span class="header-section-number">6.1</span> 2D PCA plot</h2>
+<div id="pc1-vs-pc2" class="section level3">
+<h3><span class="header-section-number">6.1.1</span> PC1 vs PC2</h3>
+<pre class="r"><code>plt.PCA.1.2 = 
+  df.PC %&gt;% ggplot(aes(x = PC1, y  = PC2, color = Category)) + geom_point() +
+  scale_x_continuous(limits = c(-6, 7), 
+                     paste(&quot;Standardized PC1, &quot;, PC1.percent, &quot;% contribution&quot;),
+                     breaks = seq(-5, 7, by = 2.5)) +
+  scale_y_continuous(limits = c(-5, 5), 
+                     paste(&quot;Standardized PC2, &quot;, PC2.percent, &quot;% contribution&quot;)) +
+  stat_ellipse(level = .7, linetype = &quot;dashed&quot;) + # containing 70% of data included 
+  scale_color_manual(values = color.category) +
+  theme(legend.position = c(.15, .15)) #  + coord_fixed(1) 
+plt.PCA.1.2</code></pre>
+<p><img src="AIV_profile_analysis_files/figure-html/unnamed-chunk-18-1.png" width="960" /></p>
+</div>
+<div id="pc1-vs.pc3" class="section level3">
+<h3><span class="header-section-number">6.1.2</span> PC1 vs. PC3</h3>
+<pre class="r"><code>plt.PCA.1.3 = df.PC %&gt;% ggplot(aes(x = PC1, y  = PC3, color = Category)) + geom_point() +
+  scale_x_continuous(limits = c(-6, 7), 
+                     paste(&quot;Standardized PC1, &quot;, PC1.percent, &quot;% contribution&quot;),
+                     breaks = seq(-5, 7, by = 2.5)) +
+  scale_y_continuous(limits = c(-4, 3), 
+                     paste(&quot;Standardized PC3, &quot;, PC3.percent, &quot;% contribution&quot;)) +
+  stat_ellipse(level = .7, linetype = &quot;dashed&quot;) + # containing 70% of data included 
+  scale_color_manual(values = color.category) +
+  theme(legend.position = c(.15, .15)) #  + coord_fixed(1) 
+plt.PCA.1.3</code></pre>
+<p><img src="AIV_profile_analysis_files/figure-html/unnamed-chunk-19-1.png" width="960" /></p>
+</div>
+<div id="pc-2-vs.pc3" class="section level3">
+<h3><span class="header-section-number">6.1.3</span> PC 2 vs. PC3</h3>
+<pre class="r"><code>plt.PCA.2.3 = df.PC %&gt;% ggplot(aes(x = PC2, y  = PC3, color = Category)) + geom_point() +
+  scale_x_continuous(limits = c(-5, 5), 
+                     paste(&quot;Standardized PC2, &quot;, PC2.percent, &quot;% contribution&quot;),
+                     breaks = seq(-5, 7, by = 2.5)) +
+  scale_y_continuous(limits = c(-4, 3), 
+                     paste(&quot;Standardized PC3, &quot;, PC3.percent, &quot;% contribution&quot;)) +
+  stat_ellipse(level = .7, linetype = &quot;dashed&quot;) + # containing 70% of data included 
+  scale_color_manual(values = color.category) +
+  theme(legend.position = c(.15, .15)) #  + coord_fixed(1) 
+plt.PCA.2.3 </code></pre>
+<p><img src="AIV_profile_analysis_files/figure-html/unnamed-chunk-20-1.png" width="1344" /></p>
+<pre class="r"><code>grid.arrange(plt.PCA.1.2, plt.PCA.1.3, plt.PCA.2.3, nrow = 1)</code></pre>
+<p><img src="AIV_profile_analysis_files/figure-html/unnamed-chunk-20-2.png" width="1344" /></p>
+</div>
+</div>
+<div id="d-pca-plot-1" class="section level2">
+<h2><span class="header-section-number">6.2</span> 3D PCA plot</h2>
+<pre class="r"><code>plot_ly(df.PC, x = ~PC1, y = ~PC2, z = ~PC3, color = ~Category, 
+        colors = color.category) %&gt;%
+  add_markers() %&gt;%
+  layout(title = &#39;3D Interactive PCA&#39;,
+         scene = list(
+           xaxis = list(title = paste(&quot;Standardized PC1, &quot;, PC1.percent, &quot;% contribution&quot;),
+                        range = c(-6, 5)),
+           yaxis = list(title = paste(&quot;Standardized PC2, &quot;, PC2.percent, &quot;% contribution&quot;),
+                        range = c(-5, 5)),
+           zaxis = list(title = paste(&quot;Standardized PC3, &quot;, PC3.percent, &quot;% contribution&quot;),
+                        range = c(-4, 4))
+         )
+  )</code></pre>
+<div id="htmlwidget-44193eaeecb65512ca91" style="width:864px;height:768px;" class="plotly html-widget"></div>
+<script type="application/json" data-for="htmlwidget-44193eaeecb65512ca91">{"x":{"visdat":{"749b1897dc47":["function () ","plotlyVisDat"]},"cur_data":"749b1897dc47","attrs":{"749b1897dc47":{"x":{},"y":{},"z":{},"color":{},"colors":["Black","Steelblue","Firebrick","Darkgreen"],"alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"type":"scatter3d","mode":"markers","inherit":true}},"layout":{"margin":{"b":40,"l":60,"t":25,"r":10},"title":"3D Interactive PCA","scene":{"xaxis":{"title":"Standardized PC1,  41 % contribution","range":[-6,5]},"yaxis":{"title":"Standardized PC2,  17 % contribution","range":[-5,5]},"zaxis":{"title":"Standardized PC3,  10 % contribution","range":[-4,4]}},"hovermode":"closest","showlegend":true},"source":"A","config":{"showSendToCloud":false},"data":[{"x":[0.614036871425364,11.2254766201752,3.01128222066086,1.31529249810383,2.7397534932851,1.74249282383886,1.24503610751597,7.24296703064973,0.381248217289149,3.81790817845055,3.97683379894884,2.60715927545431,2.14710615577736,1.82040771310035,1.27740117436592,-1.03544343513388,3.70406358938407,0.81120173977587,1.89541057412788,4.60392982773955,0.781487832751983,5.08181658110018,3.26924450032501,1.88077512215114,2.49553257683935,1.22645503131832,4.92980870163301,4.42930893197985,-1.60206224138058,1.54634872661633,3.52763929739118,-1.21997202629543,-1.28495410590806,6.88924587549462,2.58582916551734,-0.226585262936625,2.11839454206666,2.95620814534873,2.72847880301242,3.19588594545624,4.14896864913688,5.20598792745114,3.7008038603946,6.12233937361265,7.38689095160728,1.337433942141,4.20298822262789,3.81287478955772,6.20681826970645,5.79878531630836,6.33098398848145,4.74975707081511,2.86850954462785,1.91249498885688,2.64371504168646,7.81750296375629,3.44258491996813,5.81528729797688,3.85355389719073,1.29748421016934,3.33552480449468,3.83467931720531,5.44029471188673,4.10750166928992,3.31282908495242,6.39807409728289,5.15227024633732,4.66849740526321,3.26617756269813,5.4542769997522,1.73067641044054,3.63753119245723,3.65196740917751,3.93394403587553,6.09215600672629,1.48661073393264,2.49789821737099,8.78330043698135,1.6294683205354,1.6832138703747,-2.41502548508438,5.5599126136496,4.91084915847537,18.0775532579978,4.89758605801013,-5.44549383965435,1.13176539870996,6.70748627130237,4.84113316122726,4.66218347363414],"y":[0.173524867284734,2.70438647029918,0.318490187871021,-0.485530534544281,0.328613239551501,-0.386695425703904,-0.0134004831857863,1.53338373090185,-0.476746393917216,-0.228126535498064,-0.0792071671975234,0.423469807912705,0.0938674594734989,0.0918055887357298,-0.0675864550804307,0.310656406483723,0.286163724878464,-0.0968934102215043,-0.304763143133665,0.166028529243394,0.0357141958666495,1.33722637045064,0.680221466818365,-0.350472551120395,0.421320800013479,0.847156581654567,0.560358534718183,1.41701217807237,-0.129022867033523,0.00580617812175129,0.156316212766821,-0.593478969976031,-0.0702471805304075,2.15989567047979,0.790893889651759,-0.627138308122928,-0.0568313807524067,-0.0900175422899166,-0.462139545999144,0.101811956084391,1.01815181319203,0.685303754724781,0.815978739781466,0.895389401962676,2.53235814945314,0.69635622505538,1.44845542043481,0.919797131156313,1.09401423715988,0.556191450527621,-1.0920557048979,1.78667476693165,0.983096699064259,0.479986087292983,1.72716540412249,1.59170976987091,0.511415576015166,0.334090374871233,0.513816979646748,-0.76740489825224,-0.797494097652299,-0.971385786341639,-1.04453103153053,-0.96891829213967,-1.18049833389293,-1.95757186368502,-0.0727819498537494,-1.19018674050509,-0.665175430580004,-1.01316552386519,-1.06432882424432,-0.821274416268097,-1.31168508194611,-0.453575167033472,-1.13835908743214,-0.759146349269266,-0.704113005814966,1.67241474784498,-0.50635152111326,-1.03899641085328,-0.178474418972994,0.214991492744264,-0.727205551839339,-1.65054668132492,-0.938818594734624,0.481977083466807,-0.56438411980509,-1.07048970833626,0.911094813777612,-0.694938360766858],"z":[1.49162955033152,5.42486038552199,2.43135968500734,1.385223028848,1.99406009786798,1.51205789262094,1.8460346573148,3.5818889503696,1.34775338488363,1.78700828975056,2.02695063542256,1.33331604720728,1.84036893128018,0.99118431640797,1.37747097715014,1.39703302687212,2.19479243937866,1.50951099387992,1.55053556030257,2.17763064488573,1.58496941860711,1.74824916229652,2.6706341785161,1.18380471228279,1.47177860921587,1.61131867778469,1.1392011549583,1.94723368892406,1.16067289592394,1.21383881138135,1.44356115867209,0.623355667358357,0.838768321186545,3.66354985342523,1.12138600298192,0.784392251221025,1.08421920037174,0.773841588286785,0.754528340212304,1.37246930269225,1.54752995659626,1.4892811868895,1.61168669242747,1.65404922361844,4.05968956147595,1.20292623617824,1.27597151025272,1.50126146625176,1.39184459441698,1.5297308806991,-0.444170696069687,1.51369039703958,1.89704522305319,1.49193286626831,2.23893272033439,3.40406116407392,1.78908398575637,1.1011133215859,1.53896066846144,0.492064928918688,0.231907576001285,-0.222595276471137,0.174256697139691,0.652511339799862,-0.172909362618524,-0.348001897717684,1.85530704463991,0.194881609266789,0.186882280074278,0.642047820753844,-0.051629548682503,0.364200031003971,-0.0633443623051963,0.736726282675412,-0.0816268100620639,-0.0144964465351682,0.316985421052923,3.04672413242176,0.623201653745656,0.0210242715779787,-0.558955898874348,0.312279764066549,0.361650688458649,0.456337701793152,-0.0155127950398625,0.326420840390395,0.438867511246031,0.838083899410923,2.06918422679361,0.224151375488135],"type":"scatter3d","mode":"markers","name":"Mustard","marker":{"color":"rgba(70,130,180,1)","line":{"color":"rgba(70,130,180,1)"}},"textfont":{"color":"rgba(70,130,180,1)"},"error_y":{"color":"rgba(70,130,180,1)"},"error_x":{"color":"rgba(70,130,180,1)"},"line":{"color":"rgba(70,130,180,1)"},"frame":null},{"x":[3.99884746344452,0.996277576820475,-0.125863785990561,9.53458346094511,6.47017841525998,2.20231789788737,-0.453333151123735,4.4608306140556,5.48869315716954,5.06026609224959,7.26755391363091,-2.60047002608736,0.300032996085597,-1.75283220748828,-1.20815587759802,-0.778896682789441,-2.78175867144005,-1.16214987037545,-2.12725825525717,-1.96774189691454,-3.15660736193301,-1.7131720619341,-2.07365807345607,2.58866712014837,-0.775466431578071,2.25684627467017,-2.0563012388967,-2.0201551181422,-1.61561813252209,0.270713202500189,-0.167783851128541,0.397949148971652,1.23168119941886,0.0498304861861292,2.73733514905219,0.100697047462866,0.68426239705593,-0.312584653281774,0.545945153257992,0.711741127083161,0.720332593849684,1.04285897308583,-0.395476108119623,1.00323489421769,0.909404453689426,2.19822288108177,-0.436947265976366,-0.675506956198061,-0.171253756254828,1.50038454769328,0.426355781893445,-0.795433972332589,1.94647800883804,0.335767561093723,0.488661562147574,0.291394252174194,1.00067050797134,1.2674693522988,1.24529716440696,0.28805447656204,0.275274261674893,-1.17951325801568,-1.15398042813738,0.682169753970469,-0.615761232366055,0.351780372722189,-0.112070052715534,-3.00707180615741,0.944433508654751,-0.224930075438007,0.561211414472859,0.844226625346879,0.802913656911181,-1.36330667063666,1.02068728014004,1.16737833889803,-1.30039778840874,-0.898612029556006,-4.0947839561529,-1.13144083559112,-1.3063168050641,0.833249991468893,-1.28742528339799,-3.13408244035851,-3.53274553949464,-0.136111760986282,-3.38389047250908,0.986938656292677,0.361892180643832,1.0135158115891,0.528223920369531,0.199657873157109,4.59559296244733,1.13835483069843,2.11767569598697,-1.1257733367887,3.09232419062061,1.89844068062234,0.481871038682894,1.30605196903746,-0.253516192845928,-0.275398942391112,1.1103735416314,-0.135138274808947,2.59990209505771,0.6761836506511,2.16574055667391,0.555647512514801,-0.33343810135333,2.72748289507822,-0.35437035340006,0.0798998776613806,2.60057272836713,-0.523223482105979,2.85577563487272,-1.37943782216277,0.811074109840184,-1.34990583206857,0.710769617083658,-1.79236533196999,-0.504914789104212,-0.476005098890742,-2.08005431564698,-1.07740025627206,1.36570552639444,5.02300633595264,0.246860259372512,-0.693557258835886,-0.713359858110458,2.14548520770635,-1.11467678636023,-2.00050395051537,-0.356719373331042,-0.563749391139739,-1.89505520663221,-2.03177464351913,1.34373741964117,-2.26095433399777,-1.15754259668964,-0.425290887905923,-1.89115830815517,-1.19225269613102,-0.916303410777686,-0.34201966641853,0.00294112187409167,-0.703357310924204,-1.93007254020201,-1.68382064371912,-1.21520559480438,0.162784409755082,0.619010614163509,-1.61656834806649,-3.55533857431522,-0.799524275001201,-1.66179988478674,-0.494962310607481,0.755600180686638,-1.07625968282417,-1.3356119580682,0.403900406738144,-2.05766691333057,2.66826110766198,0.244471245102535,-0.4912828827077,-0.55925292117098,-1.05683313383612,4.34970070722337,1.62168941389013,-0.688207661081588,-1.82284949649973,0.298149224300443,-0.17190091392642],"y":[-4.67320837004737,-3.15153819687687,-1.86639039371243,-0.280932060342968,-0.896535018516062,-0.49650430543947,-0.0598459504171759,-0.402323285426946,-0.413767684873555,-0.924568558666792,-1.8558210960377,-1.054554526093,-2.3600222953793,-1.41804018289544,-1.48996201816804,-2.25729963567855,-0.68904643001604,-1.49464551705396,-1.02056779812215,-1.29576901624862,-0.745224341998286,-0.949520941753329,-0.942647135143986,-3.72208098000475,-1.56668782066731,-2.96871520153812,-0.814019582377412,-1.05150419368935,-0.907096457815853,-1.47225269049447,-1.74961170585436,0.838929436719812,0.286646906660421,-0.202597571081258,-3.77704133489931,0.438919134602589,-0.230594837727516,2.01229943552766,1.46981309647238,2.11404665294783,0.911028114581519,1.18745674105546,-0.0804195242931186,-0.446584195061199,-0.134565386399222,-3.95605556873709,0.540266375981945,0.400390311029225,0.262688171617309,-0.275150286692474,0.448364648311574,-0.238108824628488,-0.0973198228172109,-0.681171801951925,1.49793105689565,1.36238299217673,-2.9299680247865,1.83731056316241,1.67701522542017,0.892187138528184,0.441571233124169,-0.32011165622464,0.391923750096517,-0.263287640858574,-0.413960042014825,0.277899609924504,-0.264044891576142,-0.402986224731222,0.295260050038731,-0.106631543931515,-0.400921365174875,-1.04427003851067,1.31768633146841,-0.3384439791659,1.6236340438183,2.29141478396887,-0.180684146172206,-0.0770463503251581,0.0161733746370072,0.126643792803083,-0.471147028761916,-0.0414587186819066,0.464664444320324,-0.425338984641024,-0.131323147249693,-2.49337757353903,-0.333049000643896,-3.74600132577464,-2.97016671094979,-3.42586285689256,-3.21423226459855,-2.61343270060302,-4.93566386762323,-3.56723573608034,-3.57750606474574,-2.10472068802189,-4.27468757053451,-3.29004570523991,-2.78906945979806,-2.71726107449621,-2.61232661064524,-2.61305692832631,-3.04920794972587,-2.93084821862088,-4.68111652659961,-3.32172854296653,-4.30688399031283,-2.66683455998256,-2.68781842416528,-4.06442894776205,-2.74103762364179,-2.13884376302133,-2.30446146922169,-1.93036610826007,-2.35178576978363,-2.22586650320698,-2.86590471446225,-2.38651438482387,-2.93903550743174,-1.96817740649225,-1.91004649590328,-1.5350333873671,-1.69801910542688,-1.67596936916367,-3.05681076321192,-2.63736637330763,-2.71474040250519,-2.72026034805412,-2.31338724346,-3.81446216320545,-2.38947916677185,-0.960524637965785,-1.53984643400476,-1.12092795245892,-0.908789888680457,-1.29464588019097,-2.32787331714674,-0.838724495570283,-0.569018588165245,-1.33446453593428,-1.492696742174,-1.06242287031449,-1.5563181361872,-1.59193983543604,-1.52597147744013,-1.07374938512504,-1.56514102684078,-1.44486314029298,-1.11220714471544,-2.70770253838976,-2.71025422105014,-1.46320566881544,-0.550397640985452,-1.62586552944995,-1.48220093105702,-1.29001178147419,-2.26317046564044,-1.50477693550536,-1.54401677485044,-1.67767845276005,-1.0000498950391,-3.79788719915611,-1.69914495404006,-1.28794697589153,-1.3526428986059,-0.949847467078583,-2.36363018413593,-1.23160904127648,-1.54850802226024,-1.29866194561616,-1.72767792532482,-1.45622388192415],"z":[-2.73806465129253,-1.53933934704939,0.784193556258469,0.426996286933086,-0.660998106712187,0.128103374662016,-0.330234714107489,-0.269013794311701,1.95219600097132,2.37910924321171,2.29444678365941,1.3224101368975,-1.78191017584857,1.96844221888647,1.40828911134237,4.14462646148754,0.939241318442883,1.37873747398862,0.990282551858502,1.06174852619761,0.670482310850629,0.962279921904548,0.501136547546703,-2.12826320155068,1.38378758619769,2.34321416512655,1.14295474424782,1.00102252483816,1.05963869555508,1.58366413389153,0.591459909260807,1.16542370946443,1.14110868419985,0.91897783184275,-2.49760393663011,1.11880322451298,1.49525473363914,0.588543789207481,1.27159444169582,0.977025590014325,1.12613023766738,1.7285623260968,1.20152888346723,1.79419151905642,1.60724209937712,-2.02306937927879,0.785976513138606,1.24642463897747,1.28296529233231,1.78099844625091,1.26858791093449,0.734335231983809,0.865840414132545,1.13658954862568,1.60286663540533,1.43699289434341,-1.80196608097014,1.43050675520529,0.590209216480944,1.82438980541429,1.26025330693573,1.29888043738013,1.32911075225099,1.5753695247122,1.3163895441291,1.30841155349444,1.33531161076872,-0.487966055509707,1.65947303902774,1.39808981186811,1.13510543788496,1.01061036126689,1.78041110670424,0.826176181725981,1.7522113021192,0.67027140818778,1.28017257879648,1.36338050337492,0.0309093312653445,1.30333262559406,1.20426837806858,1.90520008818524,1.05204802331706,0.0173681746362486,-0.0700128549871861,-1.72029941958354,-0.191567662188011,-1.1772380535888,-0.586738533545695,-0.885911223895904,-0.511788334696784,-0.527113828643324,-1.30740409519278,-0.582006508726985,-0.280427159550692,-0.14125547264458,-2.74950806427673,-0.616653649817365,-0.524846518994099,-0.0570625928971616,-0.435412832570087,-0.624575055915726,-0.178045870820839,-0.808743709535794,-1.68223622495878,-1.08734977912374,-1.29133559018638,-1.67272275758494,-0.362650467901997,-1.00882772991147,0.391237102123908,0.669207926782113,1.02463760503672,0.648157299995014,0.999789409497583,0.303558069901222,0.535236343606586,0.366250584868805,-1.51706929237186,0.414409463234876,0.628493598230601,0.0183860992369045,0.346533625076402,0.605217586230605,0.618834420557505,1.21095792934929,0.486575768478889,0.417557108007224,0.404035338924675,-2.18180990147526,0.464712181733678,1.20572490480807,1.33709933033948,2.04469136702839,1.26812193853741,1.25865694904553,2.25398112593353,1.21840353746302,1.1544549154133,1.47938430858502,-0.83197351967849,0.982200216667354,0.949399419079297,1.2409201159535,0.730952148652757,0.938704294525246,1.5376847159738,0.95626876851737,0.381087411949132,2.5151948901553,-1.62409823215402,0.996531536833235,0.665230409417258,1.17524633184169,1.20791662820347,1.53389907166228,1.53394763343002,1.15553559335811,0.812372009090537,1.13998562479954,0.694809770289501,-2.10776659190978,0.894464885441553,1.04252834190414,1.03050462440791,0.979992323730008,1.7497380445391,1.31553524895607,0.829637692299259,0.598690029264382,0.868799594078102,0.892392360673268],"type":"scatter3d","mode":"markers","name":"Spider plant","marker":{"color":"rgba(0,100,0,1)","line":{"color":"rgba(0,100,0,1)"}},"textfont":{"color":"rgba(0,100,0,1)"},"error_y":{"color":"rgba(0,100,0,1)"},"error_x":{"color":"rgba(0,100,0,1)"},"line":{"color":"rgba(0,100,0,1)"},"frame":null},{"x":[-1.27525749890166,-2.10942330383572,-4.67185681187293,-4.47225753114979,-4.64929597199992,-4.50401278085308,-4.50487132548963,-4.74621520112112,-3.52587926833545,-4.2216186716826,-4.84876495348298,-4.18553709577914,-2.02294462593102,-5.06964128026343,-4.95724944455447,-4.13837642230607,-1.92242727345127,-2.64452738019758,-1.48873085480702,-1.33511371415916,-1.56088745966179,-2.24345876850904,-1.89690289412004,-1.24545802509561,-1.47451309764027,-2.64419921192524,-1.67542939161568,-1.44907803428057,-1.58836082325752,-1.39456549462061,-1.0208935012608,-1.24726598814084,-2.3401142645382,-1.22475174807714,-1.63046217638523,-3.78947615767021,-2.16981041618271,-3.75617938581363,-1.7335531834004,-2.38141205911772,-1.38325673605617,-0.947990330046354,-2.52347170286409,-2.34499707498565,-2.34866388234053,-1.27465558037128,-1.63501219742888,-0.141154230712805,-0.662936930901235,-1.44170615486484,-0.653100562899972,-1.33716156426837,-0.789191458176955,-2.57139404426338,-2.13118440094425,-2.29296148408956,-2.1720722129134,-2.00907813243292,-1.47260487208653,-1.97844767969471,-2.18579159431139,-2.88237950472867,-1.84903208228127,-2.12500702275568,-1.76777955027799,-2.37035852640712,-2.06963988174782,-2.22062378565454,-2.09097963786879,-2.42753600409245,-2.32724937822824,-2.72077641060876,-3.27097135653317,-2.67441532089232,-3.05372183611913,-2.30097988012665,-2.43624508974714,-2.93540995285057,-1.93661182567297,-0.998401151779328,-2.66433995716981,-1.00925346125521,-2.10745944704653,-2.68361347871973,-2.85596315738752,-3.31503902258387,-2.10767717697794,-3.95813895514754,-2.86050817603749,-1.64319550178853,-3.60678852984424,-4.05256864919354,-2.94628791138418,-3.79118277575815,-3.76988926832514,-2.5543971790169,-3.42415905935272,-2.91916937621457,-2.95114700610446,-1.81979883182236,-2.67833320673077,-3.15408103284764,-2.13444832034057,-2.81722082152117,-3.51584625005175,-3.38548481781129,-2.82697193885684,-2.60405219321264,-2.14926036318798,-2.52706117754808,-2.28050157172488,-2.21246117884705,-2.94672776802482,-4.08121645739098,-3.60213386173002,-3.74956560240651,-2.61626793340137,-4.18310326189272,-4.08879132486945,-3.75732794122884,-3.54413855150203,-1.64604529005836,-3.40104794780643,-4.12017793587869,-3.38670376845122,-3.74125601034831,-4.25125864376136,-4.04276606594386,-4.22349363727987,-2.6113880098117,-3.28894288408084,-3.58155579592149,-2.30863128189783,-3.59038353588728,-4.02085993308075,-4.61327415935499,-4.60216911465554,-4.71223307181713,-4.54881864362363,-4.70809820835332,-4.46154007700119,-4.67928832142483,-4.6172463225067],"y":[0.291732679229779,0.0131603902542931,0.0464517638682678,0.0978527330141753,0.00213544953112133,-0.0168027072402446,0.3019356671508,0.130060887887987,-0.468186670525274,-0.125217398637469,0.0954473747885686,-0.293076968528767,0.416747937059764,0.222626248269845,0.171465776583709,-0.278303500834733,-1.58749077556914,-0.930162522193298,-1.56793906359777,-1.33048515025164,-1.20847486307067,-0.772557373928078,-2.31942703989606,-1.14922258376593,-1.47558261705185,-1.2166040372781,-1.33371515347846,-0.5490809832745,-1.12182007166493,-1.32500064600533,-1.44136518311686,-1.4820856051272,-1.17001131633177,-0.0150405958132473,-0.905778917618721,-0.196412933437192,-1.59081114102414,-0.508298781056324,-0.792277416251965,-1.1954935627688,-1.1535977437671,-1.26250008794392,-1.68646710856069,-1.00597248537253,-0.0586924998033485,-1.47817807966961,-1.65651968431801,-0.9597929013994,-1.12231875157997,-1.00687104880156,-0.859588420947331,-1.07811294029304,-1.84794451651355,-0.995939150263234,0.534313933970628,-0.191469448193825,0.331796896233756,-0.0768542005705342,0.31441827319741,0.339217130021918,-0.346362986121025,-0.193066403834208,-0.153386529904516,0.134591420312927,0.174148558123205,0.48303731145568,0.181566858878885,0.147067820769453,0.921135625931352,0.0938791473070601,0.782376499915859,0.792429882176316,0.825530324250059,0.650914406169301,1.00051285359068,1.14255977022497,0.834670593324269,0.484438390367653,0.911313518912075,0.863659540303597,0.766842923000502,1.08090092136385,0.937145406092514,0.0299693493482937,0.686597254529279,0.212084043114196,0.808315987531621,0.454577045493903,0.801823304596867,-0.071831644450601,0.276482156872014,0.429357915607326,-0.599473089076696,0.505288408624082,0.461624260745776,0.580073758004105,0.236448287510744,0.782192407199785,1.00079487871425,-0.0119725925383974,0.898718336994794,1.16565373263285,0.859002973695615,0.219166174108111,1.08740811076701,0.316309313534299,1.14107984051169,0.84180834888334,0.911606851316306,0.627803117462028,0.0955029769030304,0.983279736421815,0.265978752586682,0.334197972438704,-0.0219936277561791,0.414893756786343,-0.170557734233429,0.330996808771277,0.296372592465919,0.444466824332289,0.0126283691828203,0.0149280535370708,-0.318225752815148,0.425452801797776,0.718938022979325,0.328517498973206,0.379324015451959,0.228031771506791,0.148816966740683,0.268316111569374,-0.308817528637191,0.260958026939366,-0.047107964047871,0.0730159241379649,0.503350326692303,0.242778545262554,0.339176587170486,0.0500667229364886,0.190066895149886,0.389460467983584,0.242146100303385,0.0904879018046976,0.170949036126221],"z":[0.107327741067604,0.488746119916871,0.0512214466956451,-0.144245437983973,-0.0108094458092017,-0.00269860732918858,0.213421454993391,0.0454490733399031,-0.161709686889024,-0.148733715739242,0.140504345128229,-0.0876243348766279,-0.207069924469125,0.197905049703747,0.192839690123044,-0.112556914118506,-0.590876879614083,0.00522198832158538,-0.588915702393396,-0.570505255078551,-0.429598908864325,-0.748648150605816,-0.572776975856435,-0.310701802672052,-0.541778380588985,-0.251229625093418,-0.388856305520482,-0.677978753593387,-0.278065434359748,-0.338483188863327,-0.262413840248535,-0.716566171068925,-0.188490074167678,0.388004621949518,-0.245621529468316,-0.20257921348834,-0.393069120340197,0.0278974021134692,-0.32537716523289,-0.468167718598963,-0.71160397311624,-0.33161182819025,-0.306738059881143,-0.240694360140775,0.279425517632404,-0.199637489842891,-0.310248726249321,-0.115735540351009,-0.238920031007388,-0.308831730222917,-0.0186288153554418,-0.322905050509614,-0.649617938407233,-0.388732502647266,-0.0617362977102296,0.253522075343888,-0.267618566302992,-0.293986967011985,-0.108538996779735,-0.335873710214382,0.0790966362936125,0.247214381349869,-0.221419499847413,-0.258351926842793,0.524586931630835,-0.0101254840689311,-0.221719291563869,0.0601022853211517,-0.0756978681167074,-0.190890281547336,0.0209648172157531,-0.00544794949825042,-0.0448885366133915,-0.18862161632201,0.277200290291578,0.175630049778189,-0.359336047332118,0.114680200674787,-0.0296564900740668,0.144063017275864,-0.246874291041452,0.248116193852963,-0.448850332232261,0.41746266073257,-0.0960812319979591,0.164023651561393,0.45401541156252,0.523604237682597,0.0408315401763842,0.14586241391186,0.332343826508227,0.305922421100018,2.78081102867989,0.401340655556931,0.430244042851828,0.596486557434444,0.196150946772212,0.101118586087262,-0.104322054136381,0.111114515735891,-0.146376426232894,0.0258813609425598,-0.330199875530249,0.706124178490766,0.0218326860166455,0.231547823285111,0.150950751253493,-0.152697003743835,-0.245319418222891,0.290509327920907,0.460780644714828,-0.106709819501834,0.148357468894104,0.338173683045264,0.138464772310113,0.398626101052663,1.54297551425067,0.212971035823484,0.320935790673839,0.33304320827986,0.0982429267290036,0.392758999422485,-0.0698246290385542,0.401044223578126,-0.142895337680243,0.584541128668779,0.318407982431263,0.190948035567532,0.175845470647512,0.481986031317758,0.627749175223968,0.365672981695431,0.187880461578008,0.270473578938651,-0.0250851890572964,0.228566539949227,0.249811476037324,0.0995933514306079,0.297331234553638,0.13904219191691,0.187921111802292,0.0709283745756845,0.226669069577338],"type":"scatter3d","mode":"markers","name":"Amaranth","marker":{"color":"rgba(0,0,0,1)","line":{"color":"rgba(0,0,0,1)"}},"textfont":{"color":"rgba(0,0,0,1)"},"error_y":{"color":"rgba(0,0,0,1)"},"error_x":{"color":"rgba(0,0,0,1)"},"line":{"color":"rgba(0,0,0,1)"},"frame":null},{"x":[1.3062302998127,3.52753155652097,-0.883795938609611,1.77210651603624,2.29508725639095,3.72453073958984,3.91108393698007,-0.276918803876743,1.61255305456169,2.86533564033035,0.513044301938467,14.4991208978929,0.316899819004328,-2.32228027959317,-1.17557706167507,-0.0501536090130383,-1.73275031553421,-1.95950437221565,-0.182224563608527,-0.00567995819924236,2.60256787441966,-3.76896975604224,-2.64575470947333,-3.12266939299338,-3.43074907121368,-3.229561620612,-2.90850688363849,-1.98002266920607,-3.19772234110101,-3.35645033762928,-3.29552979044346,2.15456645667187,-1.85733862762529,-2.27859803658035,-1.33849754164652,-2.62043777516802,-0.385547265696348,-1.13620931956107,-0.630294640358067,-2.93176309520362,-1.07070987314743,2.46860417403261,0.367154344260425,0.464084499799543,1.89752828458861,-2.42491014352205,-2.20041246074701,-3.35507347066609,-3.08881012797726,-3.46151775288561,-1.76666292850512,3.2451306883783,3.22762294465359,2.84487196818545,3.1590373259518,2.76639967133214,2.82790014707007,3.58222123082718,3.2714151428721,4.23117638598775,2.98039185194404,3.58444223464156,4.50997842312479,3.17870880585525,0.986081098776709,2.17637336617919,1.68865413884114,0.990182180322122,-0.743884850089812,1.40131638461427,0.501260729727619,-0.073392212356428,0.728658100049171,2.34620342247199,-0.381822614357392,-0.492141007580455,-1.24779109159232,2.1009602026782,1.06026070219019,1.83918415509931,1.74084932957184,0.332908123283729,0.463581895089175,0.706758085209417,1.74308414053146,3.02268577361658,0.41207189643348,1.66801253450873,0.287169572970528,2.31684956081676,0.105790708774956,0.240382388087623,0.108069792896047,1.51943017789957,0.117312122050981,1.46793311689083,-0.221929218402451,-0.828078694926685,-0.421267502929331,-1.59446803940174,-0.410851921182657,2.38535982723622,0.217970547122863,0.931595838703133,0.579552551735306,1.01368983264958,1.60404534855596,-0.940686895674294,0.779421925510448,0.251643491019502,-1.00975851019688,-0.576773139827185,-0.737438923646399,-1.29146833644819,-0.319183302857891,-1.1499692992852,-0.0639217127678101,8.71319626931683,-0.0319443650995513,0.324478559945242,0.298165342214687,-0.734024239354909,-0.0749505550576682,-1.87156517613392,-1.41195415832851,-2.03322476654331,-0.709694391354092,0.53833848493063,2.17036265417115,1.70142277113968,2.22263632316384,0.584341023035085,0.211943157781057,-0.754192880751035,-2.01552680531399,3.09507299422301,0.0028165444795499,1.52732150324115,0.671015276282844],"y":[3.4118070855096,3.66107039698236,3.12966357711532,3.06889970636404,3.23743689979365,3.86330953615243,4.30422560462317,-2.61473847460878,-4.29932880193288,3.4695094616629,-3.29573854267225,-15.2908654950791,-3.47830563132228,-0.0517790624308285,-1.61978593135707,-2.7327871867394,-1.1195450987857,-1.35312671667276,-0.730056523945467,-1.24144120453303,3.54620196454233,0.936845992172153,-0.599717187529671,0.795849387097063,0.846026432701549,0.814518896770273,0.104333814225758,0.285179786244794,0.983977934116706,0.677601557218189,0.918045783733569,2.27853675624355,0.417229814711529,0.729213324963302,-1.40941063570622,0.694082188072132,-1.49723306955174,0.0615479290624719,-0.86143113482636,0.671166928133811,-0.320802530145593,2.0371841982813,-0.202602610039551,-0.563409510773121,-1.93559430320363,1.07424100601294,0.634964590602202,0.535560676782338,0.250452721923656,0.688187014221951,-0.0926257759261068,3.56321228214781,2.9600167175256,3.12790142965078,2.44708510794976,2.34372689189831,3.01925938817012,2.8287191931046,3.42529955641202,2.42757732043037,2.98099630886043,3.44244677524889,2.09696830512771,1.98332956938651,2.20976663469921,2.2774101885253,2.88861951694705,3.20517361196581,2.6500556332566,2.32619973204761,2.03636583455614,2.49785786665738,2.76624215332685,3.14850143863972,2.3912169385667,2.33291847759861,1.86345746997857,3.45841198913696,3.94306682736665,3.76101734279179,3.58314628573509,3.07227069662586,2.7663266039121,2.95784679660451,2.79678158858971,3.37968259233405,1.61843774678885,3.28888545596192,1.79917570434906,3.29438885470635,3.0366252854689,2.22473772291208,2.02563823645833,2.97273822472377,2.46697152938725,2.1339997149207,1.82045563425563,1.78543846763497,1.64967952514367,1.80260510083339,1.86505093826954,2.95942862429099,2.2387967502941,2.28390476568353,2.67793349890157,2.88054045868381,3.34263066964276,1.79351097090722,2.46291118509814,2.14751516469879,2.00549207889857,1.6656552536174,1.81076575045314,1.95148560085537,2.40890570895982,2.06571386057553,2.46856161472032,5.52602921840381,1.90824126178272,2.08468598723866,2.49687511011734,2.07766986416635,1.22076382701552,1.70703837386006,1.40045163202797,0.710117913878633,1.79706041867037,2.38022870771317,3.43082282924518,2.2339669956343,2.92760594212617,2.80098793777592,2.24272198051379,1.74271481133439,1.37717150559168,4.56942818285259,3.89394191167146,4.12312035166824,3.2816824767775],"z":[-2.54984007937412,-2.90710831309679,-2.03481673131505,-1.94312929449478,-1.43350462016741,-2.22157588486608,-2.55971711838778,-2.57298565141717,-3.69846370208998,-2.45200473635048,-2.56376136613687,-13.1282544518859,-2.82718620227757,-0.338334986799473,-1.58913173516522,-2.43900024678809,-1.35890825738346,-1.27446797150338,-2.74434736532907,-2.38092364680736,-2.79982641532284,-1.30652928778986,-0.892390610595056,-1.74249954735415,-1.46444091753737,-1.05225674112251,-0.105112586504197,-0.918173878080694,-1.18646082234693,-1.1545906613614,-1.26762195159188,-1.25620113269544,-1.13788257672229,-1.37085697010966,-1.98813323565733,-1.19506953066457,-2.38485953538589,-2.65332838680198,-2.25926058415797,-0.762448078212298,-3.14575304345782,-1.68613986031484,-3.40023702394206,-3.34273010991908,-5.30594234132434,-1.73218434342093,-1.17114068763605,-1.02212388868184,0.00301148081615646,-0.913977298522282,-2.207263717157,-2.44805355580153,-2.711824698089,-2.60222951695771,-2.29397260954558,-1.19541777696934,-2.59345972928904,-1.58582201438698,-1.82219153292622,-1.95351164035282,-1.74681748375304,-2.1914050985233,-2.29972068627082,-1.17237762208578,-1.06441253511296,-1.30521880942444,-1.52150019352047,-1.19925654914601,-0.857157093111053,-1.35566255262913,-1.22334251358553,-1.51718195231655,-1.28999863539378,-2.030121764877,-1.31267138644219,-1.10033314643555,-1.11205779701152,-1.07195536378125,-1.64944677964084,-1.05861281270067,-1.91427525044126,-1.50588309645482,-0.0602993491203468,-0.843193218171618,-2.02425586393983,-1.56515840941243,-1.2416481859204,-2.04814574597812,-1.10034330781901,-1.54332606043706,-0.634436833048449,-1.35070394579127,-1.30247872847678,-1.25644926053174,-0.580751448444823,-1.07550283101497,-1.17821204521747,-1.1136937586839,-0.70338342888092,-0.601811300209014,-1.22719190342592,-2.40667473337612,-1.17855861045651,-0.882320963656529,-1.23369484694961,-1.69155547000152,-1.89616745349431,-0.607565029741,-0.757385486751129,-1.20966361355564,-0.818574724674161,0.161019965329299,-0.877881205342248,-0.781824768747799,-1.19851076209436,-0.509672825722842,-0.637862271176173,-4.1613480446357,-0.862668423286981,0.927373980451233,-1.39218537974221,-0.736357104553072,-0.593390194346911,-0.555743159746686,-0.38156190998573,0.0756191878009598,-0.187847873263612,-0.255523517266532,-2.23786301938064,1.46402697246289,0.595599875279438,-0.340198886447789,-0.583168415900026,-0.404010807788201,-0.307965556715626,-3.24487556235786,-1.98118670319492,-3.83346766404634,-1.87903538789462],"type":"scatter3d","mode":"markers","name":"Nightshade","marker":{"color":"rgba(178,34,34,1)","line":{"color":"rgba(178,34,34,1)"}},"textfont":{"color":"rgba(178,34,34,1)"},"error_y":{"color":"rgba(178,34,34,1)"},"error_x":{"color":"rgba(178,34,34,1)"},"line":{"color":"rgba(178,34,34,1)"},"frame":null}],"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.2,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
+<p>Based on 70% ellipse, the four categories are mostly separated; recall here that only 38 + 14 = 42% of total data considered. When higher dimension included, the four categories are likely to be separated in a more complete sense. Here we’re assuming a joint normal distribution by drawing the ellipse containing 70% data, but it’s inaccurate. Though mustard appears pretty normally distributed,other groups not the case. Such as in nightshade and amaranth, its own clusters exist.</p>
+</div>
+<div id="pca-interpretation" class="section level2">
+<h2><span class="header-section-number">6.3</span> PCA interpretation</h2>
+<div id="coefficients-of-linear-combination" class="section level3">
+<h3><span class="header-section-number">6.3.1</span> Coefficients of linear combination</h3>
+<pre class="r"><code># Check principal component interpretation: the 
+# with ComplexHeatmap
+eigen.vectors[, 1:2] %&gt;% 
+  Heatmap(cluster_columns = F, cluster_rows = F,
+          heatmap_legend_param = list(color_bar = &quot;continuous&quot;, legend_height = unit(8, &quot;cm&quot;)))</code></pre>
+<p><img src="AIV_profile_analysis_files/figure-html/unnamed-chunk-22-1.png" width="960" /></p>
+<pre class="r"><code># with ggplot2 for later more convenient plot combination
+df.eigen.vectors = eigen.vectors[, 1:2] %&gt;% as_tibble() %&gt;%
+  mutate(compounds = eigen.vectors %&gt;% rownames()) %&gt;% 
+  rename(PC1 = V1, PC2 = V2) 
+
+plt.eig.vector = df.eigen.vectors %&gt;%
+  gather(-compounds, key = PC, value = `eigenvector elements (coefficient)`) %&gt;%
+  ggplot(aes(x = compounds, y = PC)) +
+  geom_tile(aes(fill = `eigenvector elements (coefficient)`)) +
+  scale_fill_gradient2(midpoint = 0, high = &quot;firebrick&quot;, low = &quot;skyblue&quot;, name = &quot;&quot;) + 
+  coord_flip() + theme(legend.position = &quot;top&quot;)
+# plt.eig.vector</code></pre>
+</div>
+<div id="loadings" class="section level3">
+<h3><span class="header-section-number">6.3.2</span> Loadings</h3>
+<pre class="r"><code>mat.PC.var.correlation = diag(content.scaled.covarianceMatrix) %&gt;% 
+  diag() %*% # for standardized input matrix, this diagnol matrix is essentail identical matrix
+  eigen.vectors %*% 
+  diag(eigen.values %&gt;% sqrt())
+# convert to tibble format. This is the correlation matrix of amino acids with PC&#39;s!
+df.PC.var.correlation = mat.PC.var.correlation[, 1:2] %&gt;% 
+  as_tibble() %&gt;%
+  mutate(compounds = colnames(mat.content.scaled)) %&gt;%
+  rename(CorrelationWithPC1 = V1, CorrelationWithPC2 = V2) 
+df.PC.var.correlation</code></pre>
+<pre><code>## # A tibble: 21 x 3
+##    CorrelationWithPC1 CorrelationWithPC2 compounds    
+##                 &lt;dbl&gt;              &lt;dbl&gt; &lt;chr&gt;        
+##  1             0.585             -0.642  leucine      
+##  2             0.840             -0.314  isoleucine   
+##  3             0.719              0.535  tryptophan   
+##  4             0.908              0.277  phenylalanine
+##  5             0.961             -0.0655 valine       
+##  6             0.361             -0.497  methionine   
+##  7             0.563              0.178  tyrosine     
+##  8             0.595              0.234  proline      
+##  9             0.269             -0.562  alanine      
+## 10            -0.0490             0.576  cysteine     
+## # … with 11 more rows</code></pre>
+<pre class="r"><code>plt.loadings = 
+  df.PC.var.correlation %&gt;% 
+  ggplot(aes(x = CorrelationWithPC1, y = CorrelationWithPC2, color = compounds)) +
+  geom_point() + geom_text_repel(aes(label = compounds)) +
+  geom_segment(aes(x = 0, xend = 1, y = 0, yend = 0), 
+               color = &quot;black&quot;, size  = .1) +
+  geom_segment(aes(x = 0, xend = 0, y = -.6, yend = 1), 
+               color = &quot;black&quot;, size  = .1) +
+  geom_segment(aes(x = 0, y = 0, xend = CorrelationWithPC1, yend = CorrelationWithPC2), 
+               size = .2) +
+  theme(legend.position = &quot;&quot;) + 
+  scale_color_manual(values = colorRampPalette( brewer.pal(8, &quot;Dark2&quot;))(21) %&gt;% sample()) 
+# plt.loadings</code></pre>
+</div>
+<div id="coefficients-loadings" class="section level3">
+<h3><span class="header-section-number">6.3.3</span> Coefficients + loadings</h3>
+<pre class="r"><code>plot_grid(plt.loadings, plt.eig.vector, 
+          nrow = 1, align = &quot;h&quot;, rel_widths = c(2, 1, .7), labels = &quot;AUTO&quot;)</code></pre>
+<p><img src="AIV_profile_analysis_files/figure-html/unnamed-chunk-25-1.png" width="960" /></p>
+<pre class="r"><code># checking PC1 element (coefficients) vs. (variable correlation with PC1)
+df.PC.var.correlation %&gt;% left_join(df.eigen.vectors, by = &quot;compounds&quot;) %&gt;%
+  ggplot(aes(x = CorrelationWithPC1, PC1)) + 
+  geom_text_repel(aes(label = compounds))</code></pre>
+<p><img src="AIV_profile_analysis_files/figure-html/unnamed-chunk-26-1.png" width="960" /></p>
+<p>When the input data matrix is standardized, the correlation between PC’s and the original variable is exactly linear to the corresponding eigenvector elements (the coefficients). Recall the correlation = coefficient * sqrt(eigenvalue lambda) / standard deviation of the variable. When standardized, the correlation is a fixed multiple (by times of sqrt(eigenvalue)) of the coefficient.</p>
+<p>The original content values are standardized into z-scores prior to PCA to allow all amino acids to play equal role in classificaiton without biased by their varied content. The First PC is a weighted sum of the amino acid standardized content. Such weight appears to be loosely correlated with the statistic F value of univariate ANOVA of amino acids content, i.e., if an amino acid presents higher difference between the four categories, then this amino acids tends to contributes more to the computation of the first principle component, though such association remains moderate week (R2 = 0.3, p = 0.02). In a prior similar study, PC1 was found strongly correlated with the phytochemical content level when data is not normalized (see labmate Bernie’s spider plant phytochemistry paper supplementary material).</p>
+<p>Amaranth and mustard are nicely differentiated along the PC1 direction, and such horizontal separation could be largely attributed to amino acids with larger correlations with PC1, such as valines, phenylalaine and histidine, which are more abundant in mustard than in amaranth.</p>
+<p>While for nightshade and spiderplant, the differentiation mostly occurs vertically along the PC2 direction, associated largely with amino acids that present extreme correlations with PC2, such as asparagine, cystein and tryptophan (loadings &gt; 0.5) which are more abundant in nightshade, and leucine, glycine, lysine and alanine (loadings &lt; -0.5) which are more enriched in spiderplant. The loading pattern shows amino acids’ various contribution to how the four categories are separated in the PC1 and PC2 directions, and reflects the content comparison as shown in the prior univariate plots.</p>
+<p>While the loadings are important tool to shown the separation mechanism, check of the corresponding eigenvector elements could also be beneficial, since such elements directly constitute the coefficient of PC construction, and shows the contribution of each amino acid to PC computation in context of all other amino acids, a somewhat more holistic picture than loading analysis. In our case, however, the coefficients are merely a fixed multiple (by the square root of corresponindg ei) of the loadings because of the content data standardization pior to PCA. Yet still for purpose of completeness and a somewhat more straightforwrd interpretation of PC composition, we present the coefficients in this markdown report.</p>
+<p>For all four categories, majority of samples are differentiated, as shown by the ellipse containing 70 % of data for each category. Despite some noticable overlap, it is of importance to note that the first two PC’s constitute only ~52% of total data variability. When visualized at three dimensions, as shown in the interactive plot, a much improved separation is observed. In fact, when PC’s at higher dimension are considered, a more clear-cut separation is likely to happen. This clearly demonstrates a strong genetic influence upon the amino acid profile, which could be utilized for classification purpose.</p>
+</div>
+<div id="coefficient-interpretation" class="section level3">
+<h3><span class="header-section-number">6.3.4</span> Coefficient interpretation</h3>
+<pre class="r"><code># Explore the 1st PC coefficent weight / correlation with marginal data  variability (by ANOVA) ------
+df.ANOVA = data.frame(); df.ANOVA</code></pre>
+<pre><code>## data frame with 0 columns and 0 rows</code></pre>
+<pre class="r"><code>for (a in unique.compounds) {
+  #perform one-way anova for each compounds (in this case equivalent to marginal MNOVA)
+  ANOVA.model = aov(content~Category, data = df.AIV.tidy %&gt;% filter(compounds == a) ) 
+  # extract F value for each compund
+  Fvalue = (ANOVA.model %&gt;% tidy() %&gt;% filter(term == &quot;Category&quot;)) %&gt;% 
+    dplyr::select(statistic) %&gt;% rename (Fvalue = statistic)
+  df.ANOVA.update = cbind(data.frame(compounds = a), Fvalue = Fvalue )
+  df.ANOVA = rbind(df.ANOVA, df.ANOVA.update)
+}
+df.ANOVA</code></pre>
+<pre><code>##         compounds     Fvalue
+## 1         leucine  30.524217
+## 2      isoleucine  91.096075
+## 3      tryptophan  79.395893
+## 4   phenylalanine 106.058105
+## 5          valine 183.221292
+## 6      methionine   5.292197
+## 7        tyrosine 149.665961
+## 8         proline 319.709166
+## 9         alanine  68.256371
+## 10       cysteine 140.927173
+## 11        glycine  89.796563
+## 12  glutamic acid  84.412520
+## 13      threonine 324.567971
+## 14 hydroxyproline 129.314983
+## 15      glutamine  33.619717
+## 16  aspartic acid  45.273086
+## 17         serine 112.780202
+## 18     asparagine 104.488240
+## 19       arginine  48.215793
+## 20      histidine 145.313773
+## 21         lysine  46.002235</code></pre>
+<pre class="r"><code># combine PC and ANOVA stats
+df.ANOVA.PC = df.ANOVA %&gt;% left_join(df.PC.var.correlation, by = &quot;compounds&quot;) %&gt;%
+  left_join(df.eigen.vectors, by = &quot;compounds&quot;) 
+
+# plot association of PC with ANOVA
+df.ANOVA.PC %&gt;%
+  ggplot(aes(x = Fvalue, y = CorrelationWithPC1)) + geom_point() +
+  geom_smooth(method = &quot;lm&quot;, se = F, 
+              data = df.ANOVA.PC %&gt;% filter(Fvalue&lt;300 &amp; CorrelationWithPC1 &gt;0)) +
+  geom_text_repel(aes(label = compounds))</code></pre>
+<p><img src="AIV_profile_analysis_files/figure-html/unnamed-chunk-27-1.png" width="960" /></p>
+<pre class="r"><code># checking linear model
+lm(data = df.ANOVA.PC %&gt;% 
+     filter(!compounds %in%c(&quot;cysteine&quot;, &quot;proline&quot;, &quot;threonine&quot;)), # remove some outliers
+   formula = CorrelationWithPC1 ~ Fvalue) %&gt;% summary()</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = CorrelationWithPC1 ~ Fvalue, data = df.ANOVA.PC %&gt;% 
+##     filter(!compounds %in% c(&quot;cysteine&quot;, &quot;proline&quot;, &quot;threonine&quot;)))
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -0.31073 -0.09406  0.04564  0.11668  0.24098 
+## 
+## Coefficients:
+##              Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept) 0.4215105  0.0870521   4.842  0.00018 ***
+## Fvalue      0.0023113  0.0008912   2.593  0.01960 *  
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 0.1732 on 16 degrees of freedom
+## Multiple R-squared:  0.2959, Adjusted R-squared:  0.2519 
+## F-statistic: 6.725 on 1 and 16 DF,  p-value: 0.0196</code></pre>
+</div>
+</div>
+</div>
+<div id="pca-of-other-factors" class="section level1">
+<h1><span class="header-section-number">7</span> PCA of other factors</h1>
+<div id="cultivation-sites" class="section level2">
+<h2><span class="header-section-number">7.1</span> Cultivation sites</h2>
+<pre class="r"><code>plt.PCA.site.1.2 = 
+  df.PC %&gt;% ggplot(aes(x = PC1, y = PC2, color = Site)) +
+  geom_point(aes(shape = as.factor(Year))) +
+  stat_ellipse(level = .7) +
+  facet_wrap(~Category, nrow = 2, scales = &quot;free_y&quot;) +
+  scale_x_continuous(limits = c(-6, 7)) +
+  # scale_y_continuous(limits = c(-5, 5)) +
+  theme(legend.position = c(.9, .75)) +
+  scale_color_manual(values = color.site)
+plt.PCA.site.1.2</code></pre>
+<p><img src="AIV_profile_analysis_files/figure-html/unnamed-chunk-28-1.png" width="960" /></p>
+<pre class="r"><code>plt.PCA.site.1.3 = 
+  df.PC %&gt;% ggplot(aes(x = PC1, y = PC3, color = Site)) +
+  geom_point() +
+  stat_ellipse(level = .7) +
+  facet_wrap(~Category, nrow = 2) +
+  scale_x_continuous(limits = c(-6, 7)) +
+  scale_y_continuous(limits = c(-5, 5)) +
+  theme(legend.position = c(.9, .85)) +
+  scale_color_manual(values = color.site)
+plt.PCA.site.1.3</code></pre>
+<p><img src="AIV_profile_analysis_files/figure-html/unnamed-chunk-28-2.png" width="960" /></p>
+<pre class="r"><code>plt.PCA.site.2.3 = 
+  df.PC %&gt;% ggplot(aes(x = PC2, y = PC3, color = Site)) +
+  geom_point() +
+  stat_ellipse(level = .7) +
+  facet_wrap(~Category, nrow = 2) +
+  scale_x_continuous(limits = c(-5, 5)) +
+  scale_y_continuous(limits = c(-4, 3)) +
+  theme(legend.position = c(.9, .85)) +
+  scale_color_manual(values = color.site)
+plt.PCA.site.2.3</code></pre>
+<p><img src="AIV_profile_analysis_files/figure-html/unnamed-chunk-28-3.png" width="960" /></p>
+<p>Turbo and Tz showed clear environemntal impact upon amino acid profile. Turbo consistenly showed higher PC2 composition than TZ, showing that plants cultivated in Turbo has more amino acis that have a strong correlation with PC2. PC1, however, appears to be less important than PC2 in distinguishing the cultivation sites. For spiderplant, those cultivated in snyder farm has more content in amino acids with strong correlation with PC2.</p>
+<p>Different harvest years is adding more diversity to the profie change, but generally did not alter the grouping based on cultivation sites. That is, the influence is first dominated by cagetory, then cultivation site, then differrent years.</p>
+<div id="species-amaranth" class="section level3">
+<h3><span class="header-section-number">7.1.1</span> Species (Amaranth)</h3>
+<pre class="r"><code># Amaranth species 
+df.PC %&gt;% 
+  filter(Category == &quot;Amaranth&quot;) %&gt;%
+  filter(! Species %in% c(&quot;Amaranthus sp.&quot;, &quot;-&quot; ) ) %&gt;%
+  ggplot(aes(x = PC1, y = PC2, color = Species)) +
+  geom_point(size = 4, aes(shape = Site)) +
+  #stat_ellipse(level = .7) +
+  facet_wrap(~Category, nrow = 2)</code></pre>
+<p><img src="AIV_profile_analysis_files/figure-html/unnamed-chunk-29-1.png" width="960" /></p>
+</div>
+</div>
+<div id="cultivars" class="section level2">
+<h2><span class="header-section-number">7.2</span> Cultivars</h2>
+<pre class="r"><code>df.PC %&gt;% ggplot(aes(x = PC1, y = PC2, color = Cultivar)) +
+  geom_point() +
+  stat_ellipse(level = .7) +
+  facet_wrap(~Category, nrow = 2) +
+  scale_x_continuous(limits = c(-6, 7)) +
+  scale_y_continuous(limits = c(-5, 5)) +
+  theme(legend.position = &quot;none&quot;)</code></pre>
+<p><img src="AIV_profile_analysis_files/figure-html/unnamed-chunk-30-1.png" width="960" /></p>
+<p>The influence of cultivar appears to be rather inconsistent and overshadowed by various environmental factors, and appears great difficulty in forming their own clusters. Thus, when do machine learning, sample is stratified based on category-cultivation sites, while ignoring plant sub-classification below the level of category.</p>
+</div>
+</div>
+<div id="linear-discriminant-analysis-lda" class="section level1">
+<h1><span class="header-section-number">8</span> Linear discriminant analysis (LDA)</h1>
+<pre class="r"><code># tidy up data format
+df.content.scaled = mat.content.scaled %&gt;% as_tibble() %&gt;%
+  mutate(Category = rownames(mat.content.scaled)) 
+# change column order
+df.content.scaled= df.content.scaled%&gt;% dplyr::select(ncol(df.content.scaled), 2: ncol(df.content.scaled) - 1)
+
+mdl.LDA = lda(Category ~., data = df.content.scaled)
+fitted.LDA = predict(mdl.LDA)
+
+# prediction result
+df.LDA = fitted.LDA$x %&gt;% as_tibble() %&gt;%
+  mutate(fitted = fitted.LDA$class, actual = df.content.scaled$Category,
+         status = actual == fitted)</code></pre>
+<pre class="r"><code># plotting
+plt.LDA.actual.1.2 = df.LDA %&gt;% 
+  ggplot(aes(x = LD1, y = LD2, color = actual)) + 
+  geom_point() +
+  scale_color_manual(values = color.category, &quot; &quot;) +
+  scale_x_continuous(limits = c(-7, 7)) + 
+  scale_y_continuous(limits = c(-6, 6)) +
+  stat_ellipse(level = .95, linetype = &quot;dashed&quot;) +
+  theme(legend.position = c(.15, .8))
+# plt.LDA.actual.1.2</code></pre>
+<pre class="r"><code>plt.LDA.fitted.1.2 = df.LDA %&gt;% 
+  ggplot(aes(x = LD1, y = LD2, color = fitted)) + 
+  geom_point() +
+  scale_color_manual(values = color.category, &quot; &quot;) +
+  scale_x_continuous(limits = c(-7, 7)) + 
+  scale_y_continuous(limits = c(-6, 6)) +
+  stat_ellipse(level = .95, linetype = &quot;dashed&quot;) +
+  theme(legend.position = c(.15, .8)) +
+  
+  # highlight false points
+  geom_point(data = df.LDA %&gt;% filter(status == FALSE),
+             shape = 21, fill = &quot;white&quot;,
+             size = 2.5, stroke = 1.5)
+# plt.LDA.fitted.1.2</code></pre>
+<pre class="r"><code>grid.arrange(plt.LDA.actual.1.2 + labs(title = &quot;Actual plot&quot;), 
+             plt.LDA.fitted.1.2 + labs(title = &quot;Predicted plot&quot;), 
+             nrow = 1)</code></pre>
+<p><img src="AIV_profile_analysis_files/figure-html/unnamed-chunk-34-1.png" width="960" /></p>
+<p><strong>In plot on the right, the incorrect predictions are marked as empty circles. </strong></p>
+<pre class="r"><code>df.LDA %&gt;% dplyr::select(actual, fitted) %&gt;% table()</code></pre>
+<pre><code>##               fitted
+## actual         Amaranth Mustard Nightshade Spider plant
+##   Amaranth          143       0          0            0
+##   Mustard             1      86          0            3
+##   Nightshade         11       0        128            0
+##   Spider plant        5       1          0          166</code></pre>
+<pre class="r"><code>cat(&quot;LDA&#39;s predicted classification accuracy:&quot;, 
+    100 - ((! (df.LDA$status ) ) %&gt;% sum() / nrow(df.LDA) * 100) %&gt;% round(1), &quot;%.
+(Training set  = testing set)&quot;)</code></pre>
+<pre><code>## LDA&#39;s predicted classification accuracy: 96.1 %.
+## (Training set  = testing set)</code></pre>
+</div>
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3,h4",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = false;
+    options.smoothScroll = false;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
