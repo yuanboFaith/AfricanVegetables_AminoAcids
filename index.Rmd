@@ -4,19 +4,21 @@ output: html_document
 
 <br/><br/>
 
-# **Free Amino Acids in African Indigenous Vegetables**
+# **Free Amino Acids in African Indigenous Vegetables (AIVs)**
 
 <br/><br/>
 
-##### This website presents the R script used in two parts of this work on the analysis of free amino acids in African indigenous vetetables (AIVs):   
+##### This website presents the R script constructed in this work, for the four following parts:   
 
 <br/><br/>    
 
 ##### Part I. UHPLC HILIC - MS/MS method development and validation
-
  
+##### Part II. Analysis of AIVs free amino acids with exploratory data analysis
 
-##### Part II. Analysis of AIVs free amino acids and machine learning-based classification
+##### Part III. AIV classification prediction based on machine learning (ML) methods
+
+##### Part IV. ML-baed interactive prediction using R-Shiny.
 
 
 <br/><br/>    
