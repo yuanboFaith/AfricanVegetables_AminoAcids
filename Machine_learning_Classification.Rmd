@@ -1,0 +1,501 @@
+---
+title: "AIV classification with machine learning"
+author: "Bo Yuan"
+date: "12/14/2019"
+output: 
+  html_document:
+    toc: true
+    number_sections: true
+    toc_depth: 4
+    toc_float: 
+      collapsed: false
+      smooth_scroll: false
+---
+
+
+**Object naming**:
+
+df.XXX: a data.frame or tibble object; e.g., df.all.data
+df.modelname...: a data frame or tibble containing tidied results from a model prediction vs actual
+mat.XXX: a matrix object; e.g., mat.content
+pltXXX: a plot object; e.g., plt.univariate.boxplot.dot
+mdl.trained.XXXX: model from training set; e.g., mdl.trained.LDA
+mdl.fitted.XXX: object with fitted results output from a trained model; e.g., mdl.fitted.LDA
+mdl.XXX: a model object; e.g., mdl.LDA
+fitted.XXX: predicted class, e.g. fitted.logistic.elasticNet
+cf.XXX: confusion table; e.g., cf.counts.LDA
+func.XXX: defined functions; e.g., func.boxplot.Site()
+
+
+# Packages 
+```{r, message=F, warning=F}
+# functional packages
+library(readxl)
+
+# Machine learning packages
+library(MASS)
+library(glmnet)
+library(caret)
+library(rpart.plot) # for classification tree plot
+library(randomForest)
+library(e1071)
+
+# The core package collection
+# load last, so as the key functions are not masked by others; but instead masking others if any
+library(tidyverse)
+```
+
+# Seed
+```{r, message=F, warning=F}
+set.seed(2020)
+```
+
+
+# Data 
+```{r, message=F, warning=F}
+# Read amino acid content dataset
+path = "/Users/Boyuan/Desktop/My publication/7th. HILIC amino acid & PCA/Publish-ready files/AIV free amino acids content.xlsx"
+
+df.content= read_excel(path , sheet = "content in AIV (mg.100g DW-1)") 
+
+# select needed columns and tidy up
+df.content = df.content %>% select(Name, Category, Site) %>%
+  mutate(strata.group = paste(Category, Site, sep = "_")) %>%
+  cbind(df.content %>% select(23:ncol(df.content))) %>%
+  as_tibble()
+
+# categories
+unique.categories = df.content$Category %>% unique()
+```
+
+
+# Define functions
+
+## Train-test split
+
+### Statified sampling
+
+```{r, message=F, warning=F}
+# strata group
+unique.categories.site = df.content$strata.group %>% unique()
+
+# Define function doing stratified sampling based on category-site combination 
+func.stratifiedSampling = function(trainingRatio = 0.7){
+  index.train = c()
+  
+  for (a in unique.categories.site){
+    df.content.i = df.content %>% filter(strata.group == a)
+    index.train.i = sample(df.content.i$Name, size = (trainingRatio * nrow(df.content.i)) %>% floor())
+    index.train = c(index.train, index.train.i) 
+  }
+  
+  df.train = df.content %>% filter(Name %in% index.train)
+  df.test = df.content %>% filter(! Name %in% index.train)
+  list.learn = list(df.train, df.test)
+  return(list.learn)
+}
+
+# demo
+# df.learn = func.stratifiedSampling(trainingRatio = .5)
+# In practice, the trainingRatio is manuall changed by citing arguments from higher level function (see below)
+# the split ratio in convenient practice should never be changed in this sampling function
+```
+
+
+### Normalization 
+```{r, message=F, warning=F}
+# input list: 1st: training set; 2nd, test set; i.e., the output of func.stratifiedSampling
+func.normalize.trainTest = function(list) { 
+  
+  mat.train = list[[1]] %>% dplyr::select(-c(Name, Category, Site, strata.group, `Data File`)) %>% as.matrix()
+  mat.test = list[[2]] %>% dplyr::select(-c(Name, Category, Site, strata.group, `Data File`)) %>% as.matrix()
+  
+  # mean vector computed from training set (as single column matrix)
+  meanVector.train = apply(mat.train, 2, mean) %>% as.matrix()
+  
+  # diagonol matrix, with standard deviation inverse
+  mat.inverse.sd.diaganol = apply(mat.train, 2, sd)  %>% diag() %>% solve()
+  # Reserve column names
+  colnames(mat.inverse.sd.diaganol) = colnames(mat.train) 
+  
+  # ones vector, as single column matrix, length = # observation units of TRAINING set
+  vector.ones.train = rep(1, nrow(mat.train)) %>% as.matrix()
+  
+  # Compute normalized training dataset 
+  mat.train.scaled = (mat.train - vector.ones.train %*% t(meanVector.train)) %*% mat.inverse.sd.diaganol
+  
+  
+  # Use built-in scale function to double check computation
+  # Used for trouble shooting purpose; comment out to keep console cleanness when running code
+  
+  # mat.train.scaled.test = mat.train %>% scale(center = T, scale = T)
+  
+  # if ((mat.train.scaled - mat.train.scaled.test ) %>% sum() %>% round(10) == 0){
+  #   cat("Computation is correct!") 
+  # } else{
+  #   cat("Computation may be incorrect. Further examination is required!")
+  # }
+  
+  
+  # Normalize test dataset using training-set mean vector and standard deviation diagonal matrix
+  # ones vector, as single column matrix, length = # observation units of TESTING set 
+  vector.ones.test = rep(1, nrow(mat.test)) %>% as.matrix()
+  mat.test.scaled = (mat.test - vector.ones.test %*% t(meanVector.train)) %*% mat.inverse.sd.diaganol
+  
+  # Complete two matrices with category labels, and convert to tibble
+  df.train.scaled = cbind(data.frame(Category = list[[1]]$Category), mat.train.scaled) %>% as_tibble()
+  df.test.scaled  = cbind(data.frame(Category = list[[2]]$Category), mat.test.scaled) %>% as_tibble()
+  return(list(df.train.scaled, df.test.scaled))
+}
+
+# demo
+# func.stratifiedSampling(trainingRatio = .6) %>% func.normalize.trainTest()
+```
+
+### Chaining prior two functions
+
+```{r, message=F, warning=F}
+# Define a third function: chaining the prior two functions together
+# 1) stratified sampling into training and test set
+# 2) normalize training set, and normalize test set based on training mean vector and standard deviation 
+func.strata.Norm.trainTest = function(trainingRatio = 0.7, scaleData = T){
+  if(scaleData == T){
+    func.stratifiedSampling(trainingRatio = trainingRatio) %>%
+      func.normalize.trainTest() %>% return()
+  } else {
+    func.stratifiedSampling(trainingRatio = trainingRatio) %>% return()
+  }
+  
+}
+
+# demo: 1> func.strata.Norm.trainTest(); # default 0.7 train-test split ratio
+#       2> func.strata.Norm.trainTest(trainingRatio = .5) # manually change train-test split ratio
+```
+
+
+
+
+## Prediction table tidy up
+
+### Confusion matrix
+
+```{r, message=F, warning=F}
+# Define two function: tidy up confusion tables (contingency table and stats) 
+# Divide suffle times and tidy up as data frame
+
+# 1) For contigency table
+func.tidy.cf.contigencyTable = function(inputTable, ModelName){
+  inputTable %>% as.data.frame() %>% 
+    spread(key = Reference, value = Freq) %>% 
+    mutate(Model = ModelName) %>%
+    return()
+}
+
+# demo: cf.counts.LDA %>% func.tidy.cf.contigencyTable()
+```
+
+### Summary statistics
+```{r, message=F, warning=F}
+# 2) For stats table
+func.tidy.cf.statsTable = function(inputTable, ModelName){
+  cbind(Category = rownames(inputTable), inputTable %>% as_tibble()) %>%
+    mutate(Category = str_remove(Category, pattern = "Class: ")) %>%
+    mutate(Model = ModelName) %>%
+    return()
+}
+```
+
+
+
+# Machine learning
+
+## 70/30 train/test split
+```{r, message=F, warning=F}
+# Now, let's set up the training and testing set. 
+# When needed for certain algorithm, when hyper-parameters are tuned, the training set is further split into validations sets using cross-validation method. 
+
+df.learn = func.strata.Norm.trainTest(trainingRatio = .7, scaleData = T) 
+df.train = df.learn[[1]]
+df.test = df.learn[[2]]
+```
+
+**Note here that the training set is scaled, and the testing set is also scaled using the mean and covariance matrix of the testing set!**
+
+Despite Differences in algorithms per se, the workflow is roughly the same: train the model, test performance on the teset set, and tidy up the confusion matrix. Regardless such similarityit and the possibility of wrapping different algorithms into one overal function, in this work each algorithm is written in a rather independant manner. Redundant as this truely is, this practice is rewarded by easy understanding of each algorithm section, which could be read as a more or less standalone method; meanwhile, this practice provides rapid access for trouble shooting. 
+
+## Linear discriminant analysis (LDA)
+```{r, message=F, warning=F}
+# model train
+mdl.trained.LDA = lda(Category ~., data = df.train)
+# predict on test set, with equal prior probability
+mdl.fitted.LDA = predict(mdl.trained.LDA, newdata = df.test, prior = rep(1/4, 4))
+fitted.LDA = mdl.fitted.LDA$class # here we overwrite the prior fitted.LDA object
+cf.LDA = confusionMatrix(data = fitted.LDA, reference = df.test$Category, mode = "everything")
+
+# confusion table
+cf.counts.LDA = cf.LDA$table %>% func.tidy.cf.contigencyTable(ModelName = "LDA")
+# Summary stats table
+cf.stats.LDA = cf.LDA$byClass %>% func.tidy.cf.statsTable(ModelName = "LDA") 
+
+
+```
+
+
+## Quadratic discriminant analysis 
+```{r, message=F, warning=F}
+# model train
+mdl.QDA = qda(Category ~., data = df.train)
+
+# predict on test set, with equal prior probability
+mdl.fitted.QDA = predict(mdl.QDA, newdata = df.test, prior = rep(1/4, 4))
+fitted.QDA = mdl.fitted.QDA$class
+cf.QDA = confusionMatrix(data = fitted.QDA, reference = df.test$Category, mode = "everything")
+
+# confusion matrix
+cf.counts.QDA = cf.QDA$table %>% func.tidy.cf.contigencyTable(ModelName = "QDA") 
+# summary results
+cf.stats.QDA = cf.QDA$byClass %>% func.tidy.cf.statsTable(ModelName = "QDA")
+```
+
+
+With 0.5 split ratio, console would pop up error "rank deficiency in group Mustard". QDA estimates the covariance matrix for each population, and requries more data input. Mustard is the category with the smallest size of observation units. While LDA assumes equal covariance matrix for all populations, and takes a pooled covaraince matrix, and thus requires much less data input for parameter estimation. In fact, LDA does a fairly nice job when trained with only 10% of data.
+
+
+## Regularized logistic regression
+```{r, message=F, warning=F}
+mdl.logistic.ridge=      glmnet(x = df.train[, -1] %>% as.matrix(), y = df.train$Category, 
+                                family = "multinomial", alpha =  0)
+
+mdl.logistic.elasticNet= glmnet(x = df.train[, -1] %>% as.matrix(), y = df.train$Category, 
+                                family = "multinomial", alpha = .5)
+
+mdl.logistic.lasso=      glmnet(x = df.train[, -1] %>% as.matrix(), y = df.train$Category, 
+                                family = "multinomial", alpha =  1)
+
+# coefficient comparison
+par(mfrow = c(1, 1))
+# plot(mdl.logistic.ridge,      xvar = "lambda", label = T, main = "Ridge", line = 2)
+plot(mdl.logistic.elasticNet, xvar = "lambda", label = T, main = "Elastic Net (alpha = 0.5)", line = 2)
+# plot(mdl.logistic.lasso,      xvar = "lambda", label = T, main = "Lasso", line = 2)
+```
+
+
+```{r, message=F, warning=F}
+# cross validation
+cv.mdl.logistic.ridge = cv.glmnet(x = df.train[, -1] %>% as.matrix(), y = df.train$Category, 
+                                  family = "multinomial", alpha =  0)
+
+cv.mdl.logistic.elasticNet = cv.glmnet(x = df.train[, -1] %>% as.matrix(), y = df.train$Category, 
+                                       family = "multinomial", alpha =  0.5)
+
+cv.mdl.logistic.lasso = cv.glmnet(x = df.train[, -1] %>% as.matrix(), y = df.train$Category, 
+                                  family = "multinomial", alpha =  1)
+
+par(mfrow = c(1, 3))
+plot(cv.mdl.logistic.ridge, main = "Ridge", line = 2) 
+plot(cv.mdl.logistic.elasticNet, main = "Elastic Net (alpha = 0.5)", line = 2)
+plot(cv.mdl.logistic.lasso, main = "Lasso", line = 2)
+par(mfrow = c(1, 1))
+```
+
+
+```{r, message=F, warning=F}
+# check model coefficients
+x = coef(cv.mdl.logistic.elasticNet, s = "lambda.min")
+
+df.logisticNets.coefficients = 
+  data.frame(x[[1]] %>% as.matrix(), x[[2]] %>% as.matrix(),
+             x[[3]] %>% as.matrix(), x[[4]] %>% as.matrix()) 
+colnames(df.logisticNets.coefficients) = names(x)
+df.logisticNets.coefficients
+```
+
+
+```{r, message=F, warning=F}
+# Prediction with train-test split, a formal test of model efficiency
+
+# Define function for performing regularized logistic with different alpha values
+func.regularizedLogistic = function(
+  input.alpha, # control ridge, lasso, or between
+  ModelName    # model type as extra column note in the confusion table output
+){
+  
+  # train with 10-fold cross validation
+  cv.mdl.logistic = cv.glmnet(x = df.train[, -1] %>% as.matrix(), y = df.train$Category, 
+                              family = "multinomial", alpha = input.alpha, nfolds = 10)
+  # predict with test set
+  fitted.logistic =
+    predict(cv.mdl.logistic, newx = df.test[, -1] %>% as.matrix(), 
+            s = cv.mdl.logistic$lambda.1se, type = "class") %>% c() %>% 
+    factor(levels = sort(unique.categories), ordered = T) # Note: important to sort unique.categories!
+  
+  # wrap up prediction results
+  cf.logistic = confusionMatrix(data = fitted.logistic, reference = df.test$Category)
+  cf.counts.logistic = cf.logistic$table %>% func.tidy.cf.contigencyTable(ModelName = ModelName)
+  cf.stats.logistic = cf.logistic$byClass %>% func.tidy.cf.statsTable(ModelName = ModelName)
+  
+  return(list(cf.counts.logistic, cf.stats.logistic))
+  
+}
+
+# Test upon different alpha values (important to note that alpha is not a hyper-parameter to optimize!)
+func.regularizedLogistic(input.alpha = 0, ModelName = "Ridge")
+func.regularizedLogistic(input.alpha = 1, ModelName = "Lasso")
+func.regularizedLogistic(input.alpha = 0.5, ModelName = paste("ElasticNet, α = 0.5") )
+
+# We'remore interested in the elastic net results
+cf.counts.ElasticNet = func.regularizedLogistic(input.alpha = 0.5, ModelName = paste("ElasticNet") )[[1]]
+cf.stats.ElasticNet = func.regularizedLogistic(input.alpha = 0.5, ModelName = paste("ElasticNet") )[[2]]
+```
+
+
+## Random forest
+```{r, message=F, warning=F}
+colnames(df.train) = make.names(colnames(df.train))
+
+# fine tune mtry (# features randomly selected for each split)
+sumErrors.percent = c() # collect error ratio for each mtry value
+
+# loop through different mtry (# of features randomly select and compare for each split)
+mtry = 2:ncol(df.train[, -1]) 
+
+for ( i in mtry ) {
+  mdl.randomForest = randomForest(Category ~., data = df.train, mtry = i, ntree = 500)
+  
+  # predict on the same training set as quick accuracy test
+  # Considering that a third dataset not used due to bootstrap
+  fitted = mdl.randomForest$predicted %>% factor(levels = unique.categories)
+  sumErrors.i = (! fitted == df.train$Category ) %>% sum()
+  sumErrors.percent.i = sumErrors.i / nrow(df.train) * 100
+  sumErrors.percent = append(sumErrors.percent, sumErrors.percent.i)
+}
+sumErrors.percent
+plot(x = mtry, y = sumErrors.percent, pch = 19, 
+     xlab = "Number of features to randomly select for each split", 
+     ylab = "Error percentage (%)", 
+     main = "Random forest hyperparameter tuning")
+lines(x = mtry, y = sumErrors.percent)
+```
+
+Five variables to select from renders the highest accuracy (another random shuffle could give a different answer)
+Overally, the more variables the lower prediction accuracy
+Decide to use four variables as mtry parameter value, which is also reasonably close to square root of total feature numbers
+
+
+```{r, message=F, warning=F}
+# Predict with train-test split
+colnames(df.train) = make.names(colnames(df.train))
+colnames(df.test) = make.names(colnames(df.test))
+
+# set up training model and test accuracy
+mdl.randomForest = randomForest(Category ~., data = df.train, ntree = 500, mtry = 5) 
+fitted.randomForest = predict(mdl.randomForest, newdata = df.test)
+
+# set up confusion table
+cf.randomForest = confusionMatrix(data = fitted.randomForest, 
+                                  reference = df.test$Category, 
+                                  mode = "everything")
+
+# confusion matrix
+cf.counts.randomForest = cf.randomForest$table %>%
+  func.tidy.cf.contigencyTable(ModelName = "RandomForest")
+# Summary stats
+cf.stats.randomForest = cf.randomForest$byClass %>% 
+  func.tidy.cf.statsTable(ModelName = "RandomForest")
+
+cf.counts.randomForest
+cf.stats.randomForest
+```
+
+
+## Support vector machine
+```{r, message=F, warning=F}
+mdl.svm = svm(x = df.train[, -1], y = df.train$Category)
+# predict
+fitted.svm = predict(mdl.svm, newdata = df.test[, -1])
+
+# confusion matrix
+cf.svm = confusionMatrix(
+  data = fitted.svm, reference = df.test$Category, mode = "everything")
+
+# confusion matrix
+cf.counts.svm = cf.svm$table %>%
+  func.tidy.cf.contigencyTable(ModelName = "SVM")
+
+# summary stats
+cf.stats.svm = cf.svm$byClass %>% 
+  func.tidy.cf.statsTable(ModelName = "SVM")
+```
+
+## Naive Bayes (benchmark)
+```{r, message=F, warning=F}
+# train
+mdl.Bayes = naiveBayes(x = df.train[, -1], y = df.train$Category)
+# predict
+fitted.Bayes = predict(mdl.Bayes, newdata = df.test, type = "class")
+
+# confusion matrix
+cf.Bayes = confusionMatrix(
+  data = fitted.Bayes, reference = df.test$Category, mode = "everything")
+
+# confusion matrix
+cf.counts.Bayes = cf.Bayes$table %>%
+  func.tidy.cf.contigencyTable(ModelName = "Naive Bayes")
+
+# summary stats
+cf.stats.Bayes = cf.Bayes$byClass %>% 
+  func.tidy.cf.statsTable(ModelName = "Naive Bayes")
+```
+
+
+# Test results 
+
+## Wrap up
+
+```{r, message=F, warning=F}
+# Summary of all machine learning techniques
+df.confusionMatrix.all = cf.counts.LDA %>% rbind(cf.counts.QDA) %>%
+  rbind(cf.counts.ElasticNet) %>% # rbind(cf.counts.CART) %>%
+  rbind(cf.counts.randomForest) %>% rbind(cf.counts.svm) %>%
+  rbind(cf.counts.Bayes) %>% as_tibble()
+
+# tidy up the confusion matrix combined
+df.confusionMatrix.all.tidy = df.confusionMatrix.all %>%
+  gather(-c(Prediction, Model), key = reference, value = counts) %>%
+  mutate(reference = factor(reference, levels = unique.categories),
+         Prediction = factor(Prediction, levels = unique.categories %>% rev(), ordered = T))
+```
+
+
+## Visualization
+```{r, message=F, warning=F}
+# Visualize confusion matrix
+df.confusionMatrix.all.tidy %>%
+  ggplot(aes(x = reference, y = Prediction)) + 
+  facet_wrap(~Model, nrow = 2) +
+  
+  # off diaganol incorrect prediction
+  geom_label(data = df.confusionMatrix.all.tidy %>% filter(counts > 0 & counts < 20),
+             aes(label = counts), 
+             fill = "firebrick", alpha = .3, size = 6) +
+  
+  # diaganol correct prediction
+  geom_label(data = df.confusionMatrix.all.tidy %>% filter(counts > 20),
+             aes(label = counts),
+             fill = "Steelblue", alpha = .3, size = 6) +
+  
+  # zero counts
+  geom_label(data = df.confusionMatrix.all.tidy %>% filter(counts == 0),
+             aes(label = counts), 
+             size = 6, color = "grey")  +
+  theme_bw() +
+  
+  theme(axis.text.x = element_text(angle = 30, vjust = .8, hjust = .8),
+        strip.background = element_blank(),
+        strip.text = element_text(face = "bold"),
+        panel.border = element_rect(color = "black", size = 1),
+        title = element_text(face = "bold")) +
+  ggtitle("Confusion Matrix")
+
+```
+

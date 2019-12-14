@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Bo Yuan" />
+
+<meta name="date" content="2019-12-14" />
+
+<title>AIV classification with machine learning</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+.tocify-subheader {
+  display: inline;
+}
+.tocify-subheader .tocify-item {
+  font-size: 0.95em;
+}
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Free Amino Acids in African Vegetables</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="method-development-and-validation.html">HILIC UHPLC MS/MS Method R&amp;D</a>
+</li>
+<li>
+  <a href="AIV_profile_analysis.html">AIV amino acids exploratory analysis</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">AIV classification with machine learning</h1>
+<h4 class="author">Bo Yuan</h4>
+<h4 class="date">12/14/2019</h4>
+
+</div>
+
+
+<p><strong>Object naming</strong>:</p>
+<p>df.XXX: a data.frame or tibble object; e.g., df.all.data df.modelname…: a data frame or tibble containing tidied results from a model prediction vs actual mat.XXX: a matrix object; e.g., mat.content pltXXX: a plot object; e.g., plt.univariate.boxplot.dot mdl.trained.XXXX: model from training set; e.g., mdl.trained.LDA mdl.fitted.XXX: object with fitted results output from a trained model; e.g., mdl.fitted.LDA mdl.XXX: a model object; e.g., mdl.LDA fitted.XXX: predicted class, e.g. fitted.logistic.elasticNet cf.XXX: confusion table; e.g., cf.counts.LDA func.XXX: defined functions; e.g., func.boxplot.Site()</p>
+<div id="packages" class="section level1">
+<h1><span class="header-section-number">1</span> Packages</h1>
+<pre class="r"><code># functional packages
+library(readxl)
+
+# Machine learning packages
+library(MASS)
+library(glmnet)
+library(caret)
+library(rpart.plot) # for classification tree plot
+library(randomForest)
+library(e1071)
+
+# The core package collection
+# load last, so as the key functions are not masked by others; but instead masking others if any
+library(tidyverse)</code></pre>
+</div>
+<div id="seed" class="section level1">
+<h1><span class="header-section-number">2</span> Seed</h1>
+<pre class="r"><code>set.seed(2020)</code></pre>
+</div>
+<div id="data" class="section level1">
+<h1><span class="header-section-number">3</span> Data</h1>
+<pre class="r"><code># Read amino acid content dataset
+path = &quot;/Users/Boyuan/Desktop/My publication/7th. HILIC amino acid &amp; PCA/Publish-ready files/AIV free amino acids content.xlsx&quot;
+
+df.content= read_excel(path , sheet = &quot;content in AIV (mg.100g DW-1)&quot;) 
+
+# select needed columns and tidy up
+df.content = df.content %&gt;% select(Name, Category, Site) %&gt;%
+  mutate(strata.group = paste(Category, Site, sep = &quot;_&quot;)) %&gt;%
+  cbind(df.content %&gt;% select(23:ncol(df.content))) %&gt;%
+  as_tibble()
+
+# categories
+unique.categories = df.content$Category %&gt;% unique()</code></pre>
+</div>
+<div id="define-functions" class="section level1">
+<h1><span class="header-section-number">4</span> Define functions</h1>
+<div id="train-test-split" class="section level2">
+<h2><span class="header-section-number">4.1</span> Train-test split</h2>
+<div id="statified-sampling" class="section level3">
+<h3><span class="header-section-number">4.1.1</span> Statified sampling</h3>
+<pre class="r"><code># strata group
+unique.categories.site = df.content$strata.group %&gt;% unique()
+
+# Define function doing stratified sampling based on category-site combination 
+func.stratifiedSampling = function(trainingRatio = 0.7){
+  index.train = c()
+  
+  for (a in unique.categories.site){
+    df.content.i = df.content %&gt;% filter(strata.group == a)
+    index.train.i = sample(df.content.i$Name, size = (trainingRatio * nrow(df.content.i)) %&gt;% floor())
+    index.train = c(index.train, index.train.i) 
+  }
+  
+  df.train = df.content %&gt;% filter(Name %in% index.train)
+  df.test = df.content %&gt;% filter(! Name %in% index.train)
+  list.learn = list(df.train, df.test)
+  return(list.learn)
+}
+
+# demo
+# df.learn = func.stratifiedSampling(trainingRatio = .5)
+# In practice, the trainingRatio is manuall changed by citing arguments from higher level function (see below)
+# the split ratio in convenient practice should never be changed in this sampling function</code></pre>
+</div>
+<div id="normalization" class="section level3">
+<h3><span class="header-section-number">4.1.2</span> Normalization</h3>
+<pre class="r"><code># input list: 1st: training set; 2nd, test set; i.e., the output of func.stratifiedSampling
+func.normalize.trainTest = function(list) { 
+  
+  mat.train = list[[1]] %&gt;% dplyr::select(-c(Name, Category, Site, strata.group, `Data File`)) %&gt;% as.matrix()
+  mat.test = list[[2]] %&gt;% dplyr::select(-c(Name, Category, Site, strata.group, `Data File`)) %&gt;% as.matrix()
+  
+  # mean vector computed from training set (as single column matrix)
+  meanVector.train = apply(mat.train, 2, mean) %&gt;% as.matrix()
+  
+  # diagonol matrix, with standard deviation inverse
+  mat.inverse.sd.diaganol = apply(mat.train, 2, sd)  %&gt;% diag() %&gt;% solve()
+  # Reserve column names
+  colnames(mat.inverse.sd.diaganol) = colnames(mat.train) 
+  
+  # ones vector, as single column matrix, length = # observation units of TRAINING set
+  vector.ones.train = rep(1, nrow(mat.train)) %&gt;% as.matrix()
+  
+  # Compute normalized training dataset 
+  mat.train.scaled = (mat.train - vector.ones.train %*% t(meanVector.train)) %*% mat.inverse.sd.diaganol
+  
+  
+  # Use built-in scale function to double check computation
+  # Used for trouble shooting purpose; comment out to keep console cleanness when running code
+  
+  # mat.train.scaled.test = mat.train %&gt;% scale(center = T, scale = T)
+  
+  # if ((mat.train.scaled - mat.train.scaled.test ) %&gt;% sum() %&gt;% round(10) == 0){
+  #   cat(&quot;Computation is correct!&quot;) 
+  # } else{
+  #   cat(&quot;Computation may be incorrect. Further examination is required!&quot;)
+  # }
+  
+  
+  # Normalize test dataset using training-set mean vector and standard deviation diagonal matrix
+  # ones vector, as single column matrix, length = # observation units of TESTING set 
+  vector.ones.test = rep(1, nrow(mat.test)) %&gt;% as.matrix()
+  mat.test.scaled = (mat.test - vector.ones.test %*% t(meanVector.train)) %*% mat.inverse.sd.diaganol
+  
+  # Complete two matrices with category labels, and convert to tibble
+  df.train.scaled = cbind(data.frame(Category = list[[1]]$Category), mat.train.scaled) %&gt;% as_tibble()
+  df.test.scaled  = cbind(data.frame(Category = list[[2]]$Category), mat.test.scaled) %&gt;% as_tibble()
+  return(list(df.train.scaled, df.test.scaled))
+}
+
+# demo
+# func.stratifiedSampling(trainingRatio = .6) %&gt;% func.normalize.trainTest()</code></pre>
+</div>
+<div id="chaining-prior-two-functions" class="section level3">
+<h3><span class="header-section-number">4.1.3</span> Chaining prior two functions</h3>
+<pre class="r"><code># Define a third function: chaining the prior two functions together
+# 1) stratified sampling into training and test set
+# 2) normalize training set, and normalize test set based on training mean vector and standard deviation 
+func.strata.Norm.trainTest = function(trainingRatio = 0.7, scaleData = T){
+  if(scaleData == T){
+    func.stratifiedSampling(trainingRatio = trainingRatio) %&gt;%
+      func.normalize.trainTest() %&gt;% return()
+  } else {
+    func.stratifiedSampling(trainingRatio = trainingRatio) %&gt;% return()
+  }
+  
+}
+
+# demo: 1&gt; func.strata.Norm.trainTest(); # default 0.7 train-test split ratio
+#       2&gt; func.strata.Norm.trainTest(trainingRatio = .5) # manually change train-test split ratio</code></pre>
+</div>
+</div>
+<div id="prediction-table-tidy-up" class="section level2">
+<h2><span class="header-section-number">4.2</span> Prediction table tidy up</h2>
+<div id="confusion-matrix" class="section level3">
+<h3><span class="header-section-number">4.2.1</span> Confusion matrix</h3>
+<pre class="r"><code># Define two function: tidy up confusion tables (contingency table and stats) 
+# Divide suffle times and tidy up as data frame
+
+# 1) For contigency table
+func.tidy.cf.contigencyTable = function(inputTable, ModelName){
+  inputTable %&gt;% as.data.frame() %&gt;% 
+    spread(key = Reference, value = Freq) %&gt;% 
+    mutate(Model = ModelName) %&gt;%
+    return()
+}
+
+# demo: cf.counts.LDA %&gt;% func.tidy.cf.contigencyTable()</code></pre>
+</div>
+<div id="summary-statistics" class="section level3">
+<h3><span class="header-section-number">4.2.2</span> Summary statistics</h3>
+<pre class="r"><code># 2) For stats table
+func.tidy.cf.statsTable = function(inputTable, ModelName){
+  cbind(Category = rownames(inputTable), inputTable %&gt;% as_tibble()) %&gt;%
+    mutate(Category = str_remove(Category, pattern = &quot;Class: &quot;)) %&gt;%
+    mutate(Model = ModelName) %&gt;%
+    return()
+}</code></pre>
+</div>
+</div>
+</div>
+<div id="machine-learning" class="section level1">
+<h1><span class="header-section-number">5</span> Machine learning</h1>
+<div id="traintest-split" class="section level2">
+<h2><span class="header-section-number">5.1</span> 70/30 train/test split</h2>
+<pre class="r"><code># Now, let&#39;s set up the training and testing set. 
+# When needed for certain algorithm, when hyper-parameters are tuned, the training set is further split into validations sets using cross-validation method. 
+
+df.learn = func.strata.Norm.trainTest(trainingRatio = .7, scaleData = T) 
+df.train = df.learn[[1]]
+df.test = df.learn[[2]]</code></pre>
+<p><strong>Note here that the training set is scaled, and the testing set is also scaled using the mean and covariance matrix of the testing set!</strong></p>
+<p>Despite Differences in algorithms per se, the workflow is roughly the same: train the model, test performance on the teset set, and tidy up the confusion matrix. Regardless such similarityit and the possibility of wrapping different algorithms into one overal function, in this work each algorithm is written in a rather independant manner. Redundant as this truely is, this practice is rewarded by easy understanding of each algorithm section, which could be read as a more or less standalone method; meanwhile, this practice provides rapid access for trouble shooting.</p>
+</div>
+<div id="linear-discriminant-analysis-lda" class="section level2">
+<h2><span class="header-section-number">5.2</span> Linear discriminant analysis (LDA)</h2>
+<pre class="r"><code># model train
+mdl.trained.LDA = lda(Category ~., data = df.train)
+# predict on test set, with equal prior probability
+mdl.fitted.LDA = predict(mdl.trained.LDA, newdata = df.test, prior = rep(1/4, 4))
+fitted.LDA = mdl.fitted.LDA$class # here we overwrite the prior fitted.LDA object
+cf.LDA = confusionMatrix(data = fitted.LDA, reference = df.test$Category, mode = &quot;everything&quot;)
+
+# confusion table
+cf.counts.LDA = cf.LDA$table %&gt;% func.tidy.cf.contigencyTable(ModelName = &quot;LDA&quot;)
+# Summary stats table
+cf.stats.LDA = cf.LDA$byClass %&gt;% func.tidy.cf.statsTable(ModelName = &quot;LDA&quot;) </code></pre>
+</div>
+<div id="quadratic-discriminant-analysis" class="section level2">
+<h2><span class="header-section-number">5.3</span> Quadratic discriminant analysis</h2>
+<pre class="r"><code># model train
+mdl.QDA = qda(Category ~., data = df.train)
+
+# predict on test set, with equal prior probability
+mdl.fitted.QDA = predict(mdl.QDA, newdata = df.test, prior = rep(1/4, 4))
+fitted.QDA = mdl.fitted.QDA$class
+cf.QDA = confusionMatrix(data = fitted.QDA, reference = df.test$Category, mode = &quot;everything&quot;)
+
+# confusion matrix
+cf.counts.QDA = cf.QDA$table %&gt;% func.tidy.cf.contigencyTable(ModelName = &quot;QDA&quot;) 
+# summary results
+cf.stats.QDA = cf.QDA$byClass %&gt;% func.tidy.cf.statsTable(ModelName = &quot;QDA&quot;)</code></pre>
+<p>With 0.5 split ratio, console would pop up error “rank deficiency in group Mustard”. QDA estimates the covariance matrix for each population, and requries more data input. Mustard is the category with the smallest size of observation units. While LDA assumes equal covariance matrix for all populations, and takes a pooled covaraince matrix, and thus requires much less data input for parameter estimation. In fact, LDA does a fairly nice job when trained with only 10% of data.</p>
+</div>
+<div id="regularized-logistic-regression" class="section level2">
+<h2><span class="header-section-number">5.4</span> Regularized logistic regression</h2>
+<pre class="r"><code>mdl.logistic.ridge=      glmnet(x = df.train[, -1] %&gt;% as.matrix(), y = df.train$Category, 
+                                family = &quot;multinomial&quot;, alpha =  0)
+
+mdl.logistic.elasticNet= glmnet(x = df.train[, -1] %&gt;% as.matrix(), y = df.train$Category, 
+                                family = &quot;multinomial&quot;, alpha = .5)
+
+mdl.logistic.lasso=      glmnet(x = df.train[, -1] %&gt;% as.matrix(), y = df.train$Category, 
+                                family = &quot;multinomial&quot;, alpha =  1)
+
+# coefficient comparison
+par(mfrow = c(1, 1))
+# plot(mdl.logistic.ridge,      xvar = &quot;lambda&quot;, label = T, main = &quot;Ridge&quot;, line = 2)
+plot(mdl.logistic.elasticNet, xvar = &quot;lambda&quot;, label = T, main = &quot;Elastic Net (alpha = 0.5)&quot;, line = 2)</code></pre>
+<p><img src="Machine_learning_Classification_files/figure-html/unnamed-chunk-12-1.png" width="672" /><img src="Machine_learning_Classification_files/figure-html/unnamed-chunk-12-2.png" width="672" /><img src="Machine_learning_Classification_files/figure-html/unnamed-chunk-12-3.png" width="672" /><img src="Machine_learning_Classification_files/figure-html/unnamed-chunk-12-4.png" width="672" /></p>
+<pre class="r"><code># plot(mdl.logistic.lasso,      xvar = &quot;lambda&quot;, label = T, main = &quot;Lasso&quot;, line = 2)</code></pre>
+<pre class="r"><code># cross validation
+cv.mdl.logistic.ridge = cv.glmnet(x = df.train[, -1] %&gt;% as.matrix(), y = df.train$Category, 
+                                  family = &quot;multinomial&quot;, alpha =  0)
+
+cv.mdl.logistic.elasticNet = cv.glmnet(x = df.train[, -1] %&gt;% as.matrix(), y = df.train$Category, 
+                                       family = &quot;multinomial&quot;, alpha =  0.5)
+
+cv.mdl.logistic.lasso = cv.glmnet(x = df.train[, -1] %&gt;% as.matrix(), y = df.train$Category, 
+                                  family = &quot;multinomial&quot;, alpha =  1)
+
+par(mfrow = c(1, 3))
+plot(cv.mdl.logistic.ridge, main = &quot;Ridge&quot;, line = 2) 
+plot(cv.mdl.logistic.elasticNet, main = &quot;Elastic Net (alpha = 0.5)&quot;, line = 2)
+plot(cv.mdl.logistic.lasso, main = &quot;Lasso&quot;, line = 2)</code></pre>
+<p><img src="Machine_learning_Classification_files/figure-html/unnamed-chunk-13-1.png" width="672" /></p>
+<pre class="r"><code>par(mfrow = c(1, 1))</code></pre>
+<pre class="r"><code># check model coefficients
+x = coef(cv.mdl.logistic.elasticNet, s = &quot;lambda.min&quot;)
+
+df.logisticNets.coefficients = 
+  data.frame(x[[1]] %&gt;% as.matrix(), x[[2]] %&gt;% as.matrix(),
+             x[[3]] %&gt;% as.matrix(), x[[4]] %&gt;% as.matrix()) 
+colnames(df.logisticNets.coefficients) = names(x)
+df.logisticNets.coefficients</code></pre>
+<pre><code>##                    Amaranth       Mustard  Nightshade Spider plant
+## (Intercept)    -0.793172840  0.0006205775  0.14420984   0.64834243
+## leucine         0.233959308  0.0000000000  0.00000000  -0.04801864
+## isoleucine      0.034984423  0.0000000000  0.31383640  -1.22863052
+## tryptophan      0.000000000  0.0000000000  0.07144249  -0.25632374
+## phenylalanine   0.000000000  0.0422543440  0.00000000   0.00000000
+## valine          0.000000000  0.4208733612  0.00000000  -0.47081652
+## methionine      0.000000000  0.0000000000  0.00000000   0.00000000
+## tyrosine       -0.427235398 -0.1866203957  2.24551007   0.00000000
+## proline        -1.210960720  1.4703988049  0.14376903  -0.40320711
+## alanine         0.788495929 -0.8926849795 -0.72853483   0.83272388
+## cysteine        0.000000000  0.0000000000  1.05047259  -0.09467338
+## glycine        -0.303344630  0.0000000000 -0.26977419   0.62923236
+## glutamic acid   0.497337135  0.2407445453 -0.30917680  -0.42890488
+## threonine      -1.822850587  0.9027114097 -0.86479731   1.78493649
+## hydroxyproline -0.013650552  0.1545762017  0.80851897  -0.94944462
+## glutamine       1.993997753  0.0000000000 -1.00534450  -0.08134950
+## aspartic acid  -0.209440068  0.0000000000  0.45468226   0.00000000
+## serine         -0.943232629  0.0000000000 -0.18356413   1.31970511
+## asparagine      0.000000000  0.0000000000  0.68397372   0.00000000
+## arginine        0.007303283 -0.0009883506 -0.31384038   0.30752544
+## histidine      -0.974123216  0.0000000000  0.00000000   0.03392149
+## lysine          0.000000000  0.0000000000  0.00000000   0.30434959</code></pre>
+<pre class="r"><code># Prediction with train-test split, a formal test of model efficiency
+
+# Define function for performing regularized logistic with different alpha values
+func.regularizedLogistic = function(
+  input.alpha, # control ridge, lasso, or between
+  ModelName    # model type as extra column note in the confusion table output
+){
+  
+  # train with 10-fold cross validation
+  cv.mdl.logistic = cv.glmnet(x = df.train[, -1] %&gt;% as.matrix(), y = df.train$Category, 
+                              family = &quot;multinomial&quot;, alpha = input.alpha, nfolds = 10)
+  # predict with test set
+  fitted.logistic =
+    predict(cv.mdl.logistic, newx = df.test[, -1] %&gt;% as.matrix(), 
+            s = cv.mdl.logistic$lambda.1se, type = &quot;class&quot;) %&gt;% c() %&gt;% 
+    factor(levels = sort(unique.categories), ordered = T) # Note: important to sort unique.categories!
+  
+  # wrap up prediction results
+  cf.logistic = confusionMatrix(data = fitted.logistic, reference = df.test$Category)
+  cf.counts.logistic = cf.logistic$table %&gt;% func.tidy.cf.contigencyTable(ModelName = ModelName)
+  cf.stats.logistic = cf.logistic$byClass %&gt;% func.tidy.cf.statsTable(ModelName = ModelName)
+  
+  return(list(cf.counts.logistic, cf.stats.logistic))
+  
+}
+
+# Test upon different alpha values (important to note that alpha is not a hyper-parameter to optimize!)
+func.regularizedLogistic(input.alpha = 0, ModelName = &quot;Ridge&quot;)</code></pre>
+<pre><code>## [[1]]
+##     Prediction Amaranth Mustard Nightshade Spider plant Model
+## 1     Amaranth       43       0          3            1 Ridge
+## 2      Mustard        0      28          0            0 Ridge
+## 3   Nightshade        0       0         39            0 Ridge
+## 4 Spider plant        1       0          0           53 Ridge
+## 
+## [[2]]
+##       Category Sensitivity Specificity Pos Pred Value Neg Pred Value Precision
+## 1     Amaranth   0.9772727   0.9677419      0.9148936      0.9917355 0.9148936
+## 2      Mustard   1.0000000   1.0000000      1.0000000      1.0000000 1.0000000
+## 3   Nightshade   0.9285714   1.0000000      1.0000000      0.9767442 1.0000000
+## 4 Spider plant   0.9814815   0.9912281      0.9814815      0.9912281 0.9814815
+##      Recall        F1 Prevalence Detection Rate Detection Prevalence
+## 1 0.9772727 0.9450549  0.2619048      0.2559524            0.2797619
+## 2 1.0000000 1.0000000  0.1666667      0.1666667            0.1666667
+## 3 0.9285714 0.9629630  0.2500000      0.2321429            0.2321429
+## 4 0.9814815 0.9814815  0.3214286      0.3154762            0.3214286
+##   Balanced Accuracy Model
+## 1         0.9725073 Ridge
+## 2         1.0000000 Ridge
+## 3         0.9642857 Ridge
+## 4         0.9863548 Ridge</code></pre>
+<pre class="r"><code>func.regularizedLogistic(input.alpha = 1, ModelName = &quot;Lasso&quot;)</code></pre>
+<pre><code>## [[1]]
+##     Prediction Amaranth Mustard Nightshade Spider plant Model
+## 1     Amaranth       44       0          4            1 Lasso
+## 2      Mustard        0      27          0            0 Lasso
+## 3   Nightshade        0       0         38            0 Lasso
+## 4 Spider plant        0       1          0           53 Lasso
+## 
+## [[2]]
+##       Category Sensitivity Specificity Pos Pred Value Neg Pred Value Precision
+## 1     Amaranth   1.0000000   0.9596774      0.8979592      1.0000000 0.8979592
+## 2      Mustard   0.9642857   1.0000000      1.0000000      0.9929078 1.0000000
+## 3   Nightshade   0.9047619   1.0000000      1.0000000      0.9692308 1.0000000
+## 4 Spider plant   0.9814815   0.9912281      0.9814815      0.9912281 0.9814815
+##      Recall        F1 Prevalence Detection Rate Detection Prevalence
+## 1 1.0000000 0.9462366  0.2619048      0.2619048            0.2916667
+## 2 0.9642857 0.9818182  0.1666667      0.1607143            0.1607143
+## 3 0.9047619 0.9500000  0.2500000      0.2261905            0.2261905
+## 4 0.9814815 0.9814815  0.3214286      0.3154762            0.3214286
+##   Balanced Accuracy Model
+## 1         0.9798387 Lasso
+## 2         0.9821429 Lasso
+## 3         0.9523810 Lasso
+## 4         0.9863548 Lasso</code></pre>
+<pre class="r"><code>func.regularizedLogistic(input.alpha = 0.5, ModelName = paste(&quot;ElasticNet, α = 0.5&quot;) )</code></pre>
+<pre><code>## [[1]]
+##     Prediction Amaranth Mustard Nightshade Spider plant               Model
+## 1     Amaranth       44       0          3            1 ElasticNet, α = 0.5
+## 2      Mustard        0      28          0            0 ElasticNet, α = 0.5
+## 3   Nightshade        0       0         39            0 ElasticNet, α = 0.5
+## 4 Spider plant        0       0          0           53 ElasticNet, α = 0.5
+## 
+## [[2]]
+##       Category Sensitivity Specificity Pos Pred Value Neg Pred Value Precision
+## 1     Amaranth   1.0000000   0.9677419      0.9166667      1.0000000 0.9166667
+## 2      Mustard   1.0000000   1.0000000      1.0000000      1.0000000 1.0000000
+## 3   Nightshade   0.9285714   1.0000000      1.0000000      0.9767442 1.0000000
+## 4 Spider plant   0.9814815   1.0000000      1.0000000      0.9913043 1.0000000
+##      Recall        F1 Prevalence Detection Rate Detection Prevalence
+## 1 1.0000000 0.9565217  0.2619048      0.2619048            0.2857143
+## 2 1.0000000 1.0000000  0.1666667      0.1666667            0.1666667
+## 3 0.9285714 0.9629630  0.2500000      0.2321429            0.2321429
+## 4 0.9814815 0.9906542  0.3214286      0.3154762            0.3154762
+##   Balanced Accuracy               Model
+## 1         0.9838710 ElasticNet, α = 0.5
+## 2         1.0000000 ElasticNet, α = 0.5
+## 3         0.9642857 ElasticNet, α = 0.5
+## 4         0.9907407 ElasticNet, α = 0.5</code></pre>
+<pre class="r"><code># We&#39;remore interested in the elastic net results
+cf.counts.ElasticNet = func.regularizedLogistic(input.alpha = 0.5, ModelName = paste(&quot;ElasticNet&quot;) )[[1]]
+cf.stats.ElasticNet = func.regularizedLogistic(input.alpha = 0.5, ModelName = paste(&quot;ElasticNet&quot;) )[[2]]</code></pre>
+</div>
+<div id="random-forest" class="section level2">
+<h2><span class="header-section-number">5.5</span> Random forest</h2>
+<pre class="r"><code>colnames(df.train) = make.names(colnames(df.train))
+
+# fine tune mtry (# features randomly selected for each split)
+sumErrors.percent = c() # collect error ratio for each mtry value
+
+# loop through different mtry (# of features randomly select and compare for each split)
+mtry = 2:ncol(df.train[, -1]) 
+
+for ( i in mtry ) {
+  mdl.randomForest = randomForest(Category ~., data = df.train, mtry = i, ntree = 500)
+  
+  # predict on the same training set as quick accuracy test
+  # Considering that a third dataset not used due to bootstrap
+  fitted = mdl.randomForest$predicted %&gt;% factor(levels = unique.categories)
+  sumErrors.i = (! fitted == df.train$Category ) %&gt;% sum()
+  sumErrors.percent.i = sumErrors.i / nrow(df.train) * 100
+  sumErrors.percent = append(sumErrors.percent, sumErrors.percent.i)
+}
+sumErrors.percent</code></pre>
+<pre><code>##  [1] 4.787234 4.255319 3.989362 4.255319 4.787234 4.255319 3.457447 4.521277
+##  [9] 3.723404 4.255319 4.255319 4.255319 4.521277 4.521277 3.989362 4.787234
+## [17] 3.989362 3.989362 5.053191 4.521277</code></pre>
+<pre class="r"><code>plot(x = mtry, y = sumErrors.percent, pch = 19, 
+     xlab = &quot;Number of features to randomly select for each split&quot;, 
+     ylab = &quot;Error percentage (%)&quot;, 
+     main = &quot;Random forest hyperparameter tuning&quot;)
+lines(x = mtry, y = sumErrors.percent)</code></pre>
+<p><img src="Machine_learning_Classification_files/figure-html/unnamed-chunk-16-1.png" width="672" /></p>
+<p>Five variables to select from renders the highest accuracy (another random shuffle could give a different answer) Overally, the more variables the lower prediction accuracy Decide to use four variables as mtry parameter value, which is also reasonably close to square root of total feature numbers</p>
+<pre class="r"><code># Predict with train-test split
+colnames(df.train) = make.names(colnames(df.train))
+colnames(df.test) = make.names(colnames(df.test))
+
+# set up training model and test accuracy
+mdl.randomForest = randomForest(Category ~., data = df.train, ntree = 500, mtry = 5) 
+fitted.randomForest = predict(mdl.randomForest, newdata = df.test)
+
+# set up confusion table
+cf.randomForest = confusionMatrix(data = fitted.randomForest, 
+                                  reference = df.test$Category, 
+                                  mode = &quot;everything&quot;)
+
+# confusion matrix
+cf.counts.randomForest = cf.randomForest$table %&gt;%
+  func.tidy.cf.contigencyTable(ModelName = &quot;RandomForest&quot;)
+# Summary stats
+cf.stats.randomForest = cf.randomForest$byClass %&gt;% 
+  func.tidy.cf.statsTable(ModelName = &quot;RandomForest&quot;)
+
+cf.counts.randomForest</code></pre>
+<pre><code>##     Prediction Amaranth Mustard Nightshade Spider plant        Model
+## 1     Amaranth       43       0          0            1 RandomForest
+## 2      Mustard        0      28          0            0 RandomForest
+## 3   Nightshade        0       0         42            0 RandomForest
+## 4 Spider plant        1       0          0           53 RandomForest</code></pre>
+<pre class="r"><code>cf.stats.randomForest</code></pre>
+<pre><code>##       Category Sensitivity Specificity Pos Pred Value Neg Pred Value Precision
+## 1     Amaranth   0.9772727   0.9919355      0.9772727      0.9919355 0.9772727
+## 2      Mustard   1.0000000   1.0000000      1.0000000      1.0000000 1.0000000
+## 3   Nightshade   1.0000000   1.0000000      1.0000000      1.0000000 1.0000000
+## 4 Spider plant   0.9814815   0.9912281      0.9814815      0.9912281 0.9814815
+##      Recall        F1 Prevalence Detection Rate Detection Prevalence
+## 1 0.9772727 0.9772727  0.2619048      0.2559524            0.2619048
+## 2 1.0000000 1.0000000  0.1666667      0.1666667            0.1666667
+## 3 1.0000000 1.0000000  0.2500000      0.2500000            0.2500000
+## 4 0.9814815 0.9814815  0.3214286      0.3154762            0.3214286
+##   Balanced Accuracy        Model
+## 1         0.9846041 RandomForest
+## 2         1.0000000 RandomForest
+## 3         1.0000000 RandomForest
+## 4         0.9863548 RandomForest</code></pre>
+</div>
+<div id="support-vector-machine" class="section level2">
+<h2><span class="header-section-number">5.6</span> Support vector machine</h2>
+<pre class="r"><code>mdl.svm = svm(x = df.train[, -1], y = df.train$Category)
+# predict
+fitted.svm = predict(mdl.svm, newdata = df.test[, -1])
+
+# confusion matrix
+cf.svm = confusionMatrix(
+  data = fitted.svm, reference = df.test$Category, mode = &quot;everything&quot;)
+
+# confusion matrix
+cf.counts.svm = cf.svm$table %&gt;%
+  func.tidy.cf.contigencyTable(ModelName = &quot;SVM&quot;)
+
+# summary stats
+cf.stats.svm = cf.svm$byClass %&gt;% 
+  func.tidy.cf.statsTable(ModelName = &quot;SVM&quot;)</code></pre>
+</div>
+<div id="naive-bayes-benchmark" class="section level2">
+<h2><span class="header-section-number">5.7</span> Naive Bayes (benchmark)</h2>
+<pre class="r"><code># train
+mdl.Bayes = naiveBayes(x = df.train[, -1], y = df.train$Category)
+# predict
+fitted.Bayes = predict(mdl.Bayes, newdata = df.test, type = &quot;class&quot;)
+
+# confusion matrix
+cf.Bayes = confusionMatrix(
+  data = fitted.Bayes, reference = df.test$Category, mode = &quot;everything&quot;)
+
+# confusion matrix
+cf.counts.Bayes = cf.Bayes$table %&gt;%
+  func.tidy.cf.contigencyTable(ModelName = &quot;Naive Bayes&quot;)
+
+# summary stats
+cf.stats.Bayes = cf.Bayes$byClass %&gt;% 
+  func.tidy.cf.statsTable(ModelName = &quot;Naive Bayes&quot;)</code></pre>
+</div>
+</div>
+<div id="test-results" class="section level1">
+<h1><span class="header-section-number">6</span> Test results</h1>
+<div id="wrap-up" class="section level2">
+<h2><span class="header-section-number">6.1</span> Wrap up</h2>
+<pre class="r"><code># Summary of all machine learning techniques
+df.confusionMatrix.all = cf.counts.LDA %&gt;% rbind(cf.counts.QDA) %&gt;%
+  rbind(cf.counts.ElasticNet) %&gt;% # rbind(cf.counts.CART) %&gt;%
+  rbind(cf.counts.randomForest) %&gt;% rbind(cf.counts.svm) %&gt;%
+  rbind(cf.counts.Bayes) %&gt;% as_tibble()
+
+# tidy up the confusion matrix combined
+df.confusionMatrix.all.tidy = df.confusionMatrix.all %&gt;%
+  gather(-c(Prediction, Model), key = reference, value = counts) %&gt;%
+  mutate(reference = factor(reference, levels = unique.categories),
+         Prediction = factor(Prediction, levels = unique.categories %&gt;% rev(), ordered = T))</code></pre>
+</div>
+<div id="visualization" class="section level2">
+<h2><span class="header-section-number">6.2</span> Visualization</h2>
+<pre class="r"><code># Visualize confusion matrix
+df.confusionMatrix.all.tidy %&gt;%
+  ggplot(aes(x = reference, y = Prediction)) + 
+  facet_wrap(~Model, nrow = 2) +
+  
+  # off diaganol incorrect prediction
+  geom_label(data = df.confusionMatrix.all.tidy %&gt;% filter(counts &gt; 0 &amp; counts &lt; 20),
+             aes(label = counts), 
+             fill = &quot;firebrick&quot;, alpha = .3, size = 6) +
+  
+  # diaganol correct prediction
+  geom_label(data = df.confusionMatrix.all.tidy %&gt;% filter(counts &gt; 20),
+             aes(label = counts),
+             fill = &quot;Steelblue&quot;, alpha = .3, size = 6) +
+  
+  # zero counts
+  geom_label(data = df.confusionMatrix.all.tidy %&gt;% filter(counts == 0),
+             aes(label = counts), 
+             size = 6, color = &quot;grey&quot;)  +
+  theme_bw() +
+  
+  theme(axis.text.x = element_text(angle = 30, vjust = .8, hjust = .8),
+        strip.background = element_blank(),
+        strip.text = element_text(face = &quot;bold&quot;),
+        panel.border = element_rect(color = &quot;black&quot;, size = 1),
+        title = element_text(face = &quot;bold&quot;)) +
+  ggtitle(&quot;Confusion Matrix&quot;)</code></pre>
+<p><img src="Machine_learning_Classification_files/figure-html/unnamed-chunk-21-1.png" width="672" /></p>
+</div>
+</div>
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3,h4",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = false;
+    options.smoothScroll = false;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
