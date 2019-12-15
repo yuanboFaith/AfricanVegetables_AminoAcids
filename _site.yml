@@ -11,5 +11,5 @@ navbar:
     - text: "Machine learning"
       href: Machine_learning_Classification.html
     - text: "Interactive Shiny"
-      href: InteractiveShiny.html
+      href: ShinyML.html
 output_dir: "."
