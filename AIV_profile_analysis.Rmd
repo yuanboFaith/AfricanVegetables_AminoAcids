@@ -1,5 +1,5 @@
 ---
-title: "African vegetables amino acid & exploratory analysis"
+title: "African vegetables amino acids & exploratory analysis"
 output: 
   html_document:
     fig_width: 10 
