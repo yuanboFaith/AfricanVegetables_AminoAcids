@@ -1,0 +1,13 @@
+---
+title: "Interactive prediction with R-Shiny" 
+output: html_document
+---
+
+<br/><br/>
+
+#### Visit our **Shiny App** for interactive machine-learning.    
+
+##### This section only documents the corresponding script used for the Shiny app. 
+
+<br/><br/>
+

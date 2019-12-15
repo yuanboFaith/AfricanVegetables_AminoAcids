@@ -4,10 +4,12 @@ navbar:
   left:
     - text: "Home"
       href: index.html
-    - text: "HILIC UHPLC MS/MS Method R&D"
+    - text: "LC-MS/MS"
       href: method-development-and-validation.html
-    - text: "AIV amino acids exploratory analysis"
+    - text: "AIV amino acids"
       href: AIV_profile_analysis.html
-    - text: "Machine learning-based classification"
+    - text: "Machine learning"
       href: Machine_learning_Classification.html
+    - text: "Interactive Shiny"
+      href: InteractiveShiny.html
 output_dir: "."
