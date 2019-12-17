@@ -310,6 +310,7 @@ $(document).ready(function () {
 <h5>This section only documents the corresponding script used for the Shiny app.</h5>
 <p><br/><br/></p>
 <pre class="r"><code>library(shiny)
+library(DT)
 library(rdrop2)
 library(e1071)
 library(MASS)
@@ -317,6 +318,7 @@ library(glmnet)
 library(randomForest)
 library(caret)
 library(readxl)
+library(writexl)
 library(tidyverse)
 
 # Import data from Dropbox ----
@@ -466,7 +468,7 @@ progress = c(&quot;Dataset setup&quot;, &quot;LDA&quot;, &quot;QDA&quot;, &quot;
 ui &lt;- fluidPage(
     
     # Application title
-    titlePanel(&quot;African indigenous vegetables classification prediction&quot;),
+    titlePanel(strong(&quot;African Vegetables Classification Predictor&quot;)),
     
     # Sidebar with a slider input for number of bins 
     sidebarLayout(
@@ -475,15 +477,9 @@ ui &lt;- fluidPage(
             # tab 1 ----
             conditionalPanel( 
                 &#39;input.purpose === &quot;Machine learning simulator&quot;&#39;,
-                strong(&quot;First-time click to initiate model training and prediction testing.&quot;, style = &quot;color: firebrick&quot;),
-                br(),
-                strong(&quot;A following click shuffles the dataset to create new training-testing sets, update models parameters, and refresh prediction results.&quot;, 
-                       style = &quot;color:steelblue&quot;),
-                
-                br(),br(),
                 
                 fluidRow(column(12, actionButton(inputId = &quot;Shuffle&quot;, 
-                                                 label = &quot;  Model and prediction of AIV categories&quot;, 
+                                                 label = &quot;  Train models and predict on test set&quot;, 
                                                  icon(&quot;paper-plane&quot;), 
                                                  style=&quot;color: white; background-color: steelblue; border-color: black&quot;))),
                 
@@ -491,9 +487,9 @@ ui &lt;- fluidPage(
                 
                 br(), br(),
                 
-                fluidRow(column(8, sliderInput(inputId = &quot;SplitRatio&quot;,
-                                               label = &quot;Percent of data used for model training&quot;,
-                                               min = .5, max = .9, value = .7))),
+                fluidRow(column(12, sliderInput(inputId = &quot;SplitRatio&quot;,
+                                                label = &quot;Percent of data used for model training&quot;,
+                                                min = .5, max = .9, value = .7))),
                 
                 fluidRow(column(12, checkboxInput(inputId = &quot;Seed2020&quot;, 
                                                   label = &quot;Set seed: generate reproducible split of train-test dataset&quot;, 
@@ -503,8 +499,14 @@ ui &lt;- fluidPage(
             # tab 2 ----
             conditionalPanel(
                 &#39;input.purpose === &quot;Unknown prediction: single sample&quot;&#39;,
-                fluidRow(actionButton(inputId = &quot;Predict2&quot;, 
-                                      label = &quot;Predict!&quot;)),
+                
+                fluidRow(column(12, actionButton(inputId = &quot;Predict2&quot;, 
+                                                 label = &quot; Predict!&quot;,
+                                                 icon(&quot;cocktail&quot;), 
+                                                 style=&quot;color: white; background-color: steelblue; border-color: black&quot;))),
+                
+                br(),
+                
                 fluidRow(column(4, sliderInput(&quot;alanine&quot;, &quot;alanine&quot;, min = 0, max = 1000, value = 529)),
                          column(4, sliderInput(&quot;arginine&quot;, &quot;arginine&quot;, min = 0, max = 1000, value = 176)),
                          column(4, sliderInput(&quot;asparagine&quot;, &quot;asparagine&quot;, min = 0, max = 5000, value = 2477))),
@@ -538,27 +540,94 @@ ui &lt;- fluidPage(
             conditionalPanel(
                 &#39;input.purpose === &quot;Unknown prediction: batch sample&quot;&#39;,
                 fluidRow(
-                    fileInput(inputId = &quot;userfile&quot;, label = NULL, buttonLabel = &quot;Browse...Excel input&quot;,
-                              width = &#39;700px&#39;, placeholder = &quot;Please upload unknown samples&#39; feature space&quot;)
-                )
+                    column(
+                        11,
+                        fileInput(inputId = &quot;userfile&quot;, label = NULL, buttonLabel = &quot;Browse...Excel input&quot;,
+                                  width = &#39;700px&#39;, placeholder = &quot;Please upload unknown samples&#39; feature space&quot;),
+                        
+                        tags$style(&quot;.btn-file { background-color:white; border-color: black; } 
+                                   .progress-bar { background-color: #3c763d;}&quot;))),
+                fluidRow(
+                    column(
+                        11,
+                        downloadButton(&quot;downloadTemplate&quot;, &quot;Download table template for batch prediction&quot;,
+                                       style=&quot;color: white; background-color: steelblue; border-color: black&quot;))
+                    )
             )
             
         ),
         
         
         # Show a plot of the generated distribution
-        mainPanel(
+        mainPanel( 
             tabsetPanel(
                 id = &#39;purpose&#39;,
-                tabPanel(&quot;Machine learning simulator&quot;,
-                         plotOutput(&quot;plt.newShuffle&quot;)
+                
+                tabPanel(&quot;Machine learning simulator&quot;, # ------
+                         br(),
+                         fluidRow(
+                             column(
+                                 11,
+                                 p(&quot;The African indigenous vegetables (AIVs) free amino acid dataset (544 rows, 21 columns) contains the content of 21 free amino acids in 544 samples of AIVs, the latter comprising four basic categories, i.e., nighthshades, amaranth, spider plant, and mustard. Each category was sourced from different continents or countries, harvest years and seasons, etc., including one or more subspecies and cultivars.&quot;, strong(&quot;This app makes prediction of the AIV category based on the content of free amino acids.&quot;,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                  style = &quot;color: black&quot;)),
+                                 
+                                 strong(&quot;Click&quot;, code(&quot;Train models and predict on test set&quot;), 
+                                        &quot;button to train models using specified percent (default 70%) of the AIV amino acid dataset as the training set, and make predictions on the remaining percent of the dataset as the test set. The prediction result is summarized as the confusion matrix, showing counts of correct and incorrect predictions.&quot;, 
+                                        style = &quot;color: steelblue&quot;),
+                                 br(), br(),
+                                 p(&quot;Following clicks of the button shuffles the dataset to create new training-testing sets, update models parameters, and refresh prediction results. After updating the training set percentage and seed setting, click the button again to initiate a new round of train and prediction.&quot;, 
+                                   style = &quot;color:black&quot;),
+                                 br(), br()
+                             )
+                         ),
+                         
+                         fluidRow(
+                             column(
+                                 12, 
+                                 plotOutput(&quot;plt.newShuffle&quot;))
+                         )
+                         
                 ),
-                tabPanel(&quot;Unknown prediction: single sample&quot;,
-                         br(),br(),
+                
+                tabPanel(&quot;Unknown prediction: single sample&quot;, # ------
+                         br(),
+                         
+                         fluidRow(
+                             column(
+                                 11,
+                                 p(&quot;This section makes prediction of AIV category of an unknown sample based on its free amino acid content (in unit of mg/100g dry weight), using models trained from the entire AIVs amino acid dataset (544 rows X 21 columns). The current default setting is the average level of free amino acids in African nightshade leaves.&quot;), 
+                                 strong(&quot;Use sliderbars to update the amino acid content of a single unknown sample.&quot;), 
+                                 br(),
+                                 strong(&quot;Click&quot;, code(&quot;Predict!&quot;), &quot;to predict classfication based on updated feature space.&quot;)
+                             )
+                         ),
+                         
                          plotOutput(&quot;plt.singleSamplePredict&quot;)),
-                tabPanel(&quot;Unknown prediction: batch sample&quot;,
-                         br(),br(),
-                         tableOutput(&quot;batchPrediction.output1&quot;))
+                
+                tabPanel(&quot;Unknown prediction: batch sample&quot;, # ------
+                         br(),
+                         fluidRow(
+                             column(
+                                 11, 
+                                 p(&quot;This section makes prediction of multiple samples using models trained from the entire AIV amino acid dataset.&quot;),
+                                 strong(&quot;Simply upload the Excel sheet to make a prediction.&quot;)
+                             )
+                         ),
+                         br(),
+                         dataTableOutput(&quot;batchPrediction.output1&quot;)
+                ),
+                
+                tabPanel(&quot;About&quot;,
+                         br(),
+                         fluidRow(
+                             column(8,
+                                    strong(span(&quot;For R script of this interactive application and more associated data analysis of our publication on African vegetables amino acids,
+                                please visit our&quot;, a(&quot;R markdown code documents&quot;, href = &quot;https://yuanbofaith.github.io/AfricanVegetables_AminoAcids/index.html&quot;, &quot;.&quot;)),
+                                           style = &quot;color: #666666&quot;)
+                             )
+                         )
+                         
+                )
             )
         )
     )
@@ -879,7 +948,7 @@ server &lt;- function(input, output) {
                         theme_minimal() +  
                         theme(plot.background =  element_blank(), 
                               axis.title = element_blank(), axis.text = element_blank(),
-                              strip.text = element_text(face = &quot;bold&quot;, size = 16, color = &quot;#999999&quot;),
+                              strip.text = element_text(face = &quot;bold&quot;, size = 16, color = &quot;#666666&quot;),
                               legend.position = &quot;NA&quot;) +
                         coord_flip() +  coord_fixed(.5)
                     
@@ -988,12 +1057,24 @@ server &lt;- function(input, output) {
         return(t)
     })
     
-    output$batchPrediction.output1 = renderTable(tab3.output() )
+    output$batchPrediction.output1 = renderDataTable(tab3.output() )
+    
+    
+    
+    # download template
+    
+    df.template = drop_read_csv(file = &quot;Template for batch prediction.csv&quot;)
+    
+    output$downloadTemplate = downloadHandler(
+        filename = &quot;Template for batch prediction.xlsx&quot;,
+        content = function(file) {
+            write_xlsx(df.template, path = file)  
+        } 
+    )
     
 }
 
-# Run the application 
-shinyApp(ui = ui, server = server)</code></pre>
+shinyApp(ui, server)</code></pre>
 </div>
 </div>
 
