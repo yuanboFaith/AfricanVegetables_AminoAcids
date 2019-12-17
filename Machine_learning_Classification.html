@@ -535,8 +535,6 @@ func.strata.Norm.trainTest = function(trainingRatio = 0.7, scaleData = T){
 <div id="confusion-matrix" class="section level3">
 <h3><span class="header-section-number">3.2.1</span> Confusion matrix</h3>
 <pre class="r"><code># Define two function: tidy up confusion tables (contingency table and stats) 
-# Divide suffle times and tidy up as data frame
-
 # 1) For contigency table
 func.tidy.cf.contigencyTable = function(inputTable, ModelName){
   inputTable %&gt;% as.data.frame() %&gt;% 
@@ -582,9 +580,9 @@ fitted.LDA = mdl.fitted.LDA$class # here we overwrite the prior fitted.LDA objec
 cf.LDA = confusionMatrix(data = fitted.LDA, reference = df.test$Category, mode = &quot;everything&quot;)
 
 # confusion table
-cf.counts.LDA = cf.LDA$table %&gt;% func.tidy.cf.contigencyTable(ModelName = &quot;LDA&quot;)
+cf.counts.LDA = cf.LDA$table %&gt;% func.tidy.cf.contigencyTable(ModelName = &quot;Linear discriminant analysis&quot;)
 # Summary stats table
-cf.stats.LDA = cf.LDA$byClass %&gt;% func.tidy.cf.statsTable(ModelName = &quot;LDA&quot;) </code></pre>
+cf.stats.LDA = cf.LDA$byClass %&gt;% func.tidy.cf.statsTable(ModelName = &quot;Linear discriminant analysis&quot;) </code></pre>
 </div>
 <div id="quadratic-discriminant-analysis" class="section level2">
 <h2><span class="header-section-number">4.3</span> Quadratic discriminant analysis</h2>
@@ -597,9 +595,9 @@ fitted.QDA = mdl.fitted.QDA$class
 cf.QDA = confusionMatrix(data = fitted.QDA, reference = df.test$Category, mode = &quot;everything&quot;)
 
 # confusion matrix
-cf.counts.QDA = cf.QDA$table %&gt;% func.tidy.cf.contigencyTable(ModelName = &quot;QDA&quot;) 
+cf.counts.QDA = cf.QDA$table %&gt;% func.tidy.cf.contigencyTable(ModelName = &quot;Quadratic discriminant analysis&quot;) 
 # summary results
-cf.stats.QDA = cf.QDA$byClass %&gt;% func.tidy.cf.statsTable(ModelName = &quot;QDA&quot;)</code></pre>
+cf.stats.QDA = cf.QDA$byClass %&gt;% func.tidy.cf.statsTable(ModelName = &quot;Quadratic discriminant analysis&quot;)</code></pre>
 <p>With 0.5 split ratio, console would pop up error “rank deficiency in group Mustard”. QDA estimates the covariance matrix for each population, and requries more data input. Mustard is the category with the smallest size of observation units. While LDA assumes equal covariance matrix for all populations, and takes a pooled covaraince matrix, and thus requires much less data input for parameter estimation. In fact, LDA does a fairly nice job when trained with only 10% of data.</p>
 </div>
 <div id="regularized-logistic-regression" class="section level2">
@@ -660,8 +658,8 @@ func.regularizedLogistic = function(
 # func.regularizedLogistic(input.alpha = 0.5, ModelName = paste(&quot;ElasticNet, α = 0.5&quot;) )
 
 # We&#39;remore interested in the elastic net results
-cf.counts.ElasticNet = func.regularizedLogistic(input.alpha = 0.5, ModelName = paste(&quot;ElasticNet&quot;) )[[1]]
-cf.stats.ElasticNet = func.regularizedLogistic(input.alpha = 0.5, ModelName = paste(&quot;ElasticNet&quot;) )[[2]]</code></pre>
+cf.counts.ElasticNet = func.regularizedLogistic(input.alpha = 0.5, ModelName = paste(&quot;Elastic net&quot;) )[[1]]
+cf.stats.ElasticNet = func.regularizedLogistic(input.alpha = 0.5, ModelName = paste(&quot;Elastic net&quot;) )[[2]]</code></pre>
 </div>
 <div id="random-forest" class="section level2">
 <h2><span class="header-section-number">4.5</span> Random forest</h2>
@@ -680,10 +678,10 @@ cf.randomForest = confusionMatrix(data = fitted.randomForest,
 
 # confusion matrix
 cf.counts.randomForest = cf.randomForest$table %&gt;%
-  func.tidy.cf.contigencyTable(ModelName = &quot;RandomForest&quot;)
+  func.tidy.cf.contigencyTable(ModelName = &quot;Random forest&quot;)
 # Summary stats
 cf.stats.randomForest = cf.randomForest$byClass %&gt;% 
-  func.tidy.cf.statsTable(ModelName = &quot;RandomForest&quot;)
+  func.tidy.cf.statsTable(ModelName = &quot;Random forest&quot;)
 
 # cf.counts.randomForest
 # cf.stats.randomForest</code></pre>
@@ -700,11 +698,11 @@ cf.svm = confusionMatrix(
 
 # confusion matrix
 cf.counts.svm = cf.svm$table %&gt;%
-  func.tidy.cf.contigencyTable(ModelName = &quot;SVM&quot;)
+  func.tidy.cf.contigencyTable(ModelName = &quot;Support vector machine&quot;)
 
 # summary stats
 cf.stats.svm = cf.svm$byClass %&gt;% 
-  func.tidy.cf.statsTable(ModelName = &quot;SVM&quot;)</code></pre>
+  func.tidy.cf.statsTable(ModelName = &quot;Support vector machine&quot;)</code></pre>
 </div>
 <div id="naive-bayes-benchmark" class="section level2">
 <h2><span class="header-section-number">4.7</span> Naive Bayes (benchmark)</h2>
@@ -730,6 +728,7 @@ cf.stats.Bayes = cf.Bayes$byClass %&gt;%
 <h1><span class="header-section-number">5</span> Test results</h1>
 <div id="wrap-up" class="section level2">
 <h2><span class="header-section-number">5.1</span> Wrap up</h2>
+<pre class="r"><code>unique.models = factor(c(&quot;Linear discriminant analysis&quot;, &quot;Quadratic discriminant analysis&quot;, &quot;Elastic net&quot;, &quot;Random forest&quot;, &quot;Support vector machine&quot;, &quot;Naive Bayes&quot;))</code></pre>
 <pre class="r"><code># Summary of all machine learning techniques
 df.confusionMatrix.all = cf.counts.LDA %&gt;% rbind(cf.counts.QDA) %&gt;%
   rbind(cf.counts.ElasticNet) %&gt;% # rbind(cf.counts.CART) %&gt;%
@@ -738,29 +737,45 @@ df.confusionMatrix.all = cf.counts.LDA %&gt;% rbind(cf.counts.QDA) %&gt;%
 
 # tidy up the confusion matrix combined
 df.confusionMatrix.all.tidy = df.confusionMatrix.all %&gt;%
+  # tidy up
   gather(-c(Prediction, Model), key = reference, value = counts) %&gt;%
-  mutate(reference = factor(reference, levels = unique.categories),
-         Prediction = factor(Prediction, levels = unique.categories %&gt;% rev(), ordered = T))</code></pre>
+  
+  # convert AIVs category into ordered factor
+  mutate(reference = factor(reference, levels = unique.categories, ordered = T),
+         Prediction = factor(Prediction, levels = unique.categories %&gt;% rev(), ordered = T)) %&gt;%
+  
+  # change model order in the dataset
+  mutate(Model = factor(Model, levels = unique.models, ordered = T)) %&gt;%
+  arrange(Model, reference, Prediction) %&gt;%
+  mutate(Diaganol = Prediction == reference)</code></pre>
+<pre class="r"><code># assign color to correct / incorrect prediction
+diag = df.confusionMatrix.all.tidy %&gt;% 
+  filter(Diaganol == F)
+
+df.confusionMatrix.all.tidy = diag %&gt;% 
+  mutate(color = ifelse(counts == 0, &quot;Grey&quot;, &quot;Firebrick&quot;)) %&gt;%
+  rbind(df.confusionMatrix.all.tidy %&gt;% filter(Diaganol == T) %&gt;%
+          mutate(color = &quot;steelblue&quot;))</code></pre>
 </div>
 <div id="visualization" class="section level2">
 <h2><span class="header-section-number">5.2</span> Visualization</h2>
 <pre class="r"><code># Visualize confusion matrix
-df.confusionMatrix.all.tidy %&gt;%
+ df.confusionMatrix.all.tidy %&gt;%
   ggplot(aes(x = reference, y = Prediction)) + 
   facet_wrap(~Model, nrow = 2) +
   
   # off diaganol incorrect prediction
-  geom_label(data = df.confusionMatrix.all.tidy %&gt;% filter(counts &gt; 0 &amp; counts &lt; 20),
+  geom_label(data = df.confusionMatrix.all.tidy %&gt;% filter(color == &quot;Firebrick&quot;),
              aes(label = counts), 
              fill = &quot;firebrick&quot;, alpha = .3, size = 6) +
   
   # diaganol correct prediction
-  geom_label(data = df.confusionMatrix.all.tidy %&gt;% filter(counts &gt; 20),
+  geom_label(data = df.confusionMatrix.all.tidy %&gt;% filter(color == &quot;steelblue&quot;),
              aes(label = counts),
              fill = &quot;Steelblue&quot;, alpha = .3, size = 6) +
   
   # zero counts
-  geom_label(data = df.confusionMatrix.all.tidy %&gt;% filter(counts == 0),
+  geom_label(data = df.confusionMatrix.all.tidy %&gt;% filter(color == &quot;Grey&quot;),
              aes(label = counts), 
              size = 6, color = &quot;grey&quot;)  +
   theme_bw() +
@@ -770,8 +785,9 @@ df.confusionMatrix.all.tidy %&gt;%
         strip.text = element_text(face = &quot;bold&quot;),
         panel.border = element_rect(color = &quot;black&quot;, size = 1),
         title = element_text(face = &quot;bold&quot;)) +
-  ggtitle(&quot;Confusion Matrix&quot;)</code></pre>
-<p><img src="Machine_learning_Classification_files/figure-html/unnamed-chunk-19-1.png" width="672" /></p>
+  ggtitle(&quot;Confusion Matrix&quot;) +
+  coord_fixed(ratio = 1)</code></pre>
+<p><img src="Machine_learning_Classification_files/figure-html/unnamed-chunk-21-1.png" width="1152" /></p>
 </div>
 </div>
 

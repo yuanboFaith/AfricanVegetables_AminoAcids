@@ -1,13 +1,702 @@
 ---
-title: "Interactive prediction with R-Shiny" 
+title: "Interactive prediction with R Shiny" 
 output: html_document
 ---
 
 <br/><br/>
 
-#### Visit our **Shiny App** for interactive machine-learning.    
+#### Visit our **[Shiny App](https://boyuan.shinyapps.io/predict_African_vegetables/)** for interactive machine-learning.    
 
 ##### This section only documents the corresponding script used for the Shiny app. 
 
 <br/><br/>
+
+```{r, eval=F}
+library(shiny)
+library(rdrop2)
+library(e1071)
+library(MASS)
+library(glmnet)
+library(randomForest)
+library(caret)
+library(readxl)
+library(tidyverse)
+
+# Import data from Dropbox ----
+drop_auth()
+token = drop_auth()
+saveRDS(token, file = "token.rds")
+
+df.content = drop_read_csv(file = "Dropbox AA Content Data.csv") 
+
+# select needed columns and tidy up
+df.content = df.content %>% select(Name, Category, Site) %>%
+    mutate(strata.group = paste(Category, Site, sep = "_")) %>%
+    cbind(df.content %>% select(23:ncol(df.content))) %>%
+    as_tibble()
+
+# categories
+unique.categories = df.content$Category %>% unique()
+
+
+
+# Define functions ----
+# Statified sampling
+# strata group
+unique.categories.site = df.content$strata.group %>% unique()
+
+# Define function doing stratified sampling based on category-site combination 
+func.stratifiedSampling = function(trainingRatio = 0.7){
+    
+    df.train = sample_frac(df.content, size = trainingRatio, replace = F)
+    df.test = df.content %>% anti_join(df.train, by = "Name")
+    
+    list.learn = list(df.train, df.test)
+    return(list.learn)
+}
+
+
+
+## Normalization  ----
+# input list: 1st: training set; 2nd, test set; i.e., the output of func.stratifiedSampling
+func.normalize.trainTest = function(list) { 
+    
+    mat.train = list[[1]] %>% dplyr::select(-c(Name, Category, Site, strata.group, `Data.File`)) %>% as.matrix()
+    mat.test = list[[2]] %>% dplyr::select(-c(Name, Category, Site, strata.group, `Data.File`)) %>% as.matrix()
+    
+    # mean vector computed from training set (as single column matrix)
+    meanVector.train = apply(mat.train, 2, mean) %>% as.matrix()
+    
+    # diagonol matrix, with standard deviation inverse
+    mat.inverse.sd.diaganol = apply(mat.train, 2, sd)  %>% diag() %>% solve()
+    # Reserve column names
+    colnames(mat.inverse.sd.diaganol) = colnames(mat.train) 
+    
+    # ones vector, as single column matrix, length = # observation units of TRAINING set
+    vector.ones.train = rep(1, nrow(mat.train)) %>% as.matrix()
+    
+    # Compute normalized training dataset 
+    mat.train.scaled = (mat.train - vector.ones.train %*% t(meanVector.train)) %*% mat.inverse.sd.diaganol
+    
+    # Normalize test dataset using training-set mean vector and standard deviation diagonal matrix
+    # ones vector, as single column matrix, length = # observation units of TESTING set 
+    vector.ones.test = rep(1, nrow(mat.test)) %>% as.matrix()
+    mat.test.scaled = (mat.test - vector.ones.test %*% t(meanVector.train)) %*% mat.inverse.sd.diaganol
+    
+    # Complete two matrices with category labels, and convert to tibble
+    df.train.scaled = cbind(data.frame(Category = list[[1]]$Category), mat.train.scaled) %>% as_tibble()
+    df.test.scaled  = cbind(data.frame(Category = list[[2]]$Category), mat.test.scaled) %>% as_tibble()
+    return(list(df.train.scaled, df.test.scaled))
+}
+
+# Chaining prior two functions
+# 1) stratified sampling into training and test set
+# 2) normalize training set, and normalize test set based on training mean vector and standard deviation 
+func.strata.Norm.trainTest = function(trainingRatio = 0.7, scaleData = T){
+    if(scaleData == T){
+        func.stratifiedSampling(trainingRatio = trainingRatio) %>%
+            func.normalize.trainTest() %>% return()
+    } else {
+        func.stratifiedSampling(trainingRatio = trainingRatio) %>% return()
+    }
+}
+
+
+
+# Prediction table tidy up ----
+# Confusion matrix
+# Define two function: tidy up confusion tables (contingency table and stats) 
+
+# 1) For contigency table
+func.tidy.cf.contigencyTable = function(inputTable, ModelName){
+    inputTable %>% as.data.frame() %>% 
+        spread(key = Reference, value = Freq) %>% 
+        mutate(Model = ModelName) %>%
+        return()
+}
+
+# 2) Summary statistics
+func.tidy.cf.statsTable = function(inputTable, ModelName){
+    cbind(Category = rownames(inputTable), inputTable %>% as_tibble()) %>%
+        mutate(Category = str_remove(Category, pattern = "Class: ")) %>%
+        mutate(Model = ModelName) %>%
+        return()
+}
+
+
+
+# arrange model order
+unique.models = factor(c("Linear discriminant analysis", "Quadratic discriminant analysis", "Elastic net", 
+                         "Random forest", "Support vector machine", "Naive Bayes"), ordered = T)
+
+
+
+
+# Entire dataset summary stats (used for tabs #2 & #3 single & batch sample(s) prediction) -----
+df.summaryALL = (df.content %>% select(-c(Name, Site, Category, strata.group, Data.File))) %>%
+    gather(key = compounds, value = content) %>%
+    group_by(compounds) %>%
+    summarise(content.mean = mean(content),
+              content.sd = sd(content)) 
+
+# set up comounds as ordered factor
+unique.compounds = (df.content %>% colnames())[-c(1:5)]
+unique.compounds = unique.compounds %>% factor(levels = unique.compounds, ordered = T)
+
+
+# In compound order as the input matrix
+# This data provides the mean and standard deviation vector used for scale() function; normalization of the feature input of the unknown sample(s)
+df.summaryALL = df.summaryALL %>% 
+    mutate(compounds = factor(compounds, level = unique.compounds, ordered = T)) %>%
+    arrange(compounds)
+
+
+# AIV Category color
+unique.categories = df.content$Category %>% unique()
+
+color.category = c("Black", "Steelblue", "Firebrick" , "Darkgreen") 
+names(color.category) = unique.categories
+
+
+
+
+# the computation progress bar
+progress = c("Dataset setup", "LDA", "QDA", "Elastic Net", "Random Forest", "SVM", "Naive Bayes", "Wrap up", "Output")
+
+
+
+# Define user interface ----
+ui <- fluidPage(
+    
+    # Application title
+    titlePanel("African indigenous vegetables classification prediction"),
+    
+    # Sidebar with a slider input for number of bins 
+    sidebarLayout(
+        sidebarPanel(
+            
+            # tab 1 ----
+            conditionalPanel( 
+                'input.purpose === "Machine learning simulator"',
+                strong("First-time click to initiate model training and prediction testing.", style = "color: firebrick"),
+                br(),
+                strong("A following click shuffles the dataset to create new training-testing sets, update models parameters, and refresh prediction results.", 
+                       style = "color:steelblue"),
+                
+                br(),br(),
+                
+                fluidRow(column(12, actionButton(inputId = "Shuffle", 
+                                                 label = "  Model and prediction of AIV categories", 
+                                                 icon("paper-plane"), 
+                                                 style="color: white; background-color: steelblue; border-color: black"))),
+                
+                # see icons at https://fontawesome.com/icons?from=io
+                
+                br(), br(),
+                
+                fluidRow(column(8, sliderInput(inputId = "SplitRatio",
+                                               label = "Percent of data used for model training",
+                                               min = .5, max = .9, value = .7))),
+                
+                fluidRow(column(12, checkboxInput(inputId = "Seed2020", 
+                                                  label = "Set seed: generate reproducible split of train-test dataset", 
+                                                  value = F)))
+            ),
+            
+            # tab 2 ----
+            conditionalPanel(
+                'input.purpose === "Unknown prediction: single sample"',
+                fluidRow(actionButton(inputId = "Predict2", 
+                                      label = "Predict!")),
+                fluidRow(column(4, sliderInput("alanine", "alanine", min = 0, max = 1000, value = 529)),
+                         column(4, sliderInput("arginine", "arginine", min = 0, max = 1000, value = 176)),
+                         column(4, sliderInput("asparagine", "asparagine", min = 0, max = 5000, value = 2477))),
+                
+                fluidRow(column(4, sliderInput("aspartic.acid", "aspartic acid", min = 0, max = 1000, value = 446)),
+                         column(4, sliderInput("cysteine", "cysteine", min = 0, max = 100, value = 2)),
+                         column(4, sliderInput("glutamic.acid", "glutamic acid", min = 0, max = 1000, value = 88))),
+                
+                fluidRow(column(4, sliderInput("glutamine", "glutamine", min = 0, max = 1000, value = 465)),
+                         column(4, sliderInput("glycine", "glycine", min = 0, max = 1000, value = 72)),
+                         column(4, sliderInput("histidine", "histidine", min = 0, max = 1000, value = 136))),
+                
+                fluidRow(column(4, sliderInput("hydroxyproline", "hydroxyproline", min = 0, max = 100, value = 5)),
+                         column(4, sliderInput("isoleucine", "isoleucine", min = 0, max = 1000, value = 175)),
+                         column(4, sliderInput("leucine", "leucine", min = 0, max = 1000, value = 136))),
+                
+                fluidRow(column(4, sliderInput("lysine", "lysine", min = 0, max = 1000, value = 92)),
+                         column(4, sliderInput("methionine", "methionine", min = 0, max = 1000, value = 1.7)),
+                         column(4, sliderInput("phenylalanine", "phenylalanine", min = 0, max = 1000, value = 312))),
+                
+                fluidRow(column(4, sliderInput("proline", "proline", min = 0, max = 5000, value = 1754)),
+                         column(4, sliderInput("serine", "serine", min = 0, max = 1000, value = 168)),
+                         column(4, sliderInput("threonine", "threonine", min = 0, max = 1000, value = 73))), # ----
+                
+                fluidRow(column(4, sliderInput("tryptophan", "tryptophan", min = 0, max = 1000, value = 113)),
+                         column(4, sliderInput("tyrosine", "tyrosine", min = 0, max = 1000, value = 228)),
+                         column(4, sliderInput("valine", "valine", min = 0, max = 1000, value = 281)))
+            ),
+            
+            # tab 3 ------
+            conditionalPanel(
+                'input.purpose === "Unknown prediction: batch sample"',
+                fluidRow(
+                    fileInput(inputId = "userfile", label = NULL, buttonLabel = "Browse...Excel input",
+                              width = '700px', placeholder = "Please upload unknown samples' feature space")
+                )
+            )
+            
+        ),
+        
+        
+        # Show a plot of the generated distribution
+        mainPanel(
+            tabsetPanel(
+                id = 'purpose',
+                tabPanel("Machine learning simulator",
+                         plotOutput("plt.newShuffle")
+                ),
+                tabPanel("Unknown prediction: single sample",
+                         br(),br(),
+                         plotOutput("plt.singleSamplePredict")),
+                tabPanel("Unknown prediction: batch sample",
+                         br(),br(),
+                         tableOutput("batchPrediction.output1"))
+            )
+        )
+    )
+)
+
+
+
+
+
+# Define server----
+server <- function(input, output) {
+    
+    # tab 1: Simulator
+    
+    p  <- eventReactive(input$Shuffle, {
+        
+        if (input$Seed2020 == T) {set.seed(2020)}
+        
+        withProgress(message = "Modelling...", value = 0, {
+            
+            for(i in 1:length(progress)) {
+                
+                # update progress of step i
+                incProgress(1/length(progress), detail = progress[i])
+                # Pause for 1 sec to simulate a long computation.
+                Sys.sleep(1)
+                
+                ## 70/30 train/test split ----
+                if (i == 1){
+                    
+                    df.learn = func.strata.Norm.trainTest(trainingRatio = input$SplitRatio, scaleData = T) 
+                    df.train = df.learn[[1]]
+                    df.test = df.learn[[2]]
+                    
+                    colnames(df.train) = make.names(colnames(df.train))
+                    colnames(df.test) = make.names(colnames(df.test))
+                } 
+                
+                ## Linear discriminant analysis (LDA)----
+                if (i == 2) {
+                    mdl.trained.LDA = lda(Category ~., data = df.train)
+                    mdl.fitted.LDA = predict(mdl.trained.LDA, newdata = df.test, prior = rep(1/4, 4))
+                    fitted.LDA = mdl.fitted.LDA$class # here we overwrite the prior fitted.LDA object
+                    cf.LDA = confusionMatrix(data = fitted.LDA, reference = df.test$Category, mode = "everything")
+                    
+                    # confusion table and summary stats
+                    cf.counts.LDA = cf.LDA$table %>% func.tidy.cf.contigencyTable(ModelName = "Linear discriminant analysis")
+                    cf.stats.LDA = cf.LDA$byClass %>% func.tidy.cf.statsTable(ModelName = "Linear discriminant analysis") 
+                }
+                
+                ## Quadratic discriminant analysis ----
+                if (i == 3) {
+                    mdl.QDA = qda(Category ~., data = df.train)
+                    mdl.fitted.QDA = predict(mdl.QDA, newdata = df.test, prior = rep(1/4, 4))
+                    fitted.QDA = mdl.fitted.QDA$class
+                    cf.QDA = confusionMatrix(data = fitted.QDA, reference = df.test$Category, mode = "everything")
+                    
+                    # confusion table and summary stats
+                    cf.counts.QDA = cf.QDA$table %>% func.tidy.cf.contigencyTable(ModelName = "Quadratic discriminant analysis") 
+                    cf.stats.QDA = cf.QDA$byClass %>% func.tidy.cf.statsTable(ModelName = "Quadratic discriminant analysis")
+                    
+                }
+                
+                ## Regularized logistic regression -----
+                if (i == 4) {
+                    
+                    # Define function for performing regularized logistic with different alpha values
+                    func.regularizedLogistic = function(
+                        input.alpha, # control ridge, lasso, or between
+                        ModelName    # model type as extra column note in the confusion table output
+                    ){        # train with 10-fold cross validation
+                        cv.mdl.logistic = cv.glmnet(x = df.train[, -1] %>% as.matrix(), y = df.train$Category, 
+                                                    family = "multinomial", alpha = input.alpha, nfolds = 6)
+                        # predict with test set
+                        fitted.logistic =
+                            predict(cv.mdl.logistic, newx = df.test[, -1] %>% as.matrix(), 
+                                    s = cv.mdl.logistic$lambda.1se, type = "class") %>% c() %>% 
+                            factor(levels = sort(unique.categories), ordered = T) # Note: important to sort unique.categories!
+                        
+                        # wrap up prediction results
+                        cf.logistic = confusionMatrix(data = fitted.logistic, reference = df.test$Category)
+                        cf.counts.logistic = cf.logistic$table %>% func.tidy.cf.contigencyTable(ModelName = ModelName)
+                        cf.stats.logistic = cf.logistic$byClass %>% func.tidy.cf.statsTable(ModelName = ModelName)
+                        
+                        return(list(cf.counts.logistic, cf.stats.logistic))
+                        
+                    }
+                    
+                    cf.counts.ElasticNet = func.regularizedLogistic(input.alpha = 0.5, ModelName = paste("Elastic net") )[[1]]
+                    cf.stats.ElasticNet = func.regularizedLogistic(input.alpha = 0.5, ModelName = paste("Elastic net") )[[2]]
+                    
+                }
+                
+                ## Random forest ----
+                if (i == 5) {
+                    mdl.randomForest = randomForest(Category ~., data = df.train, ntree = 500, mtry = 5) 
+                    fitted.randomForest = predict(mdl.randomForest, newdata = df.test)
+                    
+                    # set up confusion table
+                    cf.randomForest = confusionMatrix(
+                        data = fitted.randomForest, reference = df.test$Category, mode = "everything")
+                    # confusion matrix and summary stats
+                    cf.counts.randomForest = cf.randomForest$table %>%
+                        func.tidy.cf.contigencyTable(ModelName = "Random forest")
+                    
+                    cf.stats.randomForest = cf.randomForest$byClass %>% 
+                        func.tidy.cf.statsTable(ModelName = "Random forest")
+                    
+                }
+                
+                ## Support vector machine ----
+                if (i == 6) {
+                    mdl.svm = svm(x = df.train[, -1], y = df.train$Category)
+                    # predict
+                    fitted.svm = predict(mdl.svm, newdata = df.test[, -1])
+                    
+                    # confusion matrix
+                    cf.svm = confusionMatrix(
+                        data = fitted.svm, reference = df.test$Category, mode = "everything")
+                    
+                    # confusion matrix and summary stats
+                    cf.counts.svm = cf.svm$table %>%
+                        func.tidy.cf.contigencyTable(ModelName = "Support vector machine")
+                    
+                    cf.stats.svm = cf.svm$byClass %>% 
+                        func.tidy.cf.statsTable(ModelName = "Support vector machine")
+                    
+                }
+                
+                
+                ## Naive Bayes (benchmark) ----
+                if(i == 7) {
+                    mdl.Bayes = naiveBayes(x = df.train[, -1], y = df.train$Category)
+                    
+                    fitted.Bayes = predict(mdl.Bayes, newdata = df.test, type = "class")
+                    
+                    # confusion matrix
+                    cf.Bayes = confusionMatrix(
+                        data = fitted.Bayes, reference = df.test$Category, mode = "everything")
+                    
+                    # confusion matrix and summary stats
+                    cf.counts.Bayes = cf.Bayes$table %>%
+                        func.tidy.cf.contigencyTable(ModelName = "Naive Bayes")
+                    cf.stats.Bayes = cf.Bayes$byClass %>% 
+                        func.tidy.cf.statsTable(ModelName = "Naive Bayes")
+                    
+                }
+                
+                
+                ## Wrap up results
+                if (i == 8) {
+                    # Test results ----
+                    # Summary of all machine learning techniques ----
+                    df.confusionMatrix.all = cf.counts.LDA %>% rbind(cf.counts.QDA) %>%
+                        rbind(cf.counts.ElasticNet) %>% # rbind(cf.counts.CART) %>%
+                        rbind(cf.counts.randomForest) %>% rbind(cf.counts.svm) %>%
+                        rbind(cf.counts.Bayes) %>% as_tibble()
+                    
+                    # tidy up the confusion matrix combined
+                    df.confusionMatrix.all.tidy = df.confusionMatrix.all %>%
+                        gather(-c(Prediction, Model), key = reference, value = counts) %>%
+                        mutate(reference = factor(reference, levels = unique.categories),
+                               Prediction = factor(Prediction, levels = unique.categories %>% rev(), ordered = T))
+                    
+                    
+                    # change factor order in the dataset
+                    df.confusionMatrix.all.tidy =
+                        df.confusionMatrix.all.tidy %>% 
+                        mutate(Model = factor(Model, levels = unique.models, ordered = T)) %>%
+                        arrange(Model)
+                }
+                
+                ## Visualization ----
+                if (i == 9) {
+                    p = df.confusionMatrix.all.tidy %>%
+                        ggplot(aes(x = reference, y = Prediction)) + 
+                        facet_wrap(~Model, nrow = 2) +
+                        
+                        # off diaganol incorrect prediction
+                        geom_label(data = df.confusionMatrix.all.tidy %>% filter(counts > 0 & counts < 20),
+                                   aes(label = counts), 
+                                   fill = "firebrick", alpha = .3, size = 6) +
+                        
+                        # diaganol correct prediction
+                        geom_label(data = df.confusionMatrix.all.tidy %>% filter(counts > 20),
+                                   aes(label = counts),
+                                   fill = "Steelblue", alpha = .3, size = 6) +
+                        
+                        # zero counts
+                        geom_label(data = df.confusionMatrix.all.tidy %>% filter(counts == 0),
+                                   aes(label = counts), 
+                                   size = 6, color = "grey")  +
+                        theme_bw() +
+                        
+                        theme(axis.text.x = element_text(angle = 30, vjust = .8, hjust = .8),
+                              strip.background = element_blank(),
+                              strip.text = element_text(face = "bold"),
+                              panel.border = element_rect(color = "black", size = 1),
+                              title = element_text(face = "bold")) +
+                        ggtitle("Confusion Matrix") +
+                        coord_fixed(ratio = 1)
+                } 
+            }
+        })
+        return(p)
+    })
+    
+    output$plt.newShuffle = renderPlot({  p() })
+    
+    
+    
+    
+    
+    
+    
+    # tab 2: Single prediction of real unknown sample
+    plt.singleSample.predict = eventReactive(input$Predict2, {
+        
+        withProgress(message = "Modelling...", value = 0, {
+            
+            for(i in 1:length(progress)) {
+                
+                # update progress of step i
+                incProgress(1/length(progress), detail = progress[i])
+                # Pause for 1 sec to simulate a long computation.
+                Sys.sleep(1)
+                
+                # Use all oroginal dataset for training models
+                if (i == 1){
+                    
+                    # model training
+                    df.train = func.strata.Norm.trainTest(trainingRatio = 1, scaleData = T)[[1]] # split ratio = 1
+                    
+                    # collect to-predict feature space
+                    df.singleInput = data.frame(
+                        
+                        leucine = input$leucine,             isoleucine = input$isoleucine,         tryptophan = input$tryptophan,
+                        phenylalanine = input$phenylalanine, valine = input$valine,                 methionine = input$methionine, 
+                        
+                        tyrosine = input$tyrosine,           proline = input$proline,               alanine = input$alanine, 
+                        cysteine = input$cysteine,           glycine = input$glycine,               glutamic.acid = input$glutamic.acid, 
+                        
+                        threonine = input$threonine,         hydroxyproline = input$hydroxyproline, glutamine = input$glutamine,
+                        aspartic.acid = input$aspartic.acid, serine = input$serine,                 asparagine = input$asparagine, 
+                        
+                        arginine = input$arginine,           histidine = input$histidine,           lysine = input$lysine
+                        
+                    ) %>% as_tibble()
+                    
+                    # Normalize unknown sample based on mean and standard deviation vector computed from entire original AIV dataset
+                    # Meanwhile overwriting the input feature space
+                    df.singleInput = df.singleInput %>% 
+                        scale(center = df.summaryALL$content.mean, scale = df.summaryALL$content.sd) %>%
+                        as_tibble()
+                } 
+                
+                ## Linear discriminant analysis (LDA)----
+                if (i == 2) {
+                    mdl.trained.LDA = lda(Category ~., data = df.train)
+                    mdl.fitted.LDA = predict(mdl.trained.LDA, newdata = df.singleInput, prior = rep(1/4, 4))
+                    fitted.LDA = mdl.fitted.LDA$class 
+                }
+                ## Quadratic discriminant analysis  
+                if (i == 3) {
+                    mdl.QDA = qda(Category ~., data = df.train)
+                    mdl.fitted.QDA = predict(mdl.QDA, newdata = df.singleInput, prior = rep(1/4, 4))
+                    fitted.QDA = mdl.fitted.QDA$class
+                }
+                ## Regularized logistic regression 
+                if (i == 4) {
+                    cv.mdl.ElasticNet = cv.glmnet(x = df.train[, -1] %>% as.matrix(), y = df.train$Category, 
+                                                  family = "multinomial", alpha = .5, nfolds = 6)
+                    
+                    fitted.ElasticNet = predict(cv.mdl.ElasticNet, newx = df.singleInput %>% as.matrix(), 
+                                                s = cv.mdl.ElasticNet$lambda.1se, type = "class")
+                }
+                ## Random forest 
+                if (i == 5) {
+                    mdl.randomForest = randomForest(Category ~., data = df.train, ntree = 500, mtry = 5) 
+                    fitted.randomForest = predict(mdl.randomForest, newdata = df.singleInput)
+                }
+                ## Support vector machine
+                if (i == 6) {
+                    mdl.svm = svm(x = df.train[, -1], y = df.train$Category)
+                    # predict
+                    fitted.svm = predict(mdl.svm, newdata = df.singleInput)
+                }
+                ## Naive Bayes (benchmark) ----
+                if(i == 7) {
+                    mdl.Bayes = naiveBayes(x = df.train[, -1], y = df.train$Category)
+                    fitted.Bayes = predict(mdl.Bayes, newdata = df.singleInput, type = "class")
+                }
+                
+                ## Wrap up results
+                if (i == 8) {
+                    # As column names, no space allowed in header names. Thus use underscore later replace with space
+                    t = data.frame("Linear_discriminant_analysis" = fitted.LDA, 
+                                   "Quadratic_discriminant_analysis" = fitted.QDA, 
+                                   "Elastic_net" = fitted.ElasticNet, 
+                                   "Random_forest" = fitted.randomForest, 
+                                   "Support_vector_machine" = fitted.svm, 
+                                   "Naive_Bayes" = fitted.Bayes) %>% 
+                        as_tibble() %>% gather(key = model, value = result) %>%
+                        mutate(model = str_replace_all(model, pattern = "_", replacement = " "),
+                               model = factor(model, levels = unique.models, ordered = T))
+                    
+                }
+                
+                if (i == 9) {
+                    p2 = t %>% gather(key = model, value = result) %>%
+                        ggplot(aes(x = 1, y = 1, fill = result)) + 
+                        geom_label(aes(label = result),
+                                   size = 7, alpha = 1, color = "white", fontface = "bold",
+                                   label.padding = unit(1, "lines"), # padding size
+                                   label.r = unit(1, "lines")) + # rounding corder
+                        facet_wrap(~model) +
+                        scale_fill_manual(values = color.category) +
+                        theme_minimal() +  
+                        theme(plot.background =  element_blank(), 
+                              axis.title = element_blank(), axis.text = element_blank(),
+                              strip.text = element_text(face = "bold", size = 16, color = "#999999"),
+                              legend.position = "NA") +
+                        coord_flip() +  coord_fixed(.5)
+                    
+                    
+                }
+            }
+        })
+        return(p2)
+    })
+    
+    output$plt.singleSamplePredict = renderPlot({  plt.singleSample.predict() })
+    
+    
+    
+    
+    
+    
+    # tab 3: Batch prediction of real unknown samples
+    
+    
+    tab3.output = eventReactive(input$userfile, {
+        
+        # Read user-input excel file
+        infile <- input$userfile
+        df.batchPredict <- read_excel(infile$datapath)
+        
+        df.batchPredict.featureSpace.scaled = df.batchPredict[, -1] %>% 
+            scale(center = df.summaryALL$content.mean, scale = df.summaryALL$content.sd) %>%
+            as_tibble()
+        
+        
+        withProgress(message = "Modelling...", value = 0, {
+            
+            for(i in 1:length(progress)) {
+                
+                # update progress of step i
+                incProgress(1/length(progress), detail = progress[i])
+                # Pause for 1 sec to simulate a long computation.
+                Sys.sleep(1)
+                
+                # Use all oroginal dataset for training models
+                if (i == 1){
+                    
+                    # model training
+                    df.train = func.strata.Norm.trainTest(trainingRatio = 1, scaleData = T)[[1]] # split ratio = 1
+                    
+                    
+                    # Normalize unknown batch based on mean and standard deviation vector computed from entire original AIV dataset
+                    df.batchPredict.featureSpace.scaled = df.batchPredict[, -1] %>% 
+                        scale(center = df.summaryALL$content.mean, scale = df.summaryALL$content.sd) %>%
+                        as_tibble()
+                } 
+                
+                ## Linear discriminant analysis (LDA)----
+                if (i == 2) {
+                    mdl.trained.LDA = lda(Category ~., data = df.train)
+                    mdl.fitted.LDA = predict(mdl.trained.LDA, newdata = df.batchPredict.featureSpace.scaled, prior = rep(1/4, 4))
+                    fitted.LDA = mdl.fitted.LDA$class 
+                }
+                ## Quadratic discriminant analysis  
+                if (i == 3) {
+                    mdl.QDA = qda(Category ~., data = df.train)
+                    mdl.fitted.QDA = predict(mdl.QDA, newdata = df.batchPredict.featureSpace.scaled, prior = rep(1/4, 4))
+                    fitted.QDA = mdl.fitted.QDA$class
+                }
+                ## Regularized logistic regression 
+                if (i == 4) {
+                    cv.mdl.ElasticNet = cv.glmnet(x = df.train[, -1] %>% as.matrix(), y = df.train$Category, 
+                                                  family = "multinomial", alpha = .5, nfolds = 6)
+                    
+                    fitted.ElasticNet = predict(cv.mdl.ElasticNet, newx = df.batchPredict.featureSpace.scaled %>% as.matrix(), 
+                                                s = cv.mdl.ElasticNet$lambda.1se, type = "class")
+                }
+                ## Random forest 
+                if (i == 5) {
+                    mdl.randomForest = randomForest(Category ~., data = df.train, ntree = 500, mtry = 5) 
+                    fitted.randomForest = predict(mdl.randomForest, newdata = df.batchPredict.featureSpace.scaled)
+                }
+                ## Support vector machine
+                if (i == 6) {
+                    mdl.svm = svm(x = df.train[, -1], y = df.train$Category)
+                    # predict
+                    fitted.svm = predict(mdl.svm, newdata = df.batchPredict.featureSpace.scaled)
+                }
+                ## Naive Bayes (benchmark) ----
+                if(i == 7) {
+                    mdl.Bayes = naiveBayes(x = df.train[, -1], y = df.train$Category)
+                    fitted.Bayes = predict(mdl.Bayes, newdata = df.batchPredict.featureSpace.scaled, type = "class")
+                }
+                
+                ## Wrap up results
+                if (i == 8) {
+                    # As column names, no space allowed in header names. Thus use underscore later replace with space
+                    t = data.frame("Linear_discriminant_analysis" = fitted.LDA, 
+                                   "Quadratic_discriminant_analysis" = fitted.QDA, 
+                                   "Elastic_net" = fitted.ElasticNet %>% c(), 
+                                   "Random_forest" = fitted.randomForest, 
+                                   "Support_vector_machine" = fitted.svm, 
+                                   "Naive_Bayes" = fitted.Bayes) 
+                    # combine sample name with prediction result
+                    t = cbind(Sample = df.batchPredict$Sample, t) 
+                }
+            }
+            
+        })
+        return(t)
+    })
+    
+    output$batchPrediction.output1 = renderTable(tab3.output() )
+    
+}
+
+# Run the application 
+shinyApp(ui = ui, server = server)
+
+```
 
