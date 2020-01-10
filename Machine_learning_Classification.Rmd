@@ -39,6 +39,7 @@ library(caret)
 library(rpart.plot) # for classification tree plot
 library(randomForest)
 library(e1071)
+library(ComplexHeatmap)
 
 # The core package collection
 # load last, so as the key functions are not masked by others; but instead masking others if any
@@ -66,6 +67,10 @@ df.content = df.content %>% select(Name, Category, Site) %>%
 
 # categories
 unique.categories = df.content$Category %>% unique()
+
+# category colors
+color.category = c("Black", "Steelblue", "Firebrick" , "Darkgreen") 
+names(color.category) = unique.categories
 ```
 
 
@@ -314,7 +319,7 @@ func.regularizedLogistic = function(
   cf.counts.logistic = cf.logistic$table %>% func.tidy.cf.contigencyTable(ModelName = ModelName)
   cf.stats.logistic = cf.logistic$byClass %>% func.tidy.cf.statsTable(ModelName = ModelName)
   
-  return(list(cf.counts.logistic, cf.stats.logistic))
+  return(list(cf.counts.logistic, cf.stats.logistic, fitted.logistic))
   
 }
 
@@ -442,7 +447,7 @@ df.confusionMatrix.all.tidy = diag %>%
 
 
 
-## Visualization
+## Confusion matrix
 ```{r, message=F, warning=F, fig.width=12, fig.height=8}
 # Visualize confusion matrix
  df.confusionMatrix.all.tidy %>%
@@ -472,6 +477,56 @@ df.confusionMatrix.all.tidy = diag %>%
         title = element_text(face = "bold")) +
   ggtitle("Confusion Matrix") +
   coord_fixed(ratio = 1)
+
+```
+
+## Sample-wise comparison among models
+```{r}
+# Sample-wise comparison between models
+fitted.ElasticNet = func.regularizedLogistic(input.alpha = 0.5, ModelName = "Elastic Net")[[3]]
+
+df.actual.vs.fit = data.frame(
+  "Actual" = df.test$Category, 
+  "Linear discriminant" = fitted.LDA, 
+  "Quadratic discriminant" = fitted.QDA, 
+  "Elastic net" = fitted.ElasticNet, 
+  # "CART" = fitted.CART,
+  "Random forest" =  fitted.randomForest, 
+  "Support vector machine" =  fitted.svm, 
+  "Naive Bayes" = fitted.Bayes)
+
+df.actual.vs.fit = df.actual.vs.fit %>% as_tibble() %>%
+  mutate(Actual = factor(Actual, ordered = F))
+df.actual.vs.fit
+
+
+# most votes
+func.mostVotes = function(vector){
+  x = vector %>% table() %>% sort() %>% rev() 
+  names(x)[1] %>% return()
+}
+
+df.actual.vs.fit = df.actual.vs.fit %>% 
+  mutate('Most voted' =  apply(df.actual.vs.fit %>% select(-Actual),
+                            MARGIN = 1, func.mostVotes))
+```
+
+
+```{r, fig.width=2, fig.width=10}
+# Heatmap of sample-wise predicted result
+plt.heatmap.machineLearning = 
+  df.actual.vs.fit %>% 
+  as.matrix() %>%
+  Heatmap(col = color.category,
+          heatmap_legend_param = list(
+            title = "Category", title_position = "leftcenter",
+            nrow = 1,
+            labels_gp = gpar(fontsize = 11)), 
+          rect_gp = gpar(col = "white", lwd = 0.1))
+
+draw(plt.heatmap.machineLearning,
+     heatmap_legend_side = "bottom")
+
 
 ```
 
