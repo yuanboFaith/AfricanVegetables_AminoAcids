@@ -284,12 +284,20 @@ ui <- fluidPage(
                              )
                          ),
                          
-                         fluidRow(
-                             column(
-                                 12, 
-                                 plotOutput("plt.newShuffle"))
-                         )
+                         strong("A. The following confusion matrix presents the summarized prediction results vs. the actual.",
+                                style = "color:tomato"),
                          
+                         fluidRow(
+                             column(8, plotOutput("plt.newShuffle"))
+                         ),
+                         br(),
+                         
+                         strong("B. The following heatmap presents the predicted result of each model vs. the actual on a sample-wise basis.",
+                                style = "color:tomato"),
+                         
+                         fluidRow(
+                             column(12, plotOutput("plt.newShuffle.heatmap"))
+                         )
                 ),
                 
                 tabPanel("Unknown prediction: single sample", # ------
@@ -345,7 +353,7 @@ server <- function(input, output) {
     
     # tab 1: Simulator
     
-    p  <- eventReactive(input$Shuffle, {
+    ph  <- eventReactive(input$Shuffle, {
         
         if (input$Seed2020 == T) {set.seed(2020)}
         
@@ -415,7 +423,7 @@ server <- function(input, output) {
                         cf.counts.logistic = cf.logistic$table %>% func.tidy.cf.contigencyTable(ModelName = ModelName)
                         cf.stats.logistic = cf.logistic$byClass %>% func.tidy.cf.statsTable(ModelName = ModelName)
                         
-                        return(list(cf.counts.logistic, cf.stats.logistic))
+                        return(list(cf.counts.logistic, cf.stats.logistic, fitted.logistic))
                         
                     }
                     
@@ -505,8 +513,9 @@ server <- function(input, output) {
                 
                 ## Visualization ----
                 if (i == 9) {
+                    # confusion matrix -----
                     p = df.confusionMatrix.all.tidy %>%
-                        ggplot(aes(x = reference, y = Prediction)) + 
+                        ggplot(aes(x = reference, y = Prediction)) +  # ----
                         facet_wrap(~Model, nrow = 2) +
                         
                         # off diaganol incorrect prediction
@@ -532,14 +541,61 @@ server <- function(input, output) {
                               title = element_text(face = "bold")) +
                         ggtitle("Confusion Matrix") +
                         coord_fixed(ratio = 1)
+                    
+                    # sample-wise comparison heatmap -----
+                    
+                    # Sample-wise comparison between models
+                    fitted.ElasticNet = func.regularizedLogistic(input.alpha = 0.5, ModelName = "Elastic Net")[[3]]
+                    
+                    df.actual.vs.fit = data.frame(
+                        "Actual" = df.test$Category, 
+                        "Linear discriminant analysis" = fitted.LDA, 
+                        "Quadratic discriminant analysis" = fitted.QDA, 
+                        "Elastic net" = fitted.ElasticNet, 
+                        # "CART" = fitted.CART,
+                        "Random forest" =  fitted.randomForest, 
+                        "Support vector machine" =  fitted.svm, 
+                        "Naive Bayes" = fitted.Bayes)
+                    
+                    df.actual.vs.fit = df.actual.vs.fit %>% as_tibble() %>%
+                        mutate(Actual = factor(Actual, ordered = F))
+                    df.actual.vs.fit
+                    
+                    
+                    # most votes
+                    func.mostVotes = function(vector){
+                        x = vector %>% table() %>% sort() %>% rev() 
+                        names(x)[1] %>% return()
+                    }
+                    
+                    df.actual.vs.fit = df.actual.vs.fit %>% 
+                        mutate(mostVotes =  apply(df.actual.vs.fit %>% select(-Actual),
+                                                  MARGIN = 1, func.mostVotes))
+                    
+                    
+                    
+                    # Heatmap of sample-wise predicted result
+                    plt.heatmap.machineLearning = 
+                        df.actual.vs.fit %>% 
+                        as.matrix() %>% t() %>%
+                        Heatmap(col = color.category,
+                                heatmap_legend_param = list(
+                                    title = "Category", title_position = "leftcenter",
+                                    nrow = 1,
+                                    labels_gp = gpar(fontsize = 11)), 
+                                rect_gp = gpar(col = "white", lwd = 0.1))
+                    
+                    h = draw(plt.heatmap.machineLearning, heatmap_legend_side = "bottom")
+                    
+                    
                 } 
             }
         })
-        return(p)
+        return(list(p, h))
     })
     
-    output$plt.newShuffle = renderPlot({  p() })
-    
+    output$plt.newShuffle = renderPlot({  ph()[[1]] })
+    output$plt.newShuffle.heatmap = renderPlot({  ph()[[2]] })
     
     
     
