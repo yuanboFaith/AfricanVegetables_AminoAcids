@@ -512,7 +512,7 @@ df.actual.vs.fit = df.actual.vs.fit %>%
 ```
 
 
-```{r, fig.width=2, fig.width=10}
+```{r, fig.width=10, fig.height=10}
 # Heatmap of sample-wise predicted result
 plt.heatmap.machineLearning = 
   df.actual.vs.fit %>% 

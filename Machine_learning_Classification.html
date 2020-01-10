@@ -410,6 +410,7 @@ library(caret)
 library(rpart.plot) # for classification tree plot
 library(randomForest)
 library(e1071)
+library(ComplexHeatmap)
 
 # The core package collection
 # load last, so as the key functions are not masked by others; but instead masking others if any
@@ -430,7 +431,11 @@ df.content = df.content %&gt;% select(Name, Category, Site) %&gt;%
   as_tibble()
 
 # categories
-unique.categories = df.content$Category %&gt;% unique()</code></pre>
+unique.categories = df.content$Category %&gt;% unique()
+
+# category colors
+color.category = c(&quot;Black&quot;, &quot;Steelblue&quot;, &quot;Firebrick&quot; , &quot;Darkgreen&quot;) 
+names(color.category) = unique.categories</code></pre>
 </div>
 <div id="define-functions" class="section level1">
 <h1><span class="header-section-number">3</span> Define functions</h1>
@@ -648,7 +653,7 @@ func.regularizedLogistic = function(
   cf.counts.logistic = cf.logistic$table %&gt;% func.tidy.cf.contigencyTable(ModelName = ModelName)
   cf.stats.logistic = cf.logistic$byClass %&gt;% func.tidy.cf.statsTable(ModelName = ModelName)
   
-  return(list(cf.counts.logistic, cf.stats.logistic))
+  return(list(cf.counts.logistic, cf.stats.logistic, fitted.logistic))
   
 }
 
@@ -757,8 +762,8 @@ df.confusionMatrix.all.tidy = diag %&gt;%
   rbind(df.confusionMatrix.all.tidy %&gt;% filter(Diaganol == T) %&gt;%
           mutate(color = &quot;steelblue&quot;))</code></pre>
 </div>
-<div id="visualization" class="section level2">
-<h2><span class="header-section-number">5.2</span> Visualization</h2>
+<div id="confusion-matrix-1" class="section level2">
+<h2><span class="header-section-number">5.2</span> Confusion matrix</h2>
 <pre class="r"><code># Visualize confusion matrix
  df.confusionMatrix.all.tidy %&gt;%
   ggplot(aes(x = reference, y = Prediction)) + 
@@ -788,6 +793,63 @@ df.confusionMatrix.all.tidy = diag %&gt;%
   ggtitle(&quot;Confusion Matrix&quot;) +
   coord_fixed(ratio = 1)</code></pre>
 <p><img src="Machine_learning_Classification_files/figure-html/unnamed-chunk-21-1.png" width="1152" /></p>
+</div>
+<div id="sample-wise-comparison-among-models" class="section level2">
+<h2><span class="header-section-number">5.3</span> Sample-wise comparison among models</h2>
+<pre class="r"><code># Sample-wise comparison between models
+fitted.ElasticNet = func.regularizedLogistic(input.alpha = 0.5, ModelName = &quot;Elastic Net&quot;)[[3]]
+
+df.actual.vs.fit = data.frame(
+  &quot;Actual&quot; = df.test$Category, 
+  &quot;Linear discriminant&quot; = fitted.LDA, 
+  &quot;Quadratic discriminant&quot; = fitted.QDA, 
+  &quot;Elastic net&quot; = fitted.ElasticNet, 
+  # &quot;CART&quot; = fitted.CART,
+  &quot;Random forest&quot; =  fitted.randomForest, 
+  &quot;Support vector machine&quot; =  fitted.svm, 
+  &quot;Naive Bayes&quot; = fitted.Bayes)
+
+df.actual.vs.fit = df.actual.vs.fit %&gt;% as_tibble() %&gt;%
+  mutate(Actual = factor(Actual, ordered = F))
+df.actual.vs.fit</code></pre>
+<pre><code>## # A tibble: 168 x 7
+##    Actual Linear.discrimi… Quadratic.discr… Elastic.net Random.forest
+##    &lt;fct&gt;  &lt;fct&gt;            &lt;fct&gt;            &lt;ord&gt;       &lt;fct&gt;        
+##  1 Musta… Mustard          Mustard          Mustard     Mustard      
+##  2 Musta… Mustard          Spider plant     Mustard     Mustard      
+##  3 Musta… Mustard          Mustard          Mustard     Mustard      
+##  4 Musta… Mustard          Mustard          Mustard     Mustard      
+##  5 Musta… Mustard          Mustard          Mustard     Mustard      
+##  6 Musta… Mustard          Mustard          Mustard     Mustard      
+##  7 Musta… Mustard          Mustard          Mustard     Mustard      
+##  8 Musta… Mustard          Mustard          Mustard     Mustard      
+##  9 Musta… Mustard          Mustard          Mustard     Mustard      
+## 10 Musta… Mustard          Mustard          Mustard     Mustard      
+## # … with 158 more rows, and 2 more variables: Support.vector.machine &lt;fct&gt;,
+## #   Naive.Bayes &lt;fct&gt;</code></pre>
+<pre class="r"><code># most votes
+func.mostVotes = function(vector){
+  x = vector %&gt;% table() %&gt;% sort() %&gt;% rev() 
+  names(x)[1] %&gt;% return()
+}
+
+df.actual.vs.fit = df.actual.vs.fit %&gt;% 
+  mutate(&#39;Most voted&#39; =  apply(df.actual.vs.fit %&gt;% select(-Actual),
+                            MARGIN = 1, func.mostVotes))</code></pre>
+<pre class="r"><code># Heatmap of sample-wise predicted result
+plt.heatmap.machineLearning = 
+  df.actual.vs.fit %&gt;% 
+  as.matrix() %&gt;%
+  Heatmap(col = color.category,
+          heatmap_legend_param = list(
+            title = &quot;Category&quot;, title_position = &quot;leftcenter&quot;,
+            nrow = 1,
+            labels_gp = gpar(fontsize = 11)), 
+          rect_gp = gpar(col = &quot;white&quot;, lwd = 0.1))
+
+draw(plt.heatmap.machineLearning,
+     heatmap_legend_side = &quot;bottom&quot;)</code></pre>
+<p><img src="Machine_learning_Classification_files/figure-html/unnamed-chunk-23-1.png" width="960" /></p>
 </div>
 </div>
 
