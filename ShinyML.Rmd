@@ -23,6 +23,11 @@ library(caret)
 library(readxl)
 library(writexl)
 library(tidyverse)
+library(ComplexHeatmap) # from bionconductor
+library(circlize)
+
+library(BiocManager) # ensure smooth use of ComplexHeatmap
+options(repos = BiocManager::repositories())
 
 # Import data from Dropbox ----
 drop_auth()
@@ -125,13 +130,20 @@ func.tidy.cf.statsTable = function(inputTable, ModelName){
         return()
 }
 
+# 3) Summarize most votes form all models
+func.mostVotes = function(vector){
+    x = vector %>% table() %>% sort() %>% rev() 
+    names(x)[1] %>% return()
+}
+
 
 
 # arrange model order
-unique.models = factor(c("Linear discriminant analysis", "Quadratic discriminant analysis", "Elastic net", 
-                         "Random forest", "Support vector machine", "Naive Bayes"), ordered = T)
+unique.models = factor(c("LDA", "QDA", "EN", 
+                         "RF", "SVM", "NB", "Most voted"), ordered = T)
 
-
+unique.models2 = factor(c("Linear discriminant analysis", "Quadratic discriminant analysis", "Elastic net", 
+                          "Random forest", "Support vector machine", "Naive Bayes", "Most voted"), ordered = T)
 
 
 # Entire dataset summary stats (used for tabs #2 & #3 single & batch sample(s) prediction) -----
@@ -140,6 +152,7 @@ df.summaryALL = (df.content %>% select(-c(Name, Site, Category, strata.group, Da
     group_by(compounds) %>%
     summarise(content.mean = mean(content),
               content.sd = sd(content)) 
+
 
 # set up comounds as ordered factor
 unique.compounds = (df.content %>% colnames())[-c(1:5)]
@@ -160,10 +173,9 @@ color.category = c("Black", "Steelblue", "Firebrick" , "Darkgreen")
 names(color.category) = unique.categories
 
 
-
-
 # the computation progress bar
 progress = c("Dataset setup", "LDA", "QDA", "Elastic Net", "Random Forest", "SVM", "Naive Bayes", "Wrap up", "Output")
+
 
 
 
@@ -194,9 +206,18 @@ ui <- fluidPage(
                                                 label = "Percent of data used for model training",
                                                 min = .5, max = .9, value = .7))),
                 
-                fluidRow(column(12, checkboxInput(inputId = "Seed2020", 
+                fluidRow(column(12, checkboxInput(inputId = "SeedBirthday", 
                                                   label = "Set seed: generate reproducible split of train-test dataset", 
-                                                  value = F)))
+                                                  value = T))), 
+                
+                br(),br(),br(),
+                strong("Model names are abbreviated as acronyms:"), br(), br(),
+                span(strong("LDA"), ", Linear Discriminant Analysis"), br(),br(),
+                span(strong("QDA"), ", Quadratic Discriminant Analysis"), br(),br(),
+                span(strong("EN"), ", Elastic Net (alpha = 0.5)"), br(),br(),
+                span(strong("RF"), ", Random Forest"), br(),br(),
+                span(strong("SVM"), ", Support Vector Machine"), br(),br(),
+                span(strong("NB"), ", Naive Bayes"), br(), br()
             ),
             
             # tab 2 ----
@@ -245,17 +266,44 @@ ui <- fluidPage(
                 fluidRow(
                     column(
                         11,
-                        fileInput(inputId = "userfile", label = NULL, buttonLabel = "Browse...Excel input",
-                                  width = '700px', placeholder = "Please upload unknown samples' feature space"),
-                        
-                        tags$style(".btn-file { background-color:white; border-color: black; } 
-                                   .progress-bar { background-color: #3c763d;}"))),
+                        downloadButton("downloadTemplate", "Download table template for batch prediction",
+                                       style="color: white; background-color: steelblue; border-color: black"))
+                ), 
+                
+                br(),
+                
                 fluidRow(
                     column(
                         11,
-                        downloadButton("downloadTemplate", "Download table template for batch prediction",
-                                       style="color: white; background-color: steelblue; border-color: black"))
-                    )
+                        fileInput(inputId = "userfile", label = NULL, buttonLabel = "Browse...Excel input",
+                                  width = '700px', placeholder = "Upload free amino acid content dataset"))
+                ),
+                
+                fluidRow(
+                    column(
+                        11, 
+                        checkboxInput(inputId = "ArrangeCategory", 
+                                      label = "Arrange heatmap predicted category by most voted results", 
+                                      value = F))
+                ), 
+                
+                fluidRow(
+                    column(
+                        11,
+                        downloadButton("downloadPredicted", "Download predicted result table",
+                                       style="color: white; background-color: orange; border-color: black"))
+                ),
+                
+                br(),br(),br(),
+                
+                strong("Model names are abbreviated as acronyms:"), br(), br(),
+                span(strong("LDA"), ", Linear Discriminant Analysis"), br(),br(),
+                span(strong("QDA"), ", Quadratic Discriminant Analysis"), br(),br(),
+                span(strong("EN"), ", Elastic Net (alpha = 0.5)"), br(),br(),
+                span(strong("RF"), ", Random Forest"), br(),br(),
+                span(strong("SVM"), ", Support Vector Machine"), br(),br(),
+                span(strong("NB"), ", Naive Bayes"), br(), br()
+                
             )
             
         ),
@@ -272,7 +320,7 @@ ui <- fluidPage(
                              column(
                                  11,
                                  p("The African indigenous vegetables (AIVs) free amino acid dataset (544 rows, 21 columns) contains the content of 21 free amino acids in 544 samples of AIVs, the latter comprising four basic categories, i.e., nighthshades, amaranth, spider plant, and mustard. Each category was sourced from different continents or countries, harvest years and seasons, etc., including one or more subspecies and cultivars.", strong("This app makes prediction of the AIV category based on the content of free amino acids.",
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                  style = "color: black")),
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                  style = "color: black")), br(),
                                  
                                  strong("Click", code("Train models and predict on test set"), 
                                         "button to train models using specified percent (default 70%) of the AIV amino acid dataset as the training set, and make predictions on the remaining percent of the dataset as the test set. The prediction result is summarized as the confusion matrix, showing counts of correct and incorrect predictions.", 
@@ -285,7 +333,7 @@ ui <- fluidPage(
                          ),
                          
                          strong("A. The following confusion matrix presents the summarized prediction results vs. the actual.",
-                                style = "color:tomato"),
+                                style = "color:#006666"),
                          
                          fluidRow(
                              column(8, plotOutput("plt.newShuffle"))
@@ -293,10 +341,17 @@ ui <- fluidPage(
                          br(),
                          
                          strong("B. The following heatmap presents the predicted result of each model vs. the actual on a sample-wise basis.",
-                                style = "color:tomato"),
+                                style = "color:#006666"),
                          
                          fluidRow(
                              column(12, plotOutput("plt.newShuffle.heatmap"))
+                         ),
+                         
+                         br(),
+                         strong("C. The following sprout plot presents key summary statistics of each model.",
+                                style = "color:#006666"),
+                         fluidRow(
+                             column(12, plotOutput("plt.summaryStats"))
                          )
                 ),
                 
@@ -306,13 +361,14 @@ ui <- fluidPage(
                          fluidRow(
                              column(
                                  11,
-                                 p("This section makes prediction of AIV category of an unknown sample based on its free amino acid content (in unit of mg/100g dry weight), using models trained from the entire AIVs amino acid dataset (544 rows X 21 columns). The current default setting is the average level of free amino acids in African nightshade leaves."), 
+                                 p("This section makes prediction of AIV category of an unknown sample based on its free amino acid content (in unit of mg/100g dry weight), using models trained from the entire AIVs amino acid dataset (544 rows X 21 columns). The current default setting is the average level of free amino acids in African nightshade leaves."), br(),
+                                 
                                  strong("Use sliderbars to update the amino acid content of a single unknown sample."), 
                                  br(),
                                  strong("Click", code("Predict!"), "to predict classfication based on updated feature space.")
                              )
                          ),
-                         
+                         br(),
                          plotOutput("plt.singleSamplePredict")),
                 
                 tabPanel("Unknown prediction: batch sample", # ------
@@ -325,7 +381,15 @@ ui <- fluidPage(
                              )
                          ),
                          br(),
-                         dataTableOutput("batchPrediction.output1")
+                         
+                         strong("A: The following table represents prediction result for each sample.", 
+                                style = "color:#006666"), br(),
+                         dataTableOutput("batchPrediction.output1"),
+                         br(),
+                         
+                         strong("B: The following heatmap visualizes the above prediction table as easy overview.", 
+                                style = "color:#006666"),
+                         plotOutput("batchPrediction.output2")
                 ),
                 
                 tabPanel("About",
@@ -355,7 +419,7 @@ server <- function(input, output) {
     
     ph  <- eventReactive(input$Shuffle, {
         
-        if (input$Seed2020 == T) {set.seed(2020)}
+        if (input$SeedBirthday == T) {set.seed(11101991)}
         
         withProgress(message = "Modelling...", value = 0, {
             
@@ -385,8 +449,8 @@ server <- function(input, output) {
                     cf.LDA = confusionMatrix(data = fitted.LDA, reference = df.test$Category, mode = "everything")
                     
                     # confusion table and summary stats
-                    cf.counts.LDA = cf.LDA$table %>% func.tidy.cf.contigencyTable(ModelName = "Linear discriminant analysis")
-                    cf.stats.LDA = cf.LDA$byClass %>% func.tidy.cf.statsTable(ModelName = "Linear discriminant analysis") 
+                    cf.counts.LDA = cf.LDA$table %>% func.tidy.cf.contigencyTable(ModelName = "LDA")
+                    cf.stats.LDA = cf.LDA$byClass %>% func.tidy.cf.statsTable(ModelName = "LDA") 
                 }
                 
                 ## Quadratic discriminant analysis ----
@@ -397,8 +461,8 @@ server <- function(input, output) {
                     cf.QDA = confusionMatrix(data = fitted.QDA, reference = df.test$Category, mode = "everything")
                     
                     # confusion table and summary stats
-                    cf.counts.QDA = cf.QDA$table %>% func.tidy.cf.contigencyTable(ModelName = "Quadratic discriminant analysis") 
-                    cf.stats.QDA = cf.QDA$byClass %>% func.tidy.cf.statsTable(ModelName = "Quadratic discriminant analysis")
+                    cf.counts.QDA = cf.QDA$table %>% func.tidy.cf.contigencyTable(ModelName = "QDA") 
+                    cf.stats.QDA = cf.QDA$byClass %>% func.tidy.cf.statsTable(ModelName = "QDA")
                     
                 }
                 
@@ -427,8 +491,9 @@ server <- function(input, output) {
                         
                     }
                     
-                    cf.counts.ElasticNet = func.regularizedLogistic(input.alpha = 0.5, ModelName = paste("Elastic net") )[[1]]
-                    cf.stats.ElasticNet = func.regularizedLogistic(input.alpha = 0.5, ModelName = paste("Elastic net") )[[2]]
+                    cf.counts.ElasticNet = func.regularizedLogistic(input.alpha = 0.5, ModelName = paste("EN") )[[1]]
+                    cf.stats.ElasticNet = func.regularizedLogistic(input.alpha = 0.5, ModelName = paste("EN") )[[2]]
+                    fitted.ElasticNet = func.regularizedLogistic(input.alpha = 0.5, ModelName = paste("EN") )[[3]]
                     
                 }
                 
@@ -442,10 +507,10 @@ server <- function(input, output) {
                         data = fitted.randomForest, reference = df.test$Category, mode = "everything")
                     # confusion matrix and summary stats
                     cf.counts.randomForest = cf.randomForest$table %>%
-                        func.tidy.cf.contigencyTable(ModelName = "Random forest")
+                        func.tidy.cf.contigencyTable(ModelName = "RF")
                     
                     cf.stats.randomForest = cf.randomForest$byClass %>% 
-                        func.tidy.cf.statsTable(ModelName = "Random forest")
+                        func.tidy.cf.statsTable(ModelName = "RF")
                     
                 }
                 
@@ -461,10 +526,10 @@ server <- function(input, output) {
                     
                     # confusion matrix and summary stats
                     cf.counts.svm = cf.svm$table %>%
-                        func.tidy.cf.contigencyTable(ModelName = "Support vector machine")
+                        func.tidy.cf.contigencyTable(ModelName = "SVM")
                     
                     cf.stats.svm = cf.svm$byClass %>% 
-                        func.tidy.cf.statsTable(ModelName = "Support vector machine")
+                        func.tidy.cf.statsTable(ModelName = "SVM")
                     
                 }
                 
@@ -481,9 +546,9 @@ server <- function(input, output) {
                     
                     # confusion matrix and summary stats
                     cf.counts.Bayes = cf.Bayes$table %>%
-                        func.tidy.cf.contigencyTable(ModelName = "Naive Bayes")
+                        func.tidy.cf.contigencyTable(ModelName = "NB")
                     cf.stats.Bayes = cf.Bayes$byClass %>% 
-                        func.tidy.cf.statsTable(ModelName = "Naive Bayes")
+                        func.tidy.cf.statsTable(ModelName = "NB")
                     
                 }
                 
@@ -492,23 +557,61 @@ server <- function(input, output) {
                 if (i == 8) {
                     # Test results ----
                     # Summary of all machine learning techniques ----
+                    
+                    # Sample wise prediction of all models and most voted 
+                    df.actual.vs.fit = data.frame(
+                        "Actual" = df.test$Category, 
+                        "LDA" = fitted.LDA, 
+                        "QDA" = fitted.QDA, 
+                        "EN" = fitted.ElasticNet, 
+                        # "CART" = fitted.CART,
+                        "RF" =  fitted.randomForest, 
+                        "SVM" =  fitted.svm, 
+                        "NB" = fitted.Bayes)
+                    
+                    df.actual.vs.fit = df.actual.vs.fit %>% as_tibble() %>%
+                        mutate(Actual = factor(Actual, ordered = F))
+                    
+                    df.actual.vs.fit = df.actual.vs.fit %>% 
+                        mutate(most.voted =  apply(df.actual.vs.fit %>% select(-Actual),
+                                                   MARGIN = 1, func.mostVotes))
+                    
+                    
+                    # Most voted confusion matrix
+                    cf.mostVoted = confusionMatrix(data = df.actual.vs.fit$most.voted %>% factor(), 
+                                                   reference = df.actual.vs.fit$Actual, mode = "everything")
+                    
+                    cf.counts.MostVoted = cf.mostVoted$table %>%
+                        func.tidy.cf.contigencyTable(ModelName = "Most voted")
+                    
+                    cf.stats.MostVoted = cf.mostVoted$byClass %>%
+                        func.tidy.cf.statsTable(ModelName = "Most voted")
+                    
+                    
+                    # Summarize all confusion matrix
                     df.confusionMatrix.all = cf.counts.LDA %>% rbind(cf.counts.QDA) %>%
                         rbind(cf.counts.ElasticNet) %>% # rbind(cf.counts.CART) %>%
                         rbind(cf.counts.randomForest) %>% rbind(cf.counts.svm) %>%
-                        rbind(cf.counts.Bayes) %>% as_tibble()
+                        rbind(cf.counts.Bayes) %>% rbind(cf.counts.MostVoted) %>%
+                        as_tibble()
                     
                     # tidy up the confusion matrix combined
                     df.confusionMatrix.all.tidy = df.confusionMatrix.all %>%
                         gather(-c(Prediction, Model), key = reference, value = counts) %>%
-                        mutate(reference = factor(reference, levels = unique.categories),
-                               Prediction = factor(Prediction, levels = unique.categories %>% rev(), ordered = T))
-                    
-                    
-                    # change factor order in the dataset
-                    df.confusionMatrix.all.tidy =
-                        df.confusionMatrix.all.tidy %>% 
-                        mutate(Model = factor(Model, levels = unique.models, ordered = T)) %>%
+                        mutate(reference = factor(reference, levels = unique.categories, ordered = T),
+                               Prediction = factor(Prediction, levels = unique.categories %>% rev(), ordered = T),
+                               Model = factor(Model, levels = unique.models, ordered = T)) %>%
                         arrange(Model)
+                    
+                    
+                    # Set up summary statistics
+                    df.stats = cf.stats.LDA %>% rbind(cf.stats.QDA) %>%
+                        rbind(cf.stats.ElasticNet) %>% rbind(cf.stats.randomForest) %>%
+                        rbind(cf.stats.svm) %>% rbind(cf.stats.Bayes) %>% rbind(cf.stats.MostVoted) %>%
+                        select(Category, Model, Precision, Recall, F1) %>% 
+                        gather(-c(1:2), key = metrics, value = values) %>%
+                        mutate(Model = factor(Model, levels = unique.models, ordered = T))
+                    
                 }
                 
                 ## Visualization ----
@@ -516,7 +619,7 @@ server <- function(input, output) {
                     # confusion matrix -----
                     p = df.confusionMatrix.all.tidy %>%
                         ggplot(aes(x = reference, y = Prediction)) +  # ----
-                        facet_wrap(~Model, nrow = 2) +
+                    facet_wrap(~Model, nrow = 2) +
                         
                         # off diaganol incorrect prediction
                         geom_label(data = df.confusionMatrix.all.tidy %>% filter(counts > 0 & counts < 20),
@@ -534,69 +637,84 @@ server <- function(input, output) {
                                    size = 6, color = "grey")  +
                         theme_bw() +
                         
-                        theme(axis.text.x = element_text(angle = 30, vjust = .8, hjust = .8),
+                        theme(axis.text.x = element_text(angle = 90, vjust = .8, hjust = .8, size = 12, colour = "black"),
+                              axis.text.y = element_text(size = 12, colour = "black"),
+                              axis.title = element_text(size = 12),
                               strip.background = element_blank(),
-                              strip.text = element_text(face = "bold"),
+                              strip.text = element_text(face = "bold", size = 14),
                               panel.border = element_rect(color = "black", size = 1),
-                              title = element_text(face = "bold")) +
-                        ggtitle("Confusion Matrix") +
-                        coord_fixed(ratio = 1)
+                              title = element_text(face = "bold"),
+                              plot.margin = unit(c(.1, .1, .1, .1), "cm")) # +
+                    # coord_fixed(ratio = .8)
                     
                     # sample-wise comparison heatmap -----
                     
                     # Sample-wise comparison between models
-                    fitted.ElasticNet = func.regularizedLogistic(input.alpha = 0.5, ModelName = "Elastic Net")[[3]]
                     
                     df.actual.vs.fit = data.frame(
                         "Actual" = df.test$Category, 
-                        "Linear discriminant analysis" = fitted.LDA, 
-                        "Quadratic discriminant analysis" = fitted.QDA, 
-                        "Elastic net" = fitted.ElasticNet, 
+                        "LDA" = fitted.LDA, 
+                        "QDA" = fitted.QDA, 
+                        "EN" = fitted.ElasticNet, 
                         # "CART" = fitted.CART,
-                        "Random forest" =  fitted.randomForest, 
-                        "Support vector machine" =  fitted.svm, 
-                        "Naive Bayes" = fitted.Bayes)
+                        "RF" =  fitted.randomForest, 
+                        "SVM" =  fitted.svm, 
+                        "NB" = fitted.Bayes)
                     
                     df.actual.vs.fit = df.actual.vs.fit %>% as_tibble() %>%
                         mutate(Actual = factor(Actual, ordered = F))
                     df.actual.vs.fit
                     
-                    
-                    # most votes
-                    func.mostVotes = function(vector){
-                        x = vector %>% table() %>% sort() %>% rev() 
-                        names(x)[1] %>% return()
-                    }
-                    
                     df.actual.vs.fit = df.actual.vs.fit %>% 
-                        mutate(mostVotes =  apply(df.actual.vs.fit %>% select(-Actual),
-                                                  MARGIN = 1, func.mostVotes))
+                        mutate(most.voted =  apply(df.actual.vs.fit %>% select(-Actual),
+                                                   MARGIN = 1, func.mostVotes))
                     
                     
                     
                     # Heatmap of sample-wise predicted result
                     plt.heatmap.machineLearning = 
-                        df.actual.vs.fit %>% 
+                        df.actual.vs.fit %>% arrange(Actual) %>%
                         as.matrix() %>% t() %>%
                         Heatmap(col = color.category,
                                 heatmap_legend_param = list(
-                                    title = "Category", title_position = "leftcenter",
+                                    title = "", title_position = "leftcenter",
                                     nrow = 1,
-                                    labels_gp = gpar(fontsize = 11)), 
+                                    labels_gp = gpar(fontsize = 15)), 
                                 rect_gp = gpar(col = "white", lwd = 0.1))
                     
                     h = draw(plt.heatmap.machineLearning, heatmap_legend_side = "bottom")
                     
                     
+                    
+                    # Summary statistics
+                    plt.summaryStats = df.stats %>% ggplot(aes(x = Category, y = values, color = metrics)) +
+                        geom_segment(aes( xend = Category, y = 0.5, yend = values), 
+                                     position = position_dodge(0.5)) +
+                        geom_point(size = 4, position = position_dodge(.3), alpha = .9) +
+                        facet_wrap(~Model, nrow = 1) +
+                        theme_bw() +
+                        theme(legend.position = "bottom",
+                              legend.title = element_text(size = 12),
+                              legend.text = element_text(size = 12),
+                              
+                              strip.text = element_text(face = "bold", size = 14),
+                              strip.background = element_blank(),
+                              
+                              axis.text.x = element_text(angle = 90, hjust = 1, colour = "black", size = 12),
+                              axis.text.y = element_text(colour = "black", size = 12),
+                              axis.title = element_text(size = 13)) +
+                        coord_cartesian(ylim = c(0.65, 1)) +
+                        scale_color_brewer(palette = "Accent")
+                    
                 } 
             }
         })
-        return(list(p, h))
+        return(list(p, h, plt.summaryStats))
     })
     
     output$plt.newShuffle = renderPlot({  ph()[[1]] })
     output$plt.newShuffle.heatmap = renderPlot({  ph()[[2]] })
-    
+    output$plt.summaryStats = renderPlot({ ph()[3] })
     
     
     
@@ -691,7 +809,7 @@ server <- function(input, output) {
                                    "Naive_Bayes" = fitted.Bayes) %>% 
                         as_tibble() %>% gather(key = model, value = result) %>%
                         mutate(model = str_replace_all(model, pattern = "_", replacement = " "),
-                               model = factor(model, levels = unique.models, ordered = T))
+                               model = factor(model, levels = unique.models2, ordered = T))
                     
                 }
                 
@@ -800,23 +918,66 @@ server <- function(input, output) {
                 
                 ## Wrap up results
                 if (i == 8) {
-                    # As column names, no space allowed in header names. Thus use underscore later replace with space
-                    t = data.frame("Linear_discriminant_analysis" = fitted.LDA, 
-                                   "Quadratic_discriminant_analysis" = fitted.QDA, 
-                                   "Elastic_net" = fitted.ElasticNet %>% c(), 
-                                   "Random_forest" = fitted.randomForest, 
-                                   "Support_vector_machine" = fitted.svm, 
-                                   "Naive_Bayes" = fitted.Bayes) 
-                    # combine sample name with prediction result
-                    t = cbind(Sample = df.batchPredict$Sample, t) 
+                    # Summary table -----
+                    d.fitted.all = data.frame("LDA" = fitted.LDA, 
+                                              "QDA" = fitted.QDA, 
+                                              "EN" = fitted.ElasticNet %>% c(), 
+                                              "RF" = fitted.randomForest, 
+                                              "SVM" = fitted.svm, 
+                                              "NB" = fitted.Bayes) 
+                    # summarize most voted
+                    d.fitted.all = d.fitted.all %>% 
+                        mutate(most.voted = apply(d.fitted.all, MARGIN = 1, func.mostVotes)) 
+                    
+                    # combine sample name with prediction result as output table
+                    d.fitted.all.named.1 = cbind(Sample = df.batchPredict$Sample, d.fitted.all) 
+                    
                 }
             }
             
         })
-        return(t)
+        return(list(d.fitted.all.named.1, h) )
+    }) 
+    
+    output$batchPrediction.output1 = renderDataTable(tab3.output()[[1]] )
+    
+    
+    
+    
+    # Heatmap of sample-wise predicted result -----
+    # rownames(d.fitted.all) = df.batchPredict$Sample
+    
+    tab3.heatmap = reactive({
+        d.heat = tab3.output()[[1]]
+        
+        if (input$ArrangeCategory == TRUE) { # arrange by category order
+            
+            d.heat = d.heat %>% 
+                mutate(most.voted = factor(most.voted, levels = unique.categories, ordered = T)) %>%
+                arrange(most.voted) 
+            SampleNames = d.heat$Sample
+            d.heat = d.heat %>% select(-Sample) %>% as.matrix()
+            rownames(d.heat) = SampleNames
+        } else{ # keep original order
+            SampleNames = d.heat$Sample
+            d.heat = d.heat %>% select(-Sample) %>% as.matrix()
+            rownames(d.heat) = SampleNames
+        }
+        
+        plt.heatmap.batchPrediction = 
+            d.heat %>% t() %>%
+            Heatmap(col = color.category,
+                    heatmap_legend_param = list(
+                        title = "", title_position = "leftcenter",
+                        nrow = 1,
+                        labels_gp = gpar(fontsize = 15)), 
+                    rect_gp = gpar(col = "white", lwd = 0.1))
+        
+        h = draw(plt.heatmap.batchPrediction, heatmap_legend_side = "bottom")
     })
     
-    output$batchPrediction.output1 = renderDataTable(tab3.output() )
+    
+    output$batchPrediction.output2 = renderPlot(tab3.heatmap())
     
     
     
@@ -829,6 +990,14 @@ server <- function(input, output) {
         content = function(file) {
             write_xlsx(df.template, path = file)  
         } 
+    )
+    
+    # download predicted table
+    output$downloadPredicted = downloadHandler(
+        filename = "Predicted results.xlsx",
+        content = function(file) {
+            write_xlsx(tab3.output()[[1]], path = file )
+        }
     )
     
 }
