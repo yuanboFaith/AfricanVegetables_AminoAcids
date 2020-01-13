@@ -412,10 +412,9 @@ df.AA = read_excel(path, sheet = &quot;amino acids&quot;) # amino acids traits d
 df.buffer = df.buffer %&gt;% left_join(df.AA, by = &quot;Amino acids&quot;) # combine datasets
 
 df.buffer$`Amino acids` %&gt;% unique() # Check all amino acids are properly registered (ensure there is NO datasets mis-match)</code></pre>
-<pre><code>##  [1] &quot;Alanine&quot;          &quot;Arginine&quot;         &quot;Asparagine&quot;       &quot;Aspartic acid&quot;    &quot;Cysteine&quot;         &quot;Glutamic acid&quot;   
-##  [7] &quot;Glutamine&quot;        &quot;Glycine&quot;          &quot;Histidine&quot;        &quot;Isoleucine&quot;       &quot;Leucine&quot;          &quot;Lysine&quot;          
-## [13] &quot;Methionine&quot;       &quot;Phenylalanine&quot;    &quot;Proline&quot;          &quot;Serine&quot;           &quot;Threonine&quot;        &quot;4-hydroxyproline&quot;
-## [19] &quot;Tryptophan&quot;       &quot;Tyrosine&quot;         &quot;Valine&quot;</code></pre>
+<pre><code>##  [1] &quot;Alanine&quot;          &quot;Arginine&quot;         &quot;Asparagine&quot;       &quot;Aspartic acid&quot;    &quot;Cysteine&quot;         &quot;Glutamic acid&quot;    &quot;Glutamine&quot;       
+##  [8] &quot;Glycine&quot;          &quot;Histidine&quot;        &quot;Isoleucine&quot;       &quot;Leucine&quot;          &quot;Lysine&quot;           &quot;Methionine&quot;       &quot;Phenylalanine&quot;   
+## [15] &quot;Proline&quot;          &quot;Serine&quot;           &quot;Threonine&quot;        &quot;4-hydroxyproline&quot; &quot;Tryptophan&quot;       &quot;Tyrosine&quot;         &quot;Valine&quot;</code></pre>
 <pre class="r"><code>df.buffer$Conc.mM = df.buffer$Conc.mM %&gt;% 
   factor(levels = rev(unique(df.buffer$Conc.mM)), ordered = T) # convert buffer conc. into factors
 
@@ -891,8 +890,8 @@ df.accuracy</code></pre>
 ##  8 alanine   A/a          2189.        59.7               1.8             2.25             350            8782.             276. 
 ##  9 alanine   B/b          1625.        20.2               2.6             1.62             350           12159.             382. 
 ## 10 alanine   C/c           952.        21.9               5               1.25             350           15807.             496. 
-## # … with 137 more rows, and 6 more variables: QC.Spike.Expected &lt;dbl&gt;, inj.conc.background.mean &lt;dbl&gt;,
-## #   inj.conc.background.sd &lt;dbl&gt;, inj.conc.Spike.Expected &lt;dbl&gt;, Accuracy &lt;dbl&gt;, Accuracy.sd &lt;dbl&gt;</code></pre>
+## # … with 137 more rows, and 6 more variables: QC.Spike.Expected &lt;dbl&gt;, inj.conc.background.mean &lt;dbl&gt;, inj.conc.background.sd &lt;dbl&gt;,
+## #   inj.conc.Spike.Expected &lt;dbl&gt;, Accuracy &lt;dbl&gt;, Accuracy.sd &lt;dbl&gt;</code></pre>
 <pre class="r"><code># Visualize accuracy
 dg.Acc = .6 # position_dodge value
 errorBarWidth = 1

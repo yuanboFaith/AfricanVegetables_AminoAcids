@@ -48,7 +48,7 @@ library(tidyverse)
 
 
 ```{r, message=F, warning=F}
-set.seed(2020)
+set.seed(19911110)
 ```
 
 
@@ -196,10 +196,9 @@ func.tidy.cf.contigencyTable = function(inputTable, ModelName){
 ```
 
 
-
 ### Summary statistics
 ```{r, message=F, warning=F}
-# 2) For stats table
+# 2) For stats table based on each category
 func.tidy.cf.statsTable = function(inputTable, ModelName){
   cbind(Category = rownames(inputTable), inputTable %>% as_tibble()) %>%
     mutate(Category = str_remove(Category, pattern = "Class: ")) %>%
@@ -207,6 +206,25 @@ func.tidy.cf.statsTable = function(inputTable, ModelName){
     return()
 }
 ```
+
+```{r}
+# 3) For overal stats table
+func.tidy.cf.statsOveral = function(vector, modelName){
+  d = data.frame(Accuracy = vector[1], AccuracyLower = vector[3], 
+                 AccuracyUpper = vector[4], Model = modelName) %>% as_tibble()
+  return(d)
+}
+
+```
+
+### Most votes 
+```{r}
+func.mostVotes = function(vector){
+  x = vector %>% table() %>% sort() %>% rev() 
+  names(x)[1] %>% return()
+}
+```
+
 
 
 # Machine learning
@@ -235,9 +253,9 @@ fitted.LDA = mdl.fitted.LDA$class # here we overwrite the prior fitted.LDA objec
 cf.LDA = confusionMatrix(data = fitted.LDA, reference = df.test$Category, mode = "everything")
 
 # confusion table
-cf.counts.LDA = cf.LDA$table %>% func.tidy.cf.contigencyTable(ModelName = "Linear discriminant analysis")
+cf.counts.LDA = cf.LDA$table %>% func.tidy.cf.contigencyTable(ModelName = "LDA")
 # Summary stats table
-cf.stats.LDA = cf.LDA$byClass %>% func.tidy.cf.statsTable(ModelName = "Linear discriminant analysis") 
+cf.stats.LDA = cf.LDA$byClass %>% func.tidy.cf.statsTable(ModelName = "LDA") 
 
 
 ```
@@ -254,9 +272,9 @@ fitted.QDA = mdl.fitted.QDA$class
 cf.QDA = confusionMatrix(data = fitted.QDA, reference = df.test$Category, mode = "everything")
 
 # confusion matrix
-cf.counts.QDA = cf.QDA$table %>% func.tidy.cf.contigencyTable(ModelName = "Quadratic discriminant analysis") 
+cf.counts.QDA = cf.QDA$table %>% func.tidy.cf.contigencyTable(ModelName = "QDA") 
 # summary results
-cf.stats.QDA = cf.QDA$byClass %>% func.tidy.cf.statsTable(ModelName = "Quadratic discriminant analysis")
+cf.stats.QDA = cf.QDA$byClass %>% func.tidy.cf.statsTable(ModelName = "QDA")
 ```
 
 
@@ -319,7 +337,7 @@ func.regularizedLogistic = function(
   cf.counts.logistic = cf.logistic$table %>% func.tidy.cf.contigencyTable(ModelName = ModelName)
   cf.stats.logistic = cf.logistic$byClass %>% func.tidy.cf.statsTable(ModelName = ModelName)
   
-  return(list(cf.counts.logistic, cf.stats.logistic, fitted.logistic))
+  return(list(cf.counts.logistic, cf.stats.logistic, fitted.logistic, cf.logistic))
   
 }
 
@@ -329,8 +347,13 @@ func.regularizedLogistic = function(
 # func.regularizedLogistic(input.alpha = 0.5, ModelName = paste("ElasticNet, α = 0.5") )
 
 # We'remore interested in the elastic net results
-cf.counts.ElasticNet = func.regularizedLogistic(input.alpha = 0.5, ModelName = paste("Elastic net") )[[1]]
-cf.stats.ElasticNet = func.regularizedLogistic(input.alpha = 0.5, ModelName = paste("Elastic net") )[[2]]
+list.logistic = func.regularizedLogistic(input.alpha = 0.5, ModelName = paste("EN") )
+
+cf.counts.ElasticNet =list.logistic[[1]]
+cf.stats.ElasticNet = list.logistic[[2]]
+fitted.ElasticNet = list.logistic[[3]]
+cf.EN = list.logistic[[4]]
+
 ```
 
 
@@ -351,10 +374,10 @@ cf.randomForest = confusionMatrix(data = fitted.randomForest,
 
 # confusion matrix
 cf.counts.randomForest = cf.randomForest$table %>%
-  func.tidy.cf.contigencyTable(ModelName = "Random forest")
+  func.tidy.cf.contigencyTable(ModelName = "RF")
 # Summary stats
 cf.stats.randomForest = cf.randomForest$byClass %>% 
-  func.tidy.cf.statsTable(ModelName = "Random forest")
+  func.tidy.cf.statsTable(ModelName = "RF")
 
 # cf.counts.randomForest
 # cf.stats.randomForest
@@ -373,11 +396,11 @@ cf.svm = confusionMatrix(
 
 # confusion matrix
 cf.counts.svm = cf.svm$table %>%
-  func.tidy.cf.contigencyTable(ModelName = "Support vector machine")
+  func.tidy.cf.contigencyTable(ModelName = "SVM")
 
 # summary stats
 cf.stats.svm = cf.svm$byClass %>% 
-  func.tidy.cf.statsTable(ModelName = "Support vector machine")
+  func.tidy.cf.statsTable(ModelName = "SVM")
 ```
 
 ## Naive Bayes (benchmark)
@@ -393,11 +416,11 @@ cf.Bayes = confusionMatrix(
 
 # confusion matrix
 cf.counts.Bayes = cf.Bayes$table %>%
-  func.tidy.cf.contigencyTable(ModelName = "Naive Bayes")
+  func.tidy.cf.contigencyTable(ModelName = "NB")
 
 # summary stats
 cf.stats.Bayes = cf.Bayes$byClass %>% 
-  func.tidy.cf.statsTable(ModelName = "Naive Bayes")
+  func.tidy.cf.statsTable(ModelName = "NB")
 ```
 
 
@@ -406,7 +429,43 @@ cf.stats.Bayes = cf.Bayes$byClass %>%
 ## Wrap up
 
 ```{r}
-unique.models = factor(c("Linear discriminant analysis", "Quadratic discriminant analysis", "Elastic net", "Random forest", "Support vector machine", "Naive Bayes"))
+unique.models = factor(
+  c("LDA", "QDA", "EN", "RF", "SVM", "NB", "Most voted"), ordered = T)
+```
+
+
+```{r}
+# Summary of all machine learning techniques ----
+
+# Sample wise prediction of all models and most voted 
+df.actual.vs.fit = data.frame(
+  "Actual" = df.test$Category, 
+  "LDA" = fitted.LDA, 
+  "QDA" = fitted.QDA, 
+  "EN" = fitted.ElasticNet, 
+  "RF" =  fitted.randomForest, 
+  "SVM" =  fitted.svm, 
+  "NB" = fitted.Bayes)
+
+df.actual.vs.fit = df.actual.vs.fit %>% as_tibble() %>%
+  mutate(Actual = factor(Actual, ordered = F))
+
+df.actual.vs.fit = df.actual.vs.fit %>% 
+  mutate(most.voted =  apply(df.actual.vs.fit %>% select(-Actual),
+                             MARGIN = 1, func.mostVotes))
+
+
+# Most voted confusion matrix
+cf.mostVoted = confusionMatrix(data = df.actual.vs.fit$most.voted %>% factor(), 
+                               reference = df.actual.vs.fit$Actual %>% factor(), mode = "everything")
+
+cf.counts.MostVoted = cf.mostVoted$table %>%
+  func.tidy.cf.contigencyTable(ModelName = "Most voted")
+
+cf.stats.MostVoted = cf.mostVoted$byClass %>%
+  func.tidy.cf.statsTable(ModelName = "Most voted")
+
+
 ```
 
 
@@ -416,7 +475,7 @@ unique.models = factor(c("Linear discriminant analysis", "Quadratic discriminant
 df.confusionMatrix.all = cf.counts.LDA %>% rbind(cf.counts.QDA) %>%
   rbind(cf.counts.ElasticNet) %>% # rbind(cf.counts.CART) %>%
   rbind(cf.counts.randomForest) %>% rbind(cf.counts.svm) %>%
-  rbind(cf.counts.Bayes) %>% as_tibble()
+  rbind(cf.counts.Bayes) %>% rbind(cf.counts.MostVoted) %>% as_tibble()
 
 # tidy up the confusion matrix combined
 df.confusionMatrix.all.tidy = df.confusionMatrix.all %>%
@@ -450,7 +509,7 @@ df.confusionMatrix.all.tidy = diag %>%
 ## Confusion matrix
 ```{r, message=F, warning=F, fig.width=12, fig.height=8}
 # Visualize confusion matrix
- df.confusionMatrix.all.tidy %>%
+df.confusionMatrix.all.tidy %>%
   ggplot(aes(x = reference, y = Prediction)) + 
   facet_wrap(~Model, nrow = 2) +
   
@@ -470,17 +529,20 @@ df.confusionMatrix.all.tidy = diag %>%
              size = 6, color = "grey")  +
   theme_bw() +
   
-  theme(axis.text.x = element_text(angle = 30, vjust = .8, hjust = .8),
+  theme(axis.text.x = element_text(angle = 40, vjust = .8, hjust = .8, color = "black", size = 12),
+        axis.text.y = element_text(color = "black", size = 12),
+        axis.title = element_text(size = 14, colour = "black"),
         strip.background = element_blank(),
-        strip.text = element_text(face = "bold"),
+        strip.text = element_text(face = "bold", size = 14),
         panel.border = element_rect(color = "black", size = 1),
-        title = element_text(face = "bold")) +
-  ggtitle("Confusion Matrix") +
+        title = element_text(face = "bold")) + 
+  labs(x = "\nReference", y = "Prediction\n") 
+ggtitle("Confusion Matrix") +
   coord_fixed(ratio = 1)
 
 ```
 
-## Sample-wise comparison among models
+## Sample-wise heatmap
 ```{r}
 # Sample-wise comparison between models
 fitted.ElasticNet = func.regularizedLogistic(input.alpha = 0.5, ModelName = "Elastic Net")[[3]]
@@ -497,7 +559,7 @@ df.actual.vs.fit = data.frame(
 
 df.actual.vs.fit = df.actual.vs.fit %>% as_tibble() %>%
   mutate(Actual = factor(Actual, ordered = F))
-df.actual.vs.fit
+# df.actual.vs.fit
 
 
 # most votes
@@ -508,14 +570,15 @@ func.mostVotes = function(vector){
 
 df.actual.vs.fit = df.actual.vs.fit %>% 
   mutate('Most voted' =  apply(df.actual.vs.fit %>% select(-Actual),
-                            MARGIN = 1, func.mostVotes))
+                               MARGIN = 1, func.mostVotes))
 ```
+
 
 
 ```{r, fig.width=10, fig.height=10}
 # Heatmap of sample-wise predicted result
 plt.heatmap.machineLearning = 
-  df.actual.vs.fit %>% 
+  df.actual.vs.fit %>% arrange(`Most voted`) %>%
   as.matrix() %>%
   Heatmap(col = color.category,
           heatmap_legend_param = list(
@@ -528,5 +591,64 @@ draw(plt.heatmap.machineLearning,
      heatmap_legend_side = "bottom")
 
 
+```
+
+## Summary statistics
+```{r}
+# Set up summary statistics
+df.stats = cf.stats.LDA %>% rbind(cf.stats.QDA) %>%
+  rbind(cf.stats.ElasticNet) %>% rbind(cf.stats.randomForest) %>%
+  rbind(cf.stats.svm) %>% rbind(cf.stats.Bayes) %>% rbind(cf.stats.MostVoted) %>%
+  select(Category, Model, Precision, Recall, F1) %>% 
+  gather(-c(1:2), key = metrics, value = values) %>%
+  mutate(Model = factor(Model, levels = unique.models, ordered = T))
+
+
+df.stats.overal = func.tidy.cf.statsOveral(cf.LDA$overall, modelName = "LDA") %>%
+  rbind(func.tidy.cf.statsOveral(cf.QDA$overall, modelName = "QDA")) %>%
+  rbind(func.tidy.cf.statsOveral(cf.EN$overall, modelName = "EN")) %>%
+  rbind(func.tidy.cf.statsOveral(cf.randomForest$overall, modelName = "RF")) %>%
+  rbind(func.tidy.cf.statsOveral(cf.svm$overall, modelName = "SVM")) %>%
+  rbind(func.tidy.cf.statsOveral(cf.Bayes$overall, modelName = "NB")) %>%
+  rbind(func.tidy.cf.statsOveral(cf.mostVoted$overall, modelName = "Most voted")) %>%
+  mutate(Model = factor(Model, levels = unique.models, ordered = T))
+
+```
+
+The overal accuracy of the model is in bold, with corresponding 95% confidence interval shown in following line. 
+
+```{r, fig.width=12, fig.height=5}
+plt.summaryStats = 
+  df.stats %>% ggplot(aes(x = Category, y = values, color = metrics)) +
+  geom_segment(aes( xend = Category, y = 0.5, yend = values), 
+               position = position_dodge(0.5)) +
+  geom_point(size = 4, position = position_dodge(.3), alpha = .9) +
+  facet_wrap(~Model, nrow = 1) +
+  theme_bw() +
+  theme(legend.position = "bottom",
+        legend.title = element_text(size = 11),
+        legend.text = element_text(size = 11),
+        
+        strip.text = element_text(face = "bold", size = 12),
+        strip.background = element_blank(),
+        
+        axis.text.x = element_text(angle = 90, hjust = 1, colour = "black", size = 11),
+        axis.text.y = element_text(colour = "black", size = 11),
+        axis.title = element_text(size = 11)) +
+  coord_cartesian(ylim = c(0.65, 1)) +
+  scale_color_brewer(palette = "Accent") +
+  
+  # overal stats
+  geom_text(data = df.stats.overal, 
+            aes(x = 2.5, y = 0.7, label = round(Accuracy, 3) * 100), 
+            color = "black", fontface = "bold", size = 5) +
+  
+  geom_text(data = df.stats.overal, 
+            aes(x = 2.5, y = 0.66, 
+                label = paste(round(AccuracyLower, 3) * 100, " ~ ",
+                              round(AccuracyUpper, 3) * 100)), 
+            color = "black", size = 5) 
+
+plt.summaryStats 
 ```
 

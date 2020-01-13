@@ -415,7 +415,7 @@ library(ComplexHeatmap)
 # The core package collection
 # load last, so as the key functions are not masked by others; but instead masking others if any
 library(tidyverse)</code></pre>
-<pre class="r"><code>set.seed(2020)</code></pre>
+<pre class="r"><code>set.seed(19911110)</code></pre>
 </div>
 <div id="data" class="section level1">
 <h1><span class="header-section-number">2</span> Data</h1>
@@ -552,12 +552,25 @@ func.tidy.cf.contigencyTable = function(inputTable, ModelName){
 </div>
 <div id="summary-statistics" class="section level3">
 <h3><span class="header-section-number">3.2.2</span> Summary statistics</h3>
-<pre class="r"><code># 2) For stats table
+<pre class="r"><code># 2) For stats table based on each category
 func.tidy.cf.statsTable = function(inputTable, ModelName){
   cbind(Category = rownames(inputTable), inputTable %&gt;% as_tibble()) %&gt;%
     mutate(Category = str_remove(Category, pattern = &quot;Class: &quot;)) %&gt;%
     mutate(Model = ModelName) %&gt;%
     return()
+}</code></pre>
+<pre class="r"><code># 3) For overal stats table
+func.tidy.cf.statsOveral = function(vector, modelName){
+  d = data.frame(Accuracy = vector[1], AccuracyLower = vector[3], 
+                 AccuracyUpper = vector[4], Model = modelName) %&gt;% as_tibble()
+  return(d)
+}</code></pre>
+</div>
+<div id="most-votes" class="section level3">
+<h3><span class="header-section-number">3.2.3</span> Most votes</h3>
+<pre class="r"><code>func.mostVotes = function(vector){
+  x = vector %&gt;% table() %&gt;% sort() %&gt;% rev() 
+  names(x)[1] %&gt;% return()
 }</code></pre>
 </div>
 </div>
@@ -585,9 +598,9 @@ fitted.LDA = mdl.fitted.LDA$class # here we overwrite the prior fitted.LDA objec
 cf.LDA = confusionMatrix(data = fitted.LDA, reference = df.test$Category, mode = &quot;everything&quot;)
 
 # confusion table
-cf.counts.LDA = cf.LDA$table %&gt;% func.tidy.cf.contigencyTable(ModelName = &quot;Linear discriminant analysis&quot;)
+cf.counts.LDA = cf.LDA$table %&gt;% func.tidy.cf.contigencyTable(ModelName = &quot;LDA&quot;)
 # Summary stats table
-cf.stats.LDA = cf.LDA$byClass %&gt;% func.tidy.cf.statsTable(ModelName = &quot;Linear discriminant analysis&quot;) </code></pre>
+cf.stats.LDA = cf.LDA$byClass %&gt;% func.tidy.cf.statsTable(ModelName = &quot;LDA&quot;) </code></pre>
 </div>
 <div id="quadratic-discriminant-analysis" class="section level2">
 <h2><span class="header-section-number">4.3</span> Quadratic discriminant analysis</h2>
@@ -600,9 +613,9 @@ fitted.QDA = mdl.fitted.QDA$class
 cf.QDA = confusionMatrix(data = fitted.QDA, reference = df.test$Category, mode = &quot;everything&quot;)
 
 # confusion matrix
-cf.counts.QDA = cf.QDA$table %&gt;% func.tidy.cf.contigencyTable(ModelName = &quot;Quadratic discriminant analysis&quot;) 
+cf.counts.QDA = cf.QDA$table %&gt;% func.tidy.cf.contigencyTable(ModelName = &quot;QDA&quot;) 
 # summary results
-cf.stats.QDA = cf.QDA$byClass %&gt;% func.tidy.cf.statsTable(ModelName = &quot;Quadratic discriminant analysis&quot;)</code></pre>
+cf.stats.QDA = cf.QDA$byClass %&gt;% func.tidy.cf.statsTable(ModelName = &quot;QDA&quot;)</code></pre>
 <p>With 0.5 split ratio, console would pop up error “rank deficiency in group Mustard”. QDA estimates the covariance matrix for each population, and requries more data input. Mustard is the category with the smallest size of observation units. While LDA assumes equal covariance matrix for all populations, and takes a pooled covaraince matrix, and thus requires much less data input for parameter estimation. In fact, LDA does a fairly nice job when trained with only 10% of data.</p>
 </div>
 <div id="regularized-logistic-regression" class="section level2">
@@ -621,7 +634,7 @@ par(mfrow = c(1, 3))
 plot(cv.mdl.logistic.ridge, main = &quot;Ridge&quot;, line = 2) 
 plot(cv.mdl.logistic.elasticNet, main = &quot;Elastic Net (alpha = 0.5)&quot;, line = 2)
 plot(cv.mdl.logistic.lasso, main = &quot;Lasso&quot;, line = 2)</code></pre>
-<p><img src="Machine_learning_Classification_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
+<p><img src="Machine_learning_Classification_files/figure-html/unnamed-chunk-14-1.png" width="672" /></p>
 <pre class="r"><code>par(mfrow = c(1, 1))</code></pre>
 <pre class="r"><code># check model coefficients
 x = coef(cv.mdl.logistic.elasticNet, s = &quot;lambda.min&quot;)
@@ -653,7 +666,7 @@ func.regularizedLogistic = function(
   cf.counts.logistic = cf.logistic$table %&gt;% func.tidy.cf.contigencyTable(ModelName = ModelName)
   cf.stats.logistic = cf.logistic$byClass %&gt;% func.tidy.cf.statsTable(ModelName = ModelName)
   
-  return(list(cf.counts.logistic, cf.stats.logistic, fitted.logistic))
+  return(list(cf.counts.logistic, cf.stats.logistic, fitted.logistic, cf.logistic))
   
 }
 
@@ -663,8 +676,12 @@ func.regularizedLogistic = function(
 # func.regularizedLogistic(input.alpha = 0.5, ModelName = paste(&quot;ElasticNet, α = 0.5&quot;) )
 
 # We&#39;remore interested in the elastic net results
-cf.counts.ElasticNet = func.regularizedLogistic(input.alpha = 0.5, ModelName = paste(&quot;Elastic net&quot;) )[[1]]
-cf.stats.ElasticNet = func.regularizedLogistic(input.alpha = 0.5, ModelName = paste(&quot;Elastic net&quot;) )[[2]]</code></pre>
+list.logistic = func.regularizedLogistic(input.alpha = 0.5, ModelName = paste(&quot;EN&quot;) )
+
+cf.counts.ElasticNet =list.logistic[[1]]
+cf.stats.ElasticNet = list.logistic[[2]]
+fitted.ElasticNet = list.logistic[[3]]
+cf.EN = list.logistic[[4]]</code></pre>
 </div>
 <div id="random-forest" class="section level2">
 <h2><span class="header-section-number">4.5</span> Random forest</h2>
@@ -683,10 +700,10 @@ cf.randomForest = confusionMatrix(data = fitted.randomForest,
 
 # confusion matrix
 cf.counts.randomForest = cf.randomForest$table %&gt;%
-  func.tidy.cf.contigencyTable(ModelName = &quot;Random forest&quot;)
+  func.tidy.cf.contigencyTable(ModelName = &quot;RF&quot;)
 # Summary stats
 cf.stats.randomForest = cf.randomForest$byClass %&gt;% 
-  func.tidy.cf.statsTable(ModelName = &quot;Random forest&quot;)
+  func.tidy.cf.statsTable(ModelName = &quot;RF&quot;)
 
 # cf.counts.randomForest
 # cf.stats.randomForest</code></pre>
@@ -703,11 +720,11 @@ cf.svm = confusionMatrix(
 
 # confusion matrix
 cf.counts.svm = cf.svm$table %&gt;%
-  func.tidy.cf.contigencyTable(ModelName = &quot;Support vector machine&quot;)
+  func.tidy.cf.contigencyTable(ModelName = &quot;SVM&quot;)
 
 # summary stats
 cf.stats.svm = cf.svm$byClass %&gt;% 
-  func.tidy.cf.statsTable(ModelName = &quot;Support vector machine&quot;)</code></pre>
+  func.tidy.cf.statsTable(ModelName = &quot;SVM&quot;)</code></pre>
 </div>
 <div id="naive-bayes-benchmark" class="section level2">
 <h2><span class="header-section-number">4.7</span> Naive Bayes (benchmark)</h2>
@@ -722,23 +739,53 @@ cf.Bayes = confusionMatrix(
 
 # confusion matrix
 cf.counts.Bayes = cf.Bayes$table %&gt;%
-  func.tidy.cf.contigencyTable(ModelName = &quot;Naive Bayes&quot;)
+  func.tidy.cf.contigencyTable(ModelName = &quot;NB&quot;)
 
 # summary stats
 cf.stats.Bayes = cf.Bayes$byClass %&gt;% 
-  func.tidy.cf.statsTable(ModelName = &quot;Naive Bayes&quot;)</code></pre>
+  func.tidy.cf.statsTable(ModelName = &quot;NB&quot;)</code></pre>
 </div>
 </div>
 <div id="test-results" class="section level1">
 <h1><span class="header-section-number">5</span> Test results</h1>
 <div id="wrap-up" class="section level2">
 <h2><span class="header-section-number">5.1</span> Wrap up</h2>
-<pre class="r"><code>unique.models = factor(c(&quot;Linear discriminant analysis&quot;, &quot;Quadratic discriminant analysis&quot;, &quot;Elastic net&quot;, &quot;Random forest&quot;, &quot;Support vector machine&quot;, &quot;Naive Bayes&quot;))</code></pre>
+<pre class="r"><code>unique.models = factor(
+  c(&quot;LDA&quot;, &quot;QDA&quot;, &quot;EN&quot;, &quot;RF&quot;, &quot;SVM&quot;, &quot;NB&quot;, &quot;Most voted&quot;), ordered = T)</code></pre>
+<pre class="r"><code># Summary of all machine learning techniques ----
+
+# Sample wise prediction of all models and most voted 
+df.actual.vs.fit = data.frame(
+  &quot;Actual&quot; = df.test$Category, 
+  &quot;LDA&quot; = fitted.LDA, 
+  &quot;QDA&quot; = fitted.QDA, 
+  &quot;EN&quot; = fitted.ElasticNet, 
+  &quot;RF&quot; =  fitted.randomForest, 
+  &quot;SVM&quot; =  fitted.svm, 
+  &quot;NB&quot; = fitted.Bayes)
+
+df.actual.vs.fit = df.actual.vs.fit %&gt;% as_tibble() %&gt;%
+  mutate(Actual = factor(Actual, ordered = F))
+
+df.actual.vs.fit = df.actual.vs.fit %&gt;% 
+  mutate(most.voted =  apply(df.actual.vs.fit %&gt;% select(-Actual),
+                             MARGIN = 1, func.mostVotes))
+
+
+# Most voted confusion matrix
+cf.mostVoted = confusionMatrix(data = df.actual.vs.fit$most.voted %&gt;% factor(), 
+                               reference = df.actual.vs.fit$Actual %&gt;% factor(), mode = &quot;everything&quot;)
+
+cf.counts.MostVoted = cf.mostVoted$table %&gt;%
+  func.tidy.cf.contigencyTable(ModelName = &quot;Most voted&quot;)
+
+cf.stats.MostVoted = cf.mostVoted$byClass %&gt;%
+  func.tidy.cf.statsTable(ModelName = &quot;Most voted&quot;)</code></pre>
 <pre class="r"><code># Summary of all machine learning techniques
 df.confusionMatrix.all = cf.counts.LDA %&gt;% rbind(cf.counts.QDA) %&gt;%
   rbind(cf.counts.ElasticNet) %&gt;% # rbind(cf.counts.CART) %&gt;%
   rbind(cf.counts.randomForest) %&gt;% rbind(cf.counts.svm) %&gt;%
-  rbind(cf.counts.Bayes) %&gt;% as_tibble()
+  rbind(cf.counts.Bayes) %&gt;% rbind(cf.counts.MostVoted) %&gt;% as_tibble()
 
 # tidy up the confusion matrix combined
 df.confusionMatrix.all.tidy = df.confusionMatrix.all %&gt;%
@@ -765,7 +812,7 @@ df.confusionMatrix.all.tidy = diag %&gt;%
 <div id="confusion-matrix-1" class="section level2">
 <h2><span class="header-section-number">5.2</span> Confusion matrix</h2>
 <pre class="r"><code># Visualize confusion matrix
- df.confusionMatrix.all.tidy %&gt;%
+df.confusionMatrix.all.tidy %&gt;%
   ggplot(aes(x = reference, y = Prediction)) + 
   facet_wrap(~Model, nrow = 2) +
   
@@ -785,17 +832,21 @@ df.confusionMatrix.all.tidy = diag %&gt;%
              size = 6, color = &quot;grey&quot;)  +
   theme_bw() +
   
-  theme(axis.text.x = element_text(angle = 30, vjust = .8, hjust = .8),
+  theme(axis.text.x = element_text(angle = 40, vjust = .8, hjust = .8, color = &quot;black&quot;, size = 12),
+        axis.text.y = element_text(color = &quot;black&quot;, size = 12),
+        axis.title = element_text(size = 14, colour = &quot;black&quot;),
         strip.background = element_blank(),
-        strip.text = element_text(face = &quot;bold&quot;),
+        strip.text = element_text(face = &quot;bold&quot;, size = 14),
         panel.border = element_rect(color = &quot;black&quot;, size = 1),
-        title = element_text(face = &quot;bold&quot;)) +
-  ggtitle(&quot;Confusion Matrix&quot;) +
+        title = element_text(face = &quot;bold&quot;)) + 
+  labs(x = &quot;\nReference&quot;, y = &quot;Prediction\n&quot;) </code></pre>
+<p><img src="Machine_learning_Classification_files/figure-html/unnamed-chunk-24-1.png" width="1152" /></p>
+<pre class="r"><code>ggtitle(&quot;Confusion Matrix&quot;) +
   coord_fixed(ratio = 1)</code></pre>
-<p><img src="Machine_learning_Classification_files/figure-html/unnamed-chunk-21-1.png" width="1152" /></p>
+<pre><code>## NULL</code></pre>
 </div>
-<div id="sample-wise-comparison-among-models" class="section level2">
-<h2><span class="header-section-number">5.3</span> Sample-wise comparison among models</h2>
+<div id="sample-wise-heatmap" class="section level2">
+<h2><span class="header-section-number">5.3</span> Sample-wise heatmap</h2>
 <pre class="r"><code># Sample-wise comparison between models
 fitted.ElasticNet = func.regularizedLogistic(input.alpha = 0.5, ModelName = &quot;Elastic Net&quot;)[[3]]
 
@@ -811,23 +862,10 @@ df.actual.vs.fit = data.frame(
 
 df.actual.vs.fit = df.actual.vs.fit %&gt;% as_tibble() %&gt;%
   mutate(Actual = factor(Actual, ordered = F))
-df.actual.vs.fit</code></pre>
-<pre><code>## # A tibble: 168 x 7
-##    Actual Linear.discrimi… Quadratic.discr… Elastic.net Random.forest
-##    &lt;fct&gt;  &lt;fct&gt;            &lt;fct&gt;            &lt;ord&gt;       &lt;fct&gt;        
-##  1 Musta… Mustard          Mustard          Mustard     Mustard      
-##  2 Musta… Mustard          Spider plant     Mustard     Mustard      
-##  3 Musta… Mustard          Mustard          Mustard     Mustard      
-##  4 Musta… Mustard          Mustard          Mustard     Mustard      
-##  5 Musta… Mustard          Mustard          Mustard     Mustard      
-##  6 Musta… Mustard          Mustard          Mustard     Mustard      
-##  7 Musta… Mustard          Mustard          Mustard     Mustard      
-##  8 Musta… Mustard          Mustard          Mustard     Mustard      
-##  9 Musta… Mustard          Mustard          Mustard     Mustard      
-## 10 Musta… Mustard          Mustard          Mustard     Mustard      
-## # … with 158 more rows, and 2 more variables: Support.vector.machine &lt;fct&gt;,
-## #   Naive.Bayes &lt;fct&gt;</code></pre>
-<pre class="r"><code># most votes
+# df.actual.vs.fit
+
+
+# most votes
 func.mostVotes = function(vector){
   x = vector %&gt;% table() %&gt;% sort() %&gt;% rev() 
   names(x)[1] %&gt;% return()
@@ -835,10 +873,10 @@ func.mostVotes = function(vector){
 
 df.actual.vs.fit = df.actual.vs.fit %&gt;% 
   mutate(&#39;Most voted&#39; =  apply(df.actual.vs.fit %&gt;% select(-Actual),
-                            MARGIN = 1, func.mostVotes))</code></pre>
+                               MARGIN = 1, func.mostVotes))</code></pre>
 <pre class="r"><code># Heatmap of sample-wise predicted result
 plt.heatmap.machineLearning = 
-  df.actual.vs.fit %&gt;% 
+  df.actual.vs.fit %&gt;% arrange(`Most voted`) %&gt;%
   as.matrix() %&gt;%
   Heatmap(col = color.category,
           heatmap_legend_param = list(
@@ -849,7 +887,61 @@ plt.heatmap.machineLearning =
 
 draw(plt.heatmap.machineLearning,
      heatmap_legend_side = &quot;bottom&quot;)</code></pre>
-<p><img src="Machine_learning_Classification_files/figure-html/unnamed-chunk-23-1.png" width="960" /></p>
+<p><img src="Machine_learning_Classification_files/figure-html/unnamed-chunk-26-1.png" width="960" /></p>
+</div>
+<div id="summary-statistics-1" class="section level2">
+<h2><span class="header-section-number">5.4</span> Summary statistics</h2>
+<pre class="r"><code># Set up summary statistics
+df.stats = cf.stats.LDA %&gt;% rbind(cf.stats.QDA) %&gt;%
+  rbind(cf.stats.ElasticNet) %&gt;% rbind(cf.stats.randomForest) %&gt;%
+  rbind(cf.stats.svm) %&gt;% rbind(cf.stats.Bayes) %&gt;% rbind(cf.stats.MostVoted) %&gt;%
+  select(Category, Model, Precision, Recall, F1) %&gt;% 
+  gather(-c(1:2), key = metrics, value = values) %&gt;%
+  mutate(Model = factor(Model, levels = unique.models, ordered = T))
+
+
+df.stats.overal = func.tidy.cf.statsOveral(cf.LDA$overall, modelName = &quot;LDA&quot;) %&gt;%
+  rbind(func.tidy.cf.statsOveral(cf.QDA$overall, modelName = &quot;QDA&quot;)) %&gt;%
+  rbind(func.tidy.cf.statsOveral(cf.EN$overall, modelName = &quot;EN&quot;)) %&gt;%
+  rbind(func.tidy.cf.statsOveral(cf.randomForest$overall, modelName = &quot;RF&quot;)) %&gt;%
+  rbind(func.tidy.cf.statsOveral(cf.svm$overall, modelName = &quot;SVM&quot;)) %&gt;%
+  rbind(func.tidy.cf.statsOveral(cf.Bayes$overall, modelName = &quot;NB&quot;)) %&gt;%
+  rbind(func.tidy.cf.statsOveral(cf.mostVoted$overall, modelName = &quot;Most voted&quot;)) %&gt;%
+  mutate(Model = factor(Model, levels = unique.models, ordered = T))</code></pre>
+<p>The overal accuracy of the model is in bold, with corresponding 95% confidence interval shown in following line.</p>
+<pre class="r"><code>plt.summaryStats = 
+  df.stats %&gt;% ggplot(aes(x = Category, y = values, color = metrics)) +
+  geom_segment(aes( xend = Category, y = 0.5, yend = values), 
+               position = position_dodge(0.5)) +
+  geom_point(size = 4, position = position_dodge(.3), alpha = .9) +
+  facet_wrap(~Model, nrow = 1) +
+  theme_bw() +
+  theme(legend.position = &quot;bottom&quot;,
+        legend.title = element_text(size = 11),
+        legend.text = element_text(size = 11),
+        
+        strip.text = element_text(face = &quot;bold&quot;, size = 12),
+        strip.background = element_blank(),
+        
+        axis.text.x = element_text(angle = 90, hjust = 1, colour = &quot;black&quot;, size = 11),
+        axis.text.y = element_text(colour = &quot;black&quot;, size = 11),
+        axis.title = element_text(size = 11)) +
+  coord_cartesian(ylim = c(0.65, 1)) +
+  scale_color_brewer(palette = &quot;Accent&quot;) +
+  
+  # overal stats
+  geom_text(data = df.stats.overal, 
+            aes(x = 2.5, y = 0.7, label = round(Accuracy, 3) * 100), 
+            color = &quot;black&quot;, fontface = &quot;bold&quot;, size = 5) +
+  
+  geom_text(data = df.stats.overal, 
+            aes(x = 2.5, y = 0.66, 
+                label = paste(round(AccuracyLower, 3) * 100, &quot; ~ &quot;,
+                              round(AccuracyUpper, 3) * 100)), 
+            color = &quot;black&quot;, size = 5) 
+
+plt.summaryStats </code></pre>
+<p><img src="Machine_learning_Classification_files/figure-html/unnamed-chunk-28-1.png" width="1152" /></p>
 </div>
 </div>
 

@@ -5,7 +5,7 @@ output: html_document
 
 <br/><br/>
 
-#### Visit our **[Shiny App](https://boyuan.shinyapps.io/predict_African_vegetables/)** for interactive machine-learning.    
+#### Visit our **[Shiny App](https://boyuan.shinyapps.io/AIV_Classifier/)** for interactive machine-learning.    
 
 ##### This section only documents the corresponding script used for the Shiny app. 
 
@@ -112,7 +112,7 @@ func.strata.Norm.trainTest = function(trainingRatio = 0.7, scaleData = T){
 
 # Prediction table tidy up ----
 # Confusion matrix
-# Define two function: tidy up confusion tables (contingency table and stats) 
+# Define functions: tidy up confusion tables (contingency table and stats) 
 
 # 1) For contigency table
 func.tidy.cf.contigencyTable = function(inputTable, ModelName){
@@ -122,7 +122,7 @@ func.tidy.cf.contigencyTable = function(inputTable, ModelName){
         return()
 }
 
-# 2) Summary statistics
+# 2) Summary statistics for each category
 func.tidy.cf.statsTable = function(inputTable, ModelName){
     cbind(Category = rownames(inputTable), inputTable %>% as_tibble()) %>%
         mutate(Category = str_remove(Category, pattern = "Class: ")) %>%
@@ -136,6 +136,12 @@ func.mostVotes = function(vector){
     names(x)[1] %>% return()
 }
 
+# 4) Overal summary statistics for each model
+func.tidy.cf.statsOveral = function(vector, modelName){
+    d = data.frame(Accuracy = vector[1], AccuracyLower = vector[3], 
+                   AccuracyUpper = vector[4], Model = modelName) %>% as_tibble()
+    return(d)
+}
 
 
 # arrange model order
@@ -208,7 +214,7 @@ ui <- fluidPage(
                 
                 fluidRow(column(12, checkboxInput(inputId = "SeedBirthday", 
                                                   label = "Set seed: generate reproducible split of train-test dataset", 
-                                                  value = T))), 
+                                                  value = F))), 
                 
                 br(),br(),br(),
                 strong("Model names are abbreviated as acronyms:"), br(), br(),
@@ -338,20 +344,22 @@ ui <- fluidPage(
                          fluidRow(
                              column(8, plotOutput("plt.newShuffle"))
                          ),
-                         br(),
+                         br(),br(),
                          
                          strong("B. The following heatmap presents the predicted result of each model vs. the actual on a sample-wise basis.",
                                 style = "color:#006666"),
                          
                          fluidRow(
-                             column(12, plotOutput("plt.newShuffle.heatmap"))
+                             column(11, plotOutput("plt.newShuffle.heatmap"))
                          ),
                          
-                         br(),
+                         br(),br(),
                          strong("C. The following sprout plot presents key summary statistics of each model.",
                                 style = "color:#006666"),
+                         p("The overal accuracy is in bold, with 95% confidence interval displayed in the following line."),
+                         
                          fluidRow(
-                             column(12, plotOutput("plt.summaryStats"))
+                             column(11, plotOutput("plt.summaryStats"))
                          )
                 ),
                 
@@ -419,7 +427,7 @@ server <- function(input, output) {
     
     ph  <- eventReactive(input$Shuffle, {
         
-        if (input$SeedBirthday == T) {set.seed(11101991)}
+        if (input$SeedBirthday == T) {set.seed(19911110)}
         
         withProgress(message = "Modelling...", value = 0, {
             
@@ -487,13 +495,15 @@ server <- function(input, output) {
                         cf.counts.logistic = cf.logistic$table %>% func.tidy.cf.contigencyTable(ModelName = ModelName)
                         cf.stats.logistic = cf.logistic$byClass %>% func.tidy.cf.statsTable(ModelName = ModelName)
                         
-                        return(list(cf.counts.logistic, cf.stats.logistic, fitted.logistic))
+                        return(list(cf.counts.logistic, cf.stats.logistic, fitted.logistic, cf.logistic))
                         
                     }
                     
-                    cf.counts.ElasticNet = func.regularizedLogistic(input.alpha = 0.5, ModelName = paste("EN") )[[1]]
-                    cf.stats.ElasticNet = func.regularizedLogistic(input.alpha = 0.5, ModelName = paste("EN") )[[2]]
-                    fitted.ElasticNet = func.regularizedLogistic(input.alpha = 0.5, ModelName = paste("EN") )[[3]]
+                    list.logistic = func.regularizedLogistic(input.alpha = 0.5, ModelName = paste("EN") )
+                    cf.counts.ElasticNet =list.logistic[[1]]
+                    cf.stats.ElasticNet = list.logistic[[2]]
+                    fitted.ElasticNet = list.logistic[[3]]
+                    cf.EN = list.logistic[[4]]
                     
                 }
                 
@@ -588,21 +598,43 @@ server <- function(input, output) {
                         func.tidy.cf.statsTable(ModelName = "Most voted")
                     
                     
-                    # Summarize all confusion matrix
+                    
+                    
+                    
+                    # Summary of all machine learning techniques
                     df.confusionMatrix.all = cf.counts.LDA %>% rbind(cf.counts.QDA) %>%
                         rbind(cf.counts.ElasticNet) %>% # rbind(cf.counts.CART) %>%
                         rbind(cf.counts.randomForest) %>% rbind(cf.counts.svm) %>%
-                        rbind(cf.counts.Bayes) %>% rbind(cf.counts.MostVoted) %>%
-                        as_tibble()
+                        rbind(cf.counts.Bayes) %>% rbind(cf.counts.MostVoted) %>% as_tibble()
+                    
                     
                     # tidy up the confusion matrix combined
                     df.confusionMatrix.all.tidy = df.confusionMatrix.all %>%
+                        # tidy up
                         gather(-c(Prediction, Model), key = reference, value = counts) %>%
+                        
+                        # convert AIVs category into ordered factor
                         mutate(reference = factor(reference, levels = unique.categories, ordered = T),
-                               Prediction = factor(Prediction, levels = unique.categories %>% rev(), ordered = T),
-                               Model = factor(Model, levels = unique.models, ordered = T)) %>%
-                        arrange(Model)
+                               Prediction = factor(Prediction, levels = unique.categories %>% rev(), ordered = T)) %>%
+                        
+                        # change model order in the dataset
+                        mutate(Model = factor(Model, levels = unique.models, ordered = T)) %>%
+                        arrange(Model, reference, Prediction) %>%
+                        mutate(Diaganol = Prediction == reference)
                     
+                    
+                    
+                    
+                    ## Plot confusion matrix
+                    # Assign color to correct / incorrect prediction
+                    diag = df.confusionMatrix.all.tidy %>% 
+                        filter(Diaganol == F)
+                    
+                    df.confusionMatrix.all.tidy = diag %>% 
+                        mutate(color = ifelse(counts == 0, "Grey", "Firebrick")) %>%
+                        rbind(df.confusionMatrix.all.tidy %>% filter(Diaganol == T) %>%
+                                  mutate(color = "steelblue"))
+                  
                     
                     # Set up summary statistics
                     df.stats = cf.stats.LDA %>% rbind(cf.stats.QDA) %>%
@@ -612,45 +644,52 @@ server <- function(input, output) {
                         gather(-c(1:2), key = metrics, value = values) %>%
                         mutate(Model = factor(Model, levels = unique.models, ordered = T))
                     
+                    
+                    df.stats.overal = func.tidy.cf.statsOveral(cf.LDA$overall, modelName = "LDA") %>%
+                        rbind(func.tidy.cf.statsOveral(cf.QDA$overall, modelName = "QDA")) %>%
+                        rbind(func.tidy.cf.statsOveral(cf.EN$overall, modelName = "EN")) %>%
+                        rbind(func.tidy.cf.statsOveral(cf.randomForest$overall, modelName = "RF")) %>%
+                        rbind(func.tidy.cf.statsOveral(cf.svm$overall, modelName = "SVM")) %>%
+                        rbind(func.tidy.cf.statsOveral(cf.Bayes$overall, modelName = "NB")) %>%
+                        rbind(func.tidy.cf.statsOveral(cf.mostVoted$overall, modelName = "Most voted")) %>%
+                        mutate(Model = factor(Model, levels = unique.models, ordered = T))
+                    
                 }
                 
                 ## Visualization ----
                 if (i == 9) {
                     # confusion matrix -----
-                    p = df.confusionMatrix.all.tidy %>%
-                        ggplot(aes(x = reference, y = Prediction)) +  # ----
-                    facet_wrap(~Model, nrow = 2) +
+                    p =   df.confusionMatrix.all.tidy %>% # --------
+                    ggplot(aes(x = reference, y = Prediction)) + 
+                        facet_wrap(~Model, nrow = 2) +
                         
                         # off diaganol incorrect prediction
-                        geom_label(data = df.confusionMatrix.all.tidy %>% filter(counts > 0 & counts < 20),
+                        geom_label(data = df.confusionMatrix.all.tidy %>% filter(color == "Firebrick"),
                                    aes(label = counts), 
                                    fill = "firebrick", alpha = .3, size = 6) +
                         
                         # diaganol correct prediction
-                        geom_label(data = df.confusionMatrix.all.tidy %>% filter(counts > 20),
+                        geom_label(data = df.confusionMatrix.all.tidy %>% filter(color == "steelblue"),
                                    aes(label = counts),
                                    fill = "Steelblue", alpha = .3, size = 6) +
                         
                         # zero counts
-                        geom_label(data = df.confusionMatrix.all.tidy %>% filter(counts == 0),
+                        geom_label(data = df.confusionMatrix.all.tidy %>% filter(color == "Grey"),
                                    aes(label = counts), 
                                    size = 6, color = "grey")  +
                         theme_bw() +
                         
-                        theme(axis.text.x = element_text(angle = 90, vjust = .8, hjust = .8, size = 12, colour = "black"),
-                              axis.text.y = element_text(size = 12, colour = "black"),
-                              axis.title = element_text(size = 12),
+                        theme(axis.text.x = element_text(angle = 90, vjust = .8, hjust = .8, color = "black", size = 12),
+                              axis.text.y = element_text(color = "black", size = 12),
+                              axis.title = element_text(size = 14, colour = "black"),
                               strip.background = element_blank(),
                               strip.text = element_text(face = "bold", size = 14),
                               panel.border = element_rect(color = "black", size = 1),
-                              title = element_text(face = "bold"),
-                              plot.margin = unit(c(.1, .1, .1, .1), "cm")) # +
-                    # coord_fixed(ratio = .8)
+                              title = element_text(face = "bold")) + 
+                        labs(x = "\nReference", y = "Prediction\n") 
+                    
                     
                     # sample-wise comparison heatmap -----
-                    
-                    # Sample-wise comparison between models
-                    
                     df.actual.vs.fit = data.frame(
                         "Actual" = df.test$Category, 
                         "LDA" = fitted.LDA, 
@@ -670,7 +709,6 @@ server <- function(input, output) {
                                                    MARGIN = 1, func.mostVotes))
                     
                     
-                    
                     # Heatmap of sample-wise predicted result
                     plt.heatmap.machineLearning = 
                         df.actual.vs.fit %>% arrange(Actual) %>%
@@ -687,15 +725,16 @@ server <- function(input, output) {
                     
                     
                     # Summary statistics
-                    plt.summaryStats = df.stats %>% ggplot(aes(x = Category, y = values, color = metrics)) +
+                    plt.summaryStats = 
+                        df.stats %>% ggplot(aes(x = Category, y = values, color = metrics)) +
                         geom_segment(aes( xend = Category, y = 0.5, yend = values), 
                                      position = position_dodge(0.5)) +
                         geom_point(size = 4, position = position_dodge(.3), alpha = .9) +
                         facet_wrap(~Model, nrow = 1) +
                         theme_bw() +
                         theme(legend.position = "bottom",
-                              legend.title = element_text(size = 12),
-                              legend.text = element_text(size = 12),
+                              legend.title = element_text(size = 14),
+                              legend.text = element_text(size = 14),
                               
                               strip.text = element_text(face = "bold", size = 14),
                               strip.background = element_blank(),
@@ -704,8 +743,18 @@ server <- function(input, output) {
                               axis.text.y = element_text(colour = "black", size = 12),
                               axis.title = element_text(size = 13)) +
                         coord_cartesian(ylim = c(0.65, 1)) +
-                        scale_color_brewer(palette = "Accent")
-                    
+                        scale_color_brewer(palette = "Accent") +
+                        
+                        # overal stats
+                        geom_text(data = df.stats.overal, 
+                                  aes(x = 2.5, y = 0.7, label = round(Accuracy, 3) * 100), 
+                                  color = "black", fontface = "bold", size = 6) +
+                        
+                        geom_text(data = df.stats.overal, 
+                                  aes(x = 2.5, y = 0.66, 
+                                      label = paste(round(AccuracyLower, 3) * 100, " ~ ",
+                                                    round(AccuracyUpper, 3) * 100)), 
+                                  color = "black", size = 5) 
                 } 
             }
         })
@@ -936,7 +985,7 @@ server <- function(input, output) {
             }
             
         })
-        return(list(d.fitted.all.named.1, h) )
+        return(list(d.fitted.all.named.1) )
     }) 
     
     output$batchPrediction.output1 = renderDataTable(tab3.output()[[1]] )
@@ -973,7 +1022,8 @@ server <- function(input, output) {
                         labels_gp = gpar(fontsize = 15)), 
                     rect_gp = gpar(col = "white", lwd = 0.1))
         
-        h = draw(plt.heatmap.batchPrediction, heatmap_legend_side = "bottom")
+        kk = draw(plt.heatmap.batchPrediction, heatmap_legend_side = "bottom")
+        return(kk)
     })
     
     

@@ -305,7 +305,7 @@ $(document).ready(function () {
 
 <p><br/><br/></p>
 <div id="visit-our-shiny-app-for-interactive-machine-learning." class="section level4">
-<h4>Visit our <strong><a href="https://boyuan.shinyapps.io/predict_African_vegetables/">Shiny App</a></strong> for interactive machine-learning.</h4>
+<h4>Visit our <strong><a href="https://boyuan.shinyapps.io/AIV_Classifier/">Shiny App</a></strong> for interactive machine-learning.</h4>
 <div id="this-section-only-documents-the-corresponding-script-used-for-the-shiny-app." class="section level5">
 <h5>This section only documents the corresponding script used for the Shiny app.</h5>
 <p><br/><br/></p>
@@ -320,6 +320,11 @@ library(caret)
 library(readxl)
 library(writexl)
 library(tidyverse)
+library(ComplexHeatmap) # from bionconductor
+library(circlize)
+
+library(BiocManager) # ensure smooth use of ComplexHeatmap
+options(repos = BiocManager::repositories())
 
 # Import data from Dropbox ----
 drop_auth()
@@ -404,7 +409,7 @@ func.strata.Norm.trainTest = function(trainingRatio = 0.7, scaleData = T){
 
 # Prediction table tidy up ----
 # Confusion matrix
-# Define two function: tidy up confusion tables (contingency table and stats) 
+# Define functions: tidy up confusion tables (contingency table and stats) 
 
 # 1) For contigency table
 func.tidy.cf.contigencyTable = function(inputTable, ModelName){
@@ -414,7 +419,7 @@ func.tidy.cf.contigencyTable = function(inputTable, ModelName){
         return()
 }
 
-# 2) Summary statistics
+# 2) Summary statistics for each category
 func.tidy.cf.statsTable = function(inputTable, ModelName){
     cbind(Category = rownames(inputTable), inputTable %&gt;% as_tibble()) %&gt;%
         mutate(Category = str_remove(Category, pattern = &quot;Class: &quot;)) %&gt;%
@@ -422,13 +427,26 @@ func.tidy.cf.statsTable = function(inputTable, ModelName){
         return()
 }
 
+# 3) Summarize most votes form all models
+func.mostVotes = function(vector){
+    x = vector %&gt;% table() %&gt;% sort() %&gt;% rev() 
+    names(x)[1] %&gt;% return()
+}
+
+# 4) Overal summary statistics for each model
+func.tidy.cf.statsOveral = function(vector, modelName){
+    d = data.frame(Accuracy = vector[1], AccuracyLower = vector[3], 
+                   AccuracyUpper = vector[4], Model = modelName) %&gt;% as_tibble()
+    return(d)
+}
 
 
 # arrange model order
-unique.models = factor(c(&quot;Linear discriminant analysis&quot;, &quot;Quadratic discriminant analysis&quot;, &quot;Elastic net&quot;, 
-                         &quot;Random forest&quot;, &quot;Support vector machine&quot;, &quot;Naive Bayes&quot;), ordered = T)
+unique.models = factor(c(&quot;LDA&quot;, &quot;QDA&quot;, &quot;EN&quot;, 
+                         &quot;RF&quot;, &quot;SVM&quot;, &quot;NB&quot;, &quot;Most voted&quot;), ordered = T)
 
-
+unique.models2 = factor(c(&quot;Linear discriminant analysis&quot;, &quot;Quadratic discriminant analysis&quot;, &quot;Elastic net&quot;, 
+                          &quot;Random forest&quot;, &quot;Support vector machine&quot;, &quot;Naive Bayes&quot;, &quot;Most voted&quot;), ordered = T)
 
 
 # Entire dataset summary stats (used for tabs #2 &amp; #3 single &amp; batch sample(s) prediction) -----
@@ -437,6 +455,7 @@ df.summaryALL = (df.content %&gt;% select(-c(Name, Site, Category, strata.group,
     group_by(compounds) %&gt;%
     summarise(content.mean = mean(content),
               content.sd = sd(content)) 
+
 
 # set up comounds as ordered factor
 unique.compounds = (df.content %&gt;% colnames())[-c(1:5)]
@@ -457,10 +476,9 @@ color.category = c(&quot;Black&quot;, &quot;Steelblue&quot;, &quot;Firebrick&quo
 names(color.category) = unique.categories
 
 
-
-
 # the computation progress bar
 progress = c(&quot;Dataset setup&quot;, &quot;LDA&quot;, &quot;QDA&quot;, &quot;Elastic Net&quot;, &quot;Random Forest&quot;, &quot;SVM&quot;, &quot;Naive Bayes&quot;, &quot;Wrap up&quot;, &quot;Output&quot;)
+
 
 
 
@@ -491,9 +509,18 @@ ui &lt;- fluidPage(
                                                 label = &quot;Percent of data used for model training&quot;,
                                                 min = .5, max = .9, value = .7))),
                 
-                fluidRow(column(12, checkboxInput(inputId = &quot;Seed2020&quot;, 
+                fluidRow(column(12, checkboxInput(inputId = &quot;SeedBirthday&quot;, 
                                                   label = &quot;Set seed: generate reproducible split of train-test dataset&quot;, 
-                                                  value = F)))
+                                                  value = F))), 
+                
+                br(),br(),br(),
+                strong(&quot;Model names are abbreviated as acronyms:&quot;), br(), br(),
+                span(strong(&quot;LDA&quot;), &quot;, Linear Discriminant Analysis&quot;), br(),br(),
+                span(strong(&quot;QDA&quot;), &quot;, Quadratic Discriminant Analysis&quot;), br(),br(),
+                span(strong(&quot;EN&quot;), &quot;, Elastic Net (alpha = 0.5)&quot;), br(),br(),
+                span(strong(&quot;RF&quot;), &quot;, Random Forest&quot;), br(),br(),
+                span(strong(&quot;SVM&quot;), &quot;, Support Vector Machine&quot;), br(),br(),
+                span(strong(&quot;NB&quot;), &quot;, Naive Bayes&quot;), br(), br()
             ),
             
             # tab 2 ----
@@ -542,17 +569,44 @@ ui &lt;- fluidPage(
                 fluidRow(
                     column(
                         11,
-                        fileInput(inputId = &quot;userfile&quot;, label = NULL, buttonLabel = &quot;Browse...Excel input&quot;,
-                                  width = &#39;700px&#39;, placeholder = &quot;Please upload unknown samples&#39; feature space&quot;),
-                        
-                        tags$style(&quot;.btn-file { background-color:white; border-color: black; } 
-                                   .progress-bar { background-color: #3c763d;}&quot;))),
+                        downloadButton(&quot;downloadTemplate&quot;, &quot;Download table template for batch prediction&quot;,
+                                       style=&quot;color: white; background-color: steelblue; border-color: black&quot;))
+                ), 
+                
+                br(),
+                
                 fluidRow(
                     column(
                         11,
-                        downloadButton(&quot;downloadTemplate&quot;, &quot;Download table template for batch prediction&quot;,
-                                       style=&quot;color: white; background-color: steelblue; border-color: black&quot;))
-                    )
+                        fileInput(inputId = &quot;userfile&quot;, label = NULL, buttonLabel = &quot;Browse...Excel input&quot;,
+                                  width = &#39;700px&#39;, placeholder = &quot;Upload free amino acid content dataset&quot;))
+                ),
+                
+                fluidRow(
+                    column(
+                        11, 
+                        checkboxInput(inputId = &quot;ArrangeCategory&quot;, 
+                                      label = &quot;Arrange heatmap predicted category by most voted results&quot;, 
+                                      value = F))
+                ), 
+                
+                fluidRow(
+                    column(
+                        11,
+                        downloadButton(&quot;downloadPredicted&quot;, &quot;Download predicted result table&quot;,
+                                       style=&quot;color: white; background-color: orange; border-color: black&quot;))
+                ),
+                
+                br(),br(),br(),
+                
+                strong(&quot;Model names are abbreviated as acronyms:&quot;), br(), br(),
+                span(strong(&quot;LDA&quot;), &quot;, Linear Discriminant Analysis&quot;), br(),br(),
+                span(strong(&quot;QDA&quot;), &quot;, Quadratic Discriminant Analysis&quot;), br(),br(),
+                span(strong(&quot;EN&quot;), &quot;, Elastic Net (alpha = 0.5)&quot;), br(),br(),
+                span(strong(&quot;RF&quot;), &quot;, Random Forest&quot;), br(),br(),
+                span(strong(&quot;SVM&quot;), &quot;, Support Vector Machine&quot;), br(),br(),
+                span(strong(&quot;NB&quot;), &quot;, Naive Bayes&quot;), br(), br()
+                
             )
             
         ),
@@ -569,7 +623,7 @@ ui &lt;- fluidPage(
                              column(
                                  11,
                                  p(&quot;The African indigenous vegetables (AIVs) free amino acid dataset (544 rows, 21 columns) contains the content of 21 free amino acids in 544 samples of AIVs, the latter comprising four basic categories, i.e., nighthshades, amaranth, spider plant, and mustard. Each category was sourced from different continents or countries, harvest years and seasons, etc., including one or more subspecies and cultivars.&quot;, strong(&quot;This app makes prediction of the AIV category based on the content of free amino acids.&quot;,
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                  style = &quot;color: black&quot;)),
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                  style = &quot;color: black&quot;)), br(),
                                  
                                  strong(&quot;Click&quot;, code(&quot;Train models and predict on test set&quot;), 
                                         &quot;button to train models using specified percent (default 70%) of the AIV amino acid dataset as the training set, and make predictions on the remaining percent of the dataset as the test set. The prediction result is summarized as the confusion matrix, showing counts of correct and incorrect predictions.&quot;, 
@@ -581,12 +635,29 @@ ui &lt;- fluidPage(
                              )
                          ),
                          
-                         fluidRow(
-                             column(
-                                 12, 
-                                 plotOutput(&quot;plt.newShuffle&quot;))
-                         )
+                         strong(&quot;A. The following confusion matrix presents the summarized prediction results vs. the actual.&quot;,
+                                style = &quot;color:#006666&quot;),
                          
+                         fluidRow(
+                             column(8, plotOutput(&quot;plt.newShuffle&quot;))
+                         ),
+                         br(),br(),
+                         
+                         strong(&quot;B. The following heatmap presents the predicted result of each model vs. the actual on a sample-wise basis.&quot;,
+                                style = &quot;color:#006666&quot;),
+                         
+                         fluidRow(
+                             column(11, plotOutput(&quot;plt.newShuffle.heatmap&quot;))
+                         ),
+                         
+                         br(),br(),
+                         strong(&quot;C. The following sprout plot presents key summary statistics of each model.&quot;,
+                                style = &quot;color:#006666&quot;),
+                         p(&quot;The overal accuracy is in bold, with 95% confidence interval displayed in the following line.&quot;),
+                         
+                         fluidRow(
+                             column(11, plotOutput(&quot;plt.summaryStats&quot;))
+                         )
                 ),
                 
                 tabPanel(&quot;Unknown prediction: single sample&quot;, # ------
@@ -595,13 +666,14 @@ ui &lt;- fluidPage(
                          fluidRow(
                              column(
                                  11,
-                                 p(&quot;This section makes prediction of AIV category of an unknown sample based on its free amino acid content (in unit of mg/100g dry weight), using models trained from the entire AIVs amino acid dataset (544 rows X 21 columns). The current default setting is the average level of free amino acids in African nightshade leaves.&quot;), 
+                                 p(&quot;This section makes prediction of AIV category of an unknown sample based on its free amino acid content (in unit of mg/100g dry weight), using models trained from the entire AIVs amino acid dataset (544 rows X 21 columns). The current default setting is the average level of free amino acids in African nightshade leaves.&quot;), br(),
+                                 
                                  strong(&quot;Use sliderbars to update the amino acid content of a single unknown sample.&quot;), 
                                  br(),
                                  strong(&quot;Click&quot;, code(&quot;Predict!&quot;), &quot;to predict classfication based on updated feature space.&quot;)
                              )
                          ),
-                         
+                         br(),
                          plotOutput(&quot;plt.singleSamplePredict&quot;)),
                 
                 tabPanel(&quot;Unknown prediction: batch sample&quot;, # ------
@@ -614,7 +686,15 @@ ui &lt;- fluidPage(
                              )
                          ),
                          br(),
-                         dataTableOutput(&quot;batchPrediction.output1&quot;)
+                         
+                         strong(&quot;A: The following table represents prediction result for each sample.&quot;, 
+                                style = &quot;color:#006666&quot;), br(),
+                         dataTableOutput(&quot;batchPrediction.output1&quot;),
+                         br(),
+                         
+                         strong(&quot;B: The following heatmap visualizes the above prediction table as easy overview.&quot;, 
+                                style = &quot;color:#006666&quot;),
+                         plotOutput(&quot;batchPrediction.output2&quot;)
                 ),
                 
                 tabPanel(&quot;About&quot;,
@@ -642,9 +722,9 @@ server &lt;- function(input, output) {
     
     # tab 1: Simulator
     
-    p  &lt;- eventReactive(input$Shuffle, {
+    ph  &lt;- eventReactive(input$Shuffle, {
         
-        if (input$Seed2020 == T) {set.seed(2020)}
+        if (input$SeedBirthday == T) {set.seed(19911110)}
         
         withProgress(message = &quot;Modelling...&quot;, value = 0, {
             
@@ -674,8 +754,8 @@ server &lt;- function(input, output) {
                     cf.LDA = confusionMatrix(data = fitted.LDA, reference = df.test$Category, mode = &quot;everything&quot;)
                     
                     # confusion table and summary stats
-                    cf.counts.LDA = cf.LDA$table %&gt;% func.tidy.cf.contigencyTable(ModelName = &quot;Linear discriminant analysis&quot;)
-                    cf.stats.LDA = cf.LDA$byClass %&gt;% func.tidy.cf.statsTable(ModelName = &quot;Linear discriminant analysis&quot;) 
+                    cf.counts.LDA = cf.LDA$table %&gt;% func.tidy.cf.contigencyTable(ModelName = &quot;LDA&quot;)
+                    cf.stats.LDA = cf.LDA$byClass %&gt;% func.tidy.cf.statsTable(ModelName = &quot;LDA&quot;) 
                 }
                 
                 ## Quadratic discriminant analysis ----
@@ -686,8 +766,8 @@ server &lt;- function(input, output) {
                     cf.QDA = confusionMatrix(data = fitted.QDA, reference = df.test$Category, mode = &quot;everything&quot;)
                     
                     # confusion table and summary stats
-                    cf.counts.QDA = cf.QDA$table %&gt;% func.tidy.cf.contigencyTable(ModelName = &quot;Quadratic discriminant analysis&quot;) 
-                    cf.stats.QDA = cf.QDA$byClass %&gt;% func.tidy.cf.statsTable(ModelName = &quot;Quadratic discriminant analysis&quot;)
+                    cf.counts.QDA = cf.QDA$table %&gt;% func.tidy.cf.contigencyTable(ModelName = &quot;QDA&quot;) 
+                    cf.stats.QDA = cf.QDA$byClass %&gt;% func.tidy.cf.statsTable(ModelName = &quot;QDA&quot;)
                     
                 }
                 
@@ -712,12 +792,15 @@ server &lt;- function(input, output) {
                         cf.counts.logistic = cf.logistic$table %&gt;% func.tidy.cf.contigencyTable(ModelName = ModelName)
                         cf.stats.logistic = cf.logistic$byClass %&gt;% func.tidy.cf.statsTable(ModelName = ModelName)
                         
-                        return(list(cf.counts.logistic, cf.stats.logistic))
+                        return(list(cf.counts.logistic, cf.stats.logistic, fitted.logistic, cf.logistic))
                         
                     }
                     
-                    cf.counts.ElasticNet = func.regularizedLogistic(input.alpha = 0.5, ModelName = paste(&quot;Elastic net&quot;) )[[1]]
-                    cf.stats.ElasticNet = func.regularizedLogistic(input.alpha = 0.5, ModelName = paste(&quot;Elastic net&quot;) )[[2]]
+                    list.logistic = func.regularizedLogistic(input.alpha = 0.5, ModelName = paste(&quot;EN&quot;) )
+                    cf.counts.ElasticNet =list.logistic[[1]]
+                    cf.stats.ElasticNet = list.logistic[[2]]
+                    fitted.ElasticNet = list.logistic[[3]]
+                    cf.EN = list.logistic[[4]]
                     
                 }
                 
@@ -731,10 +814,10 @@ server &lt;- function(input, output) {
                         data = fitted.randomForest, reference = df.test$Category, mode = &quot;everything&quot;)
                     # confusion matrix and summary stats
                     cf.counts.randomForest = cf.randomForest$table %&gt;%
-                        func.tidy.cf.contigencyTable(ModelName = &quot;Random forest&quot;)
+                        func.tidy.cf.contigencyTable(ModelName = &quot;RF&quot;)
                     
                     cf.stats.randomForest = cf.randomForest$byClass %&gt;% 
-                        func.tidy.cf.statsTable(ModelName = &quot;Random forest&quot;)
+                        func.tidy.cf.statsTable(ModelName = &quot;RF&quot;)
                     
                 }
                 
@@ -750,10 +833,10 @@ server &lt;- function(input, output) {
                     
                     # confusion matrix and summary stats
                     cf.counts.svm = cf.svm$table %&gt;%
-                        func.tidy.cf.contigencyTable(ModelName = &quot;Support vector machine&quot;)
+                        func.tidy.cf.contigencyTable(ModelName = &quot;SVM&quot;)
                     
                     cf.stats.svm = cf.svm$byClass %&gt;% 
-                        func.tidy.cf.statsTable(ModelName = &quot;Support vector machine&quot;)
+                        func.tidy.cf.statsTable(ModelName = &quot;SVM&quot;)
                     
                 }
                 
@@ -770,9 +853,9 @@ server &lt;- function(input, output) {
                     
                     # confusion matrix and summary stats
                     cf.counts.Bayes = cf.Bayes$table %&gt;%
-                        func.tidy.cf.contigencyTable(ModelName = &quot;Naive Bayes&quot;)
+                        func.tidy.cf.contigencyTable(ModelName = &quot;NB&quot;)
                     cf.stats.Bayes = cf.Bayes$byClass %&gt;% 
-                        func.tidy.cf.statsTable(ModelName = &quot;Naive Bayes&quot;)
+                        func.tidy.cf.statsTable(ModelName = &quot;NB&quot;)
                     
                 }
                 
@@ -781,63 +864,203 @@ server &lt;- function(input, output) {
                 if (i == 8) {
                     # Test results ----
                     # Summary of all machine learning techniques ----
+                    
+                    # Sample wise prediction of all models and most voted 
+                    df.actual.vs.fit = data.frame(
+                        &quot;Actual&quot; = df.test$Category, 
+                        &quot;LDA&quot; = fitted.LDA, 
+                        &quot;QDA&quot; = fitted.QDA, 
+                        &quot;EN&quot; = fitted.ElasticNet, 
+                        # &quot;CART&quot; = fitted.CART,
+                        &quot;RF&quot; =  fitted.randomForest, 
+                        &quot;SVM&quot; =  fitted.svm, 
+                        &quot;NB&quot; = fitted.Bayes)
+                    
+                    df.actual.vs.fit = df.actual.vs.fit %&gt;% as_tibble() %&gt;%
+                        mutate(Actual = factor(Actual, ordered = F))
+                    
+                    df.actual.vs.fit = df.actual.vs.fit %&gt;% 
+                        mutate(most.voted =  apply(df.actual.vs.fit %&gt;% select(-Actual),
+                                                   MARGIN = 1, func.mostVotes))
+                    
+                    
+                    # Most voted confusion matrix
+                    cf.mostVoted = confusionMatrix(data = df.actual.vs.fit$most.voted %&gt;% factor(), 
+                                                   reference = df.actual.vs.fit$Actual, mode = &quot;everything&quot;)
+                    
+                    cf.counts.MostVoted = cf.mostVoted$table %&gt;%
+                        func.tidy.cf.contigencyTable(ModelName = &quot;Most voted&quot;)
+                    
+                    cf.stats.MostVoted = cf.mostVoted$byClass %&gt;%
+                        func.tidy.cf.statsTable(ModelName = &quot;Most voted&quot;)
+                    
+                    
+                    
+                    
+                    
+                    # Summary of all machine learning techniques
                     df.confusionMatrix.all = cf.counts.LDA %&gt;% rbind(cf.counts.QDA) %&gt;%
                         rbind(cf.counts.ElasticNet) %&gt;% # rbind(cf.counts.CART) %&gt;%
                         rbind(cf.counts.randomForest) %&gt;% rbind(cf.counts.svm) %&gt;%
-                        rbind(cf.counts.Bayes) %&gt;% as_tibble()
+                        rbind(cf.counts.Bayes) %&gt;% rbind(cf.counts.MostVoted) %&gt;% as_tibble()
+                    
                     
                     # tidy up the confusion matrix combined
                     df.confusionMatrix.all.tidy = df.confusionMatrix.all %&gt;%
+                        # tidy up
                         gather(-c(Prediction, Model), key = reference, value = counts) %&gt;%
-                        mutate(reference = factor(reference, levels = unique.categories),
-                               Prediction = factor(Prediction, levels = unique.categories %&gt;% rev(), ordered = T))
-                    
-                    
-                    # change factor order in the dataset
-                    df.confusionMatrix.all.tidy =
-                        df.confusionMatrix.all.tidy %&gt;% 
+                        
+                        # convert AIVs category into ordered factor
+                        mutate(reference = factor(reference, levels = unique.categories, ordered = T),
+                               Prediction = factor(Prediction, levels = unique.categories %&gt;% rev(), ordered = T)) %&gt;%
+                        
+                        # change model order in the dataset
                         mutate(Model = factor(Model, levels = unique.models, ordered = T)) %&gt;%
-                        arrange(Model)
+                        arrange(Model, reference, Prediction) %&gt;%
+                        mutate(Diaganol = Prediction == reference)
+                    
+                    
+                    
+                    
+                    ## Plot confusion matrix
+                    # Assign color to correct / incorrect prediction
+                    diag = df.confusionMatrix.all.tidy %&gt;% 
+                        filter(Diaganol == F)
+                    
+                    df.confusionMatrix.all.tidy = diag %&gt;% 
+                        mutate(color = ifelse(counts == 0, &quot;Grey&quot;, &quot;Firebrick&quot;)) %&gt;%
+                        rbind(df.confusionMatrix.all.tidy %&gt;% filter(Diaganol == T) %&gt;%
+                                  mutate(color = &quot;steelblue&quot;))
+                  
+                    
+                    # Set up summary statistics
+                    df.stats = cf.stats.LDA %&gt;% rbind(cf.stats.QDA) %&gt;%
+                        rbind(cf.stats.ElasticNet) %&gt;% rbind(cf.stats.randomForest) %&gt;%
+                        rbind(cf.stats.svm) %&gt;% rbind(cf.stats.Bayes) %&gt;% rbind(cf.stats.MostVoted) %&gt;%
+                        select(Category, Model, Precision, Recall, F1) %&gt;% 
+                        gather(-c(1:2), key = metrics, value = values) %&gt;%
+                        mutate(Model = factor(Model, levels = unique.models, ordered = T))
+                    
+                    
+                    df.stats.overal = func.tidy.cf.statsOveral(cf.LDA$overall, modelName = &quot;LDA&quot;) %&gt;%
+                        rbind(func.tidy.cf.statsOveral(cf.QDA$overall, modelName = &quot;QDA&quot;)) %&gt;%
+                        rbind(func.tidy.cf.statsOveral(cf.EN$overall, modelName = &quot;EN&quot;)) %&gt;%
+                        rbind(func.tidy.cf.statsOveral(cf.randomForest$overall, modelName = &quot;RF&quot;)) %&gt;%
+                        rbind(func.tidy.cf.statsOveral(cf.svm$overall, modelName = &quot;SVM&quot;)) %&gt;%
+                        rbind(func.tidy.cf.statsOveral(cf.Bayes$overall, modelName = &quot;NB&quot;)) %&gt;%
+                        rbind(func.tidy.cf.statsOveral(cf.mostVoted$overall, modelName = &quot;Most voted&quot;)) %&gt;%
+                        mutate(Model = factor(Model, levels = unique.models, ordered = T))
+                    
                 }
                 
                 ## Visualization ----
                 if (i == 9) {
-                    p = df.confusionMatrix.all.tidy %&gt;%
-                        ggplot(aes(x = reference, y = Prediction)) + 
+                    # confusion matrix -----
+                    p =   df.confusionMatrix.all.tidy %&gt;% # --------
+                    ggplot(aes(x = reference, y = Prediction)) + 
                         facet_wrap(~Model, nrow = 2) +
                         
                         # off diaganol incorrect prediction
-                        geom_label(data = df.confusionMatrix.all.tidy %&gt;% filter(counts &gt; 0 &amp; counts &lt; 20),
+                        geom_label(data = df.confusionMatrix.all.tidy %&gt;% filter(color == &quot;Firebrick&quot;),
                                    aes(label = counts), 
                                    fill = &quot;firebrick&quot;, alpha = .3, size = 6) +
                         
                         # diaganol correct prediction
-                        geom_label(data = df.confusionMatrix.all.tidy %&gt;% filter(counts &gt; 20),
+                        geom_label(data = df.confusionMatrix.all.tidy %&gt;% filter(color == &quot;steelblue&quot;),
                                    aes(label = counts),
                                    fill = &quot;Steelblue&quot;, alpha = .3, size = 6) +
                         
                         # zero counts
-                        geom_label(data = df.confusionMatrix.all.tidy %&gt;% filter(counts == 0),
+                        geom_label(data = df.confusionMatrix.all.tidy %&gt;% filter(color == &quot;Grey&quot;),
                                    aes(label = counts), 
                                    size = 6, color = &quot;grey&quot;)  +
                         theme_bw() +
                         
-                        theme(axis.text.x = element_text(angle = 30, vjust = .8, hjust = .8),
+                        theme(axis.text.x = element_text(angle = 90, vjust = .8, hjust = .8, color = &quot;black&quot;, size = 12),
+                              axis.text.y = element_text(color = &quot;black&quot;, size = 12),
+                              axis.title = element_text(size = 14, colour = &quot;black&quot;),
                               strip.background = element_blank(),
-                              strip.text = element_text(face = &quot;bold&quot;),
+                              strip.text = element_text(face = &quot;bold&quot;, size = 14),
                               panel.border = element_rect(color = &quot;black&quot;, size = 1),
-                              title = element_text(face = &quot;bold&quot;)) +
-                        ggtitle(&quot;Confusion Matrix&quot;) +
-                        coord_fixed(ratio = 1)
+                              title = element_text(face = &quot;bold&quot;)) + 
+                        labs(x = &quot;\nReference&quot;, y = &quot;Prediction\n&quot;) 
+                    
+                    
+                    # sample-wise comparison heatmap -----
+                    df.actual.vs.fit = data.frame(
+                        &quot;Actual&quot; = df.test$Category, 
+                        &quot;LDA&quot; = fitted.LDA, 
+                        &quot;QDA&quot; = fitted.QDA, 
+                        &quot;EN&quot; = fitted.ElasticNet, 
+                        # &quot;CART&quot; = fitted.CART,
+                        &quot;RF&quot; =  fitted.randomForest, 
+                        &quot;SVM&quot; =  fitted.svm, 
+                        &quot;NB&quot; = fitted.Bayes)
+                    
+                    df.actual.vs.fit = df.actual.vs.fit %&gt;% as_tibble() %&gt;%
+                        mutate(Actual = factor(Actual, ordered = F))
+                    df.actual.vs.fit
+                    
+                    df.actual.vs.fit = df.actual.vs.fit %&gt;% 
+                        mutate(most.voted =  apply(df.actual.vs.fit %&gt;% select(-Actual),
+                                                   MARGIN = 1, func.mostVotes))
+                    
+                    
+                    # Heatmap of sample-wise predicted result
+                    plt.heatmap.machineLearning = 
+                        df.actual.vs.fit %&gt;% arrange(Actual) %&gt;%
+                        as.matrix() %&gt;% t() %&gt;%
+                        Heatmap(col = color.category,
+                                heatmap_legend_param = list(
+                                    title = &quot;&quot;, title_position = &quot;leftcenter&quot;,
+                                    nrow = 1,
+                                    labels_gp = gpar(fontsize = 15)), 
+                                rect_gp = gpar(col = &quot;white&quot;, lwd = 0.1))
+                    
+                    h = draw(plt.heatmap.machineLearning, heatmap_legend_side = &quot;bottom&quot;)
+                    
+                    
+                    
+                    # Summary statistics
+                    plt.summaryStats = 
+                        df.stats %&gt;% ggplot(aes(x = Category, y = values, color = metrics)) +
+                        geom_segment(aes( xend = Category, y = 0.5, yend = values), 
+                                     position = position_dodge(0.5)) +
+                        geom_point(size = 4, position = position_dodge(.3), alpha = .9) +
+                        facet_wrap(~Model, nrow = 1) +
+                        theme_bw() +
+                        theme(legend.position = &quot;bottom&quot;,
+                              legend.title = element_text(size = 14),
+                              legend.text = element_text(size = 14),
+                              
+                              strip.text = element_text(face = &quot;bold&quot;, size = 14),
+                              strip.background = element_blank(),
+                              
+                              axis.text.x = element_text(angle = 90, hjust = 1, colour = &quot;black&quot;, size = 12),
+                              axis.text.y = element_text(colour = &quot;black&quot;, size = 12),
+                              axis.title = element_text(size = 13)) +
+                        coord_cartesian(ylim = c(0.65, 1)) +
+                        scale_color_brewer(palette = &quot;Accent&quot;) +
+                        
+                        # overal stats
+                        geom_text(data = df.stats.overal, 
+                                  aes(x = 2.5, y = 0.7, label = round(Accuracy, 3) * 100), 
+                                  color = &quot;black&quot;, fontface = &quot;bold&quot;, size = 6) +
+                        
+                        geom_text(data = df.stats.overal, 
+                                  aes(x = 2.5, y = 0.66, 
+                                      label = paste(round(AccuracyLower, 3) * 100, &quot; ~ &quot;,
+                                                    round(AccuracyUpper, 3) * 100)), 
+                                  color = &quot;black&quot;, size = 5) 
                 } 
             }
         })
-        return(p)
+        return(list(p, h, plt.summaryStats))
     })
     
-    output$plt.newShuffle = renderPlot({  p() })
-    
-    
+    output$plt.newShuffle = renderPlot({  ph()[[1]] })
+    output$plt.newShuffle.heatmap = renderPlot({  ph()[[2]] })
+    output$plt.summaryStats = renderPlot({ ph()[3] })
     
     
     
@@ -932,7 +1155,7 @@ server &lt;- function(input, output) {
                                    &quot;Naive_Bayes&quot; = fitted.Bayes) %&gt;% 
                         as_tibble() %&gt;% gather(key = model, value = result) %&gt;%
                         mutate(model = str_replace_all(model, pattern = &quot;_&quot;, replacement = &quot; &quot;),
-                               model = factor(model, levels = unique.models, ordered = T))
+                               model = factor(model, levels = unique.models2, ordered = T))
                     
                 }
                 
@@ -1041,23 +1264,67 @@ server &lt;- function(input, output) {
                 
                 ## Wrap up results
                 if (i == 8) {
-                    # As column names, no space allowed in header names. Thus use underscore later replace with space
-                    t = data.frame(&quot;Linear_discriminant_analysis&quot; = fitted.LDA, 
-                                   &quot;Quadratic_discriminant_analysis&quot; = fitted.QDA, 
-                                   &quot;Elastic_net&quot; = fitted.ElasticNet %&gt;% c(), 
-                                   &quot;Random_forest&quot; = fitted.randomForest, 
-                                   &quot;Support_vector_machine&quot; = fitted.svm, 
-                                   &quot;Naive_Bayes&quot; = fitted.Bayes) 
-                    # combine sample name with prediction result
-                    t = cbind(Sample = df.batchPredict$Sample, t) 
+                    # Summary table -----
+                    d.fitted.all = data.frame(&quot;LDA&quot; = fitted.LDA, 
+                                              &quot;QDA&quot; = fitted.QDA, 
+                                              &quot;EN&quot; = fitted.ElasticNet %&gt;% c(), 
+                                              &quot;RF&quot; = fitted.randomForest, 
+                                              &quot;SVM&quot; = fitted.svm, 
+                                              &quot;NB&quot; = fitted.Bayes) 
+                    # summarize most voted
+                    d.fitted.all = d.fitted.all %&gt;% 
+                        mutate(most.voted = apply(d.fitted.all, MARGIN = 1, func.mostVotes)) 
+                    
+                    # combine sample name with prediction result as output table
+                    d.fitted.all.named.1 = cbind(Sample = df.batchPredict$Sample, d.fitted.all) 
+                    
                 }
             }
             
         })
-        return(t)
+        return(list(d.fitted.all.named.1) )
+    }) 
+    
+    output$batchPrediction.output1 = renderDataTable(tab3.output()[[1]] )
+    
+    
+    
+    
+    # Heatmap of sample-wise predicted result -----
+    # rownames(d.fitted.all) = df.batchPredict$Sample
+    
+    tab3.heatmap = reactive({
+        d.heat = tab3.output()[[1]]
+        
+        if (input$ArrangeCategory == TRUE) { # arrange by category order
+            
+            d.heat = d.heat %&gt;% 
+                mutate(most.voted = factor(most.voted, levels = unique.categories, ordered = T)) %&gt;%
+                arrange(most.voted) 
+            SampleNames = d.heat$Sample
+            d.heat = d.heat %&gt;% select(-Sample) %&gt;% as.matrix()
+            rownames(d.heat) = SampleNames
+        } else{ # keep original order
+            SampleNames = d.heat$Sample
+            d.heat = d.heat %&gt;% select(-Sample) %&gt;% as.matrix()
+            rownames(d.heat) = SampleNames
+        }
+        
+        plt.heatmap.batchPrediction = 
+            d.heat %&gt;% t() %&gt;%
+            Heatmap(col = color.category,
+                    heatmap_legend_param = list(
+                        title = &quot;&quot;, title_position = &quot;leftcenter&quot;,
+                        nrow = 1,
+                        labels_gp = gpar(fontsize = 15)), 
+                    rect_gp = gpar(col = &quot;white&quot;, lwd = 0.1))
+        
+        kk = draw(plt.heatmap.batchPrediction, heatmap_legend_side = &quot;bottom&quot;)
+        return(kk)
     })
     
-    output$batchPrediction.output1 = renderDataTable(tab3.output() )
+    
+    output$batchPrediction.output2 = renderPlot(tab3.heatmap())
     
     
     
@@ -1070,6 +1337,14 @@ server &lt;- function(input, output) {
         content = function(file) {
             write_xlsx(df.template, path = file)  
         } 
+    )
+    
+    # download predicted table
+    output$downloadPredicted = downloadHandler(
+        filename = &quot;Predicted results.xlsx&quot;,
+        content = function(file) {
+            write_xlsx(tab3.output()[[1]], path = file )
+        }
     )
     
 }
