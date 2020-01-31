@@ -529,14 +529,14 @@ df.confusionMatrix.all.tidy %>%
              size = 6, color = "grey")  +
   theme_bw() +
   
-  theme(axis.text.x = element_text(angle = 40, vjust = .8, hjust = .8, color = "black", size = 12),
+  theme(axis.text.x = element_text(angle = 90, vjust = .8, hjust = .8, color = "black", size = 12),
         axis.text.y = element_text(color = "black", size = 12),
         axis.title = element_text(size = 14, colour = "black"),
         strip.background = element_blank(),
         strip.text = element_text(face = "bold", size = 14),
         panel.border = element_rect(color = "black", size = 1),
         title = element_text(face = "bold")) + 
-  labs(x = "\nReference", y = "Prediction\n") 
+  labs(x = "\nReference", y = "Prediction\n") +
 ggtitle("Confusion Matrix") +
   coord_fixed(ratio = 1)
 
@@ -575,11 +575,11 @@ df.actual.vs.fit = df.actual.vs.fit %>%
 
 
 
-```{r, fig.width=10, fig.height=10}
+```{r, fig.width=10, fig.height=4}
 # Heatmap of sample-wise predicted result
 plt.heatmap.machineLearning = 
-  df.actual.vs.fit %>% arrange(`Most voted`) %>%
-  as.matrix() %>%
+  df.actual.vs.fit %>% arrange(Actual) %>%
+  as.matrix() %>% t() %>%
   Heatmap(col = color.category,
           heatmap_legend_param = list(
             title = "Category", title_position = "leftcenter",
