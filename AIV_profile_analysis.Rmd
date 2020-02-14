@@ -382,6 +382,54 @@ draw(mainplot,
 ```
 
 
+# Total amino acids
+```{r}
+df.totalAA = df.AIV.tidy %>%
+  group_by(Name) %>%
+  summarise(total.AA = sum(content)) 
+
+lll = df.AIV.tidy %>% select(Name, Category, Year)
+df.totalAA = df.totalAA %>% left_join(lll[!duplicated(lll), ], by = "Name") 
+df.totalAA = df.totalAA %>% 
+  mutate(total.AA.gPer100gDW = total.AA/1000) # g /100 g DW free amino acis
+
+plt.totalAA.density = df.totalAA %>%
+  ggplot(aes(x = total.AA.gPer100gDW, fill = Category, color = Category)) +
+  geom_density(alpha = .5) +
+  scale_fill_manual(values = color.category) +
+  scale_color_manual(values = color.category) +
+  theme(legend.position = c(.8, .8)) +
+  labs(x = "Total free amino acids (g/100g DW)")
+
+
+plt.totalAA.boxplt = df.totalAA %>%
+  ggplot(aes(x = Category, y = total.AA.gPer100gDW,
+             fill = Category, color = Category)) +
+  geom_boxplot(alpha = .5, outlier.alpha = 0) +
+  geom_point(position = position_jitter(.3, 0), alpha = .6) +
+  scale_fill_manual(values = color.category) +
+  scale_color_manual(values = color.category) +
+  theme(legend.position = c(.8, .8)) +
+  labs(y = "Total free amino acids (g/100g DW)")
+```
+
+
+```{r, fig.width=10, fig.height=4}
+grid.arrange(plt.totalAA.density, plt.totalAA.boxplt, nrow = 1)
+```
+
+
+```{r}
+df.totalAA.summary = df.totalAA %>%
+  group_by(Category) %>%
+  summarise(totalMean.gPer100gDW = mean(total.AA.gPer100gDW),
+            totalSTD.gPer100gDW = sd(total.AA.gPer100gDW))
+df.totalAA.summary
+```
+
+
+
+
 # Principle component analysis (PCA) upon categories
 ```{r, message=F, warning=F}
 mat.content.scaled = mat.content %>% scale(center = T, scale = T)
