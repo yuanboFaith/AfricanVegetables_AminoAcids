@@ -33,7 +33,7 @@ theme_set(theme_bw() +
 
 ```{r, warning=F, message=F}
 # All data Excel
-path = "/Users/Boyuan/Desktop/My publication/7th. HILIC amino acid & PCA/Publish-ready files/Method development and validation.xlsx"
+path = "/Users/Boyuan/Desktop/My publication/16. HILIC amino acid machine learning to J. Chroma A/Publish-ready files/Method development and validation.xlsx"
 ```
 
 

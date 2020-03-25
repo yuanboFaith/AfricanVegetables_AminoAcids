@@ -420,7 +420,7 @@ library(tidyverse)</code></pre>
 <div id="data" class="section level1">
 <h1><span class="header-section-number">2</span> Data</h1>
 <pre class="r"><code># Read amino acid content dataset
-path = &quot;/Users/Boyuan/Desktop/My publication/7th. HILIC amino acid &amp; PCA/Publish-ready files/AIV free amino acids content.xlsx&quot;
+path = &quot;/Users/Boyuan/Desktop/My publication/16. HILIC amino acid machine learning to J. Chroma A/Publish-ready files/AIV free amino acids content.xlsx&quot;
 
 df.content= read_excel(path , sheet = &quot;content in AIV (mg.100g DW-1)&quot;) 
 
@@ -832,18 +832,17 @@ df.confusionMatrix.all.tidy %&gt;%
              size = 6, color = &quot;grey&quot;)  +
   theme_bw() +
   
-  theme(axis.text.x = element_text(angle = 40, vjust = .8, hjust = .8, color = &quot;black&quot;, size = 12),
+  theme(axis.text.x = element_text(angle = 90, vjust = .8, hjust = .8, color = &quot;black&quot;, size = 12),
         axis.text.y = element_text(color = &quot;black&quot;, size = 12),
         axis.title = element_text(size = 14, colour = &quot;black&quot;),
         strip.background = element_blank(),
         strip.text = element_text(face = &quot;bold&quot;, size = 14),
         panel.border = element_rect(color = &quot;black&quot;, size = 1),
         title = element_text(face = &quot;bold&quot;)) + 
-  labs(x = &quot;\nReference&quot;, y = &quot;Prediction\n&quot;) </code></pre>
-<p><img src="Machine_learning_Classification_files/figure-html/unnamed-chunk-24-1.png" width="1152" /></p>
-<pre class="r"><code>ggtitle(&quot;Confusion Matrix&quot;) +
+  labs(x = &quot;\nReference&quot;, y = &quot;Prediction\n&quot;) +
+ggtitle(&quot;Confusion Matrix&quot;) +
   coord_fixed(ratio = 1)</code></pre>
-<pre><code>## NULL</code></pre>
+<p><img src="Machine_learning_Classification_files/figure-html/unnamed-chunk-24-1.png" width="1152" /></p>
 </div>
 <div id="sample-wise-heatmap" class="section level2">
 <h2><span class="header-section-number">5.3</span> Sample-wise heatmap</h2>
@@ -876,8 +875,8 @@ df.actual.vs.fit = df.actual.vs.fit %&gt;%
                                MARGIN = 1, func.mostVotes))</code></pre>
 <pre class="r"><code># Heatmap of sample-wise predicted result
 plt.heatmap.machineLearning = 
-  df.actual.vs.fit %&gt;% arrange(`Most voted`) %&gt;%
-  as.matrix() %&gt;%
+  df.actual.vs.fit %&gt;% arrange(Actual) %&gt;%
+  as.matrix() %&gt;% t() %&gt;%
   Heatmap(col = color.category,
           heatmap_legend_param = list(
             title = &quot;Category&quot;, title_position = &quot;leftcenter&quot;,

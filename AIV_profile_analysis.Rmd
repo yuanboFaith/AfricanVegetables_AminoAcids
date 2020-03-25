@@ -70,7 +70,7 @@ func.XXX: defined functions; e.g., func.boxplot.Site()
 # Calculation of amino acid content 
 ```{r, message=F, warning=F}
 # Read dataset and tidy up
-path = "/Users/Boyuan/Desktop/My publication/7th. HILIC amino acid & PCA/Publish-ready files/AIV free amino acids content.xlsx"
+path = "/Users/Boyuan/Desktop/My publication/16. HILIC amino acid machine learning to J. Chroma A/Publish-ready files/AIV free amino acids content.xlsx"
 
 # Data frame of injection concentration
 df.inj.conc = read_excel(path , sheet = "injection conc. (ng.mL-1)") # read injection concentration dataset

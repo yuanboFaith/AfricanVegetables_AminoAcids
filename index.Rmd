@@ -1,5 +1,7 @@
 ---
-output: html_document
+output: 
+  html_document:
+    css: AIV_rmarkdown_Cover.css
 ---
 
 <br/><br/>

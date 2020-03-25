@@ -399,7 +399,7 @@ library(tidyverse)</code></pre>
                   title = element_text(colour = &quot;black&quot;, face = &quot;bold&quot;),
                   axis.text = element_text(colour = &quot;black&quot;)))</code></pre>
 <pre class="r"><code># All data Excel
-path = &quot;/Users/Boyuan/Desktop/My publication/7th. HILIC amino acid &amp; PCA/Publish-ready files/Method development and validation.xlsx&quot;</code></pre>
+path = &quot;/Users/Boyuan/Desktop/My publication/16. HILIC amino acid machine learning to J. Chroma A/Publish-ready files/Method development and validation.xlsx&quot;</code></pre>
 <div id="method-development" class="section level1">
 <h1><span class="header-section-number">1</span> Method Development</h1>
 <div id="mobile-phase-buffer-optimization" class="section level2">
@@ -412,9 +412,11 @@ df.AA = read_excel(path, sheet = &quot;amino acids&quot;) # amino acids traits d
 df.buffer = df.buffer %&gt;% left_join(df.AA, by = &quot;Amino acids&quot;) # combine datasets
 
 df.buffer$`Amino acids` %&gt;% unique() # Check all amino acids are properly registered (ensure there is NO datasets mis-match)</code></pre>
-<pre><code>##  [1] &quot;Alanine&quot;          &quot;Arginine&quot;         &quot;Asparagine&quot;       &quot;Aspartic acid&quot;    &quot;Cysteine&quot;         &quot;Glutamic acid&quot;    &quot;Glutamine&quot;       
-##  [8] &quot;Glycine&quot;          &quot;Histidine&quot;        &quot;Isoleucine&quot;       &quot;Leucine&quot;          &quot;Lysine&quot;           &quot;Methionine&quot;       &quot;Phenylalanine&quot;   
-## [15] &quot;Proline&quot;          &quot;Serine&quot;           &quot;Threonine&quot;        &quot;4-hydroxyproline&quot; &quot;Tryptophan&quot;       &quot;Tyrosine&quot;         &quot;Valine&quot;</code></pre>
+<pre><code>##  [1] &quot;Alanine&quot;          &quot;Arginine&quot;         &quot;Asparagine&quot;       &quot;Aspartic acid&quot;    &quot;Cysteine&quot;        
+##  [6] &quot;Glutamic acid&quot;    &quot;Glutamine&quot;        &quot;Glycine&quot;          &quot;Histidine&quot;        &quot;Isoleucine&quot;      
+## [11] &quot;Leucine&quot;          &quot;Lysine&quot;           &quot;Methionine&quot;       &quot;Phenylalanine&quot;    &quot;Proline&quot;         
+## [16] &quot;Serine&quot;           &quot;Threonine&quot;        &quot;4-hydroxyproline&quot; &quot;Tryptophan&quot;       &quot;Tyrosine&quot;        
+## [21] &quot;Valine&quot;</code></pre>
 <pre class="r"><code>df.buffer$Conc.mM = df.buffer$Conc.mM %&gt;% 
   factor(levels = rev(unique(df.buffer$Conc.mM)), ordered = T) # convert buffer conc. into factors
 
@@ -878,19 +880,20 @@ df.accuracy = df.inj.conc.accuracy %&gt;%
 df.accuracy</code></pre>
 <pre><code>## # A tibble: 147 x 15
 ## # Groups:   compounds [21]
-##    compounds Level conc.inj.mean conc.inj.sd SpikeDiluteFact… BackgroundDilut… `Stock.conc.ug/… QC.background.m… QC.background.sd
-##    &lt;chr&gt;     &lt;chr&gt;         &lt;dbl&gt;       &lt;dbl&gt;            &lt;dbl&gt;            &lt;dbl&gt;            &lt;dbl&gt;            &lt;dbl&gt;            &lt;dbl&gt;
-##  1 4-hydrox… A/a          3403.        62.9               1.8             2.25             570.             12.5             19.5
-##  2 4-hydrox… B/b          2344.        23.9               2.6             1.62             570.             17.3             27.0
-##  3 4-hydrox… C/c          1223.        21.4               5               1.25             570.             22.5             35.1
-##  4 4-hydrox… D/d           681.         9.89              9               1.12             570.             25.0             39.1
-##  5 4-hydrox… E/e           356.         3.48             17               1.06             570.             26.4             41.3
-##  6 4-hydrox… F/f           146.         6.83             41               1.02             570.             27.4             42.9
-##  7 4-hydrox… G/g            78.7        6.90             81               1.01             570.             27.7             43.4
-##  8 alanine   A/a          2189.        59.7               1.8             2.25             350            8782.             276. 
-##  9 alanine   B/b          1625.        20.2               2.6             1.62             350           12159.             382. 
-## 10 alanine   C/c           952.        21.9               5               1.25             350           15807.             496. 
-## # … with 137 more rows, and 6 more variables: QC.Spike.Expected &lt;dbl&gt;, inj.conc.background.mean &lt;dbl&gt;, inj.conc.background.sd &lt;dbl&gt;,
+##    compounds Level conc.inj.mean conc.inj.sd SpikeDiluteFact… BackgroundDilut… `Stock.conc.ug/…
+##    &lt;chr&gt;     &lt;chr&gt;         &lt;dbl&gt;       &lt;dbl&gt;            &lt;dbl&gt;            &lt;dbl&gt;            &lt;dbl&gt;
+##  1 4-hydrox… A/a          3403.        62.9               1.8             2.25             570.
+##  2 4-hydrox… B/b          2344.        23.9               2.6             1.62             570.
+##  3 4-hydrox… C/c          1223.        21.4               5               1.25             570.
+##  4 4-hydrox… D/d           681.         9.89              9               1.12             570.
+##  5 4-hydrox… E/e           356.         3.48             17               1.06             570.
+##  6 4-hydrox… F/f           146.         6.83             41               1.02             570.
+##  7 4-hydrox… G/g            78.7        6.90             81               1.01             570.
+##  8 alanine   A/a          2189.        59.7               1.8             2.25             350 
+##  9 alanine   B/b          1625.        20.2               2.6             1.62             350 
+## 10 alanine   C/c           952.        21.9               5               1.25             350 
+## # … with 137 more rows, and 8 more variables: QC.background.mean &lt;dbl&gt;, QC.background.sd &lt;dbl&gt;,
+## #   QC.Spike.Expected &lt;dbl&gt;, inj.conc.background.mean &lt;dbl&gt;, inj.conc.background.sd &lt;dbl&gt;,
 ## #   inj.conc.Spike.Expected &lt;dbl&gt;, Accuracy &lt;dbl&gt;, Accuracy.sd &lt;dbl&gt;</code></pre>
 <pre class="r"><code># Visualize accuracy
 dg.Acc = .6 # position_dodge value

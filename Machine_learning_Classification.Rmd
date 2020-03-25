@@ -55,7 +55,7 @@ set.seed(19911110)
 # Data 
 ```{r, message=F, warning=F}
 # Read amino acid content dataset
-path = "/Users/Boyuan/Desktop/My publication/7th. HILIC amino acid & PCA/Publish-ready files/AIV free amino acids content.xlsx"
+path = "/Users/Boyuan/Desktop/My publication/16. HILIC amino acid machine learning to J. Chroma A/Publish-ready files/AIV free amino acids content.xlsx"
 
 df.content= read_excel(path , sheet = "content in AIV (mg.100g DW-1)") 
 
