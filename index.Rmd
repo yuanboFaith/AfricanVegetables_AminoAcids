@@ -6,11 +6,11 @@ output:
 
 <br/><br/>
 
-# **Free Amino Acids in African Indigenous Vegetables (AIVs)**
+# **Free Amino Acids in African Indigenous Vegetables**
 
 <br/><br/>
 
-##### This website presents the R script constructed in this work, for the four following parts:   
+##### This work studied the free amino acids in African indigenous leafy vegetables (AIVs). The R script constructed and presented here are for various analysis purpose in the four following parts:   
 
 <br/><br/>    
 
