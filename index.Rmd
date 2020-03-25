@@ -1,10 +1,10 @@
 ---
 output: 
   html_document:
-    css: AIV_rmarkdown_Cover.css
+    css: AIV_cover_background.css
 ---
 
-<br/><br/>
+<br/>
 
 # **Free Amino Acids in African Indigenous Vegetables**
 
