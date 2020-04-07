@@ -412,13 +412,11 @@ df.AA = read_excel(path, sheet = &quot;amino acids&quot;) # amino acids traits d
 df.buffer = df.buffer %&gt;% left_join(df.AA, by = &quot;Amino acids&quot;) # combine datasets
 
 df.buffer$`Amino acids` %&gt;% unique() # Check all amino acids are properly registered (ensure there is NO datasets mis-match)</code></pre>
-<pre><code>##  [1] &quot;Alanine&quot;          &quot;Arginine&quot;         &quot;Asparagine&quot;      
-##  [4] &quot;Aspartic acid&quot;    &quot;Cysteine&quot;         &quot;Glutamic acid&quot;   
-##  [7] &quot;Glutamine&quot;        &quot;Glycine&quot;          &quot;Histidine&quot;       
-## [10] &quot;Isoleucine&quot;       &quot;Leucine&quot;          &quot;Lysine&quot;          
-## [13] &quot;Methionine&quot;       &quot;Phenylalanine&quot;    &quot;Proline&quot;         
-## [16] &quot;Serine&quot;           &quot;Threonine&quot;        &quot;4-hydroxyproline&quot;
-## [19] &quot;Tryptophan&quot;       &quot;Tyrosine&quot;         &quot;Valine&quot;</code></pre>
+<pre><code>##  [1] &quot;Alanine&quot;          &quot;Arginine&quot;         &quot;Asparagine&quot;       &quot;Aspartic acid&quot;    &quot;Cysteine&quot;        
+##  [6] &quot;Glutamic acid&quot;    &quot;Glutamine&quot;        &quot;Glycine&quot;          &quot;Histidine&quot;        &quot;Isoleucine&quot;      
+## [11] &quot;Leucine&quot;          &quot;Lysine&quot;           &quot;Methionine&quot;       &quot;Phenylalanine&quot;    &quot;Proline&quot;         
+## [16] &quot;Serine&quot;           &quot;Threonine&quot;        &quot;4-hydroxyproline&quot; &quot;Tryptophan&quot;       &quot;Tyrosine&quot;        
+## [21] &quot;Valine&quot;</code></pre>
 <pre class="r"><code>df.buffer$Conc.mM = df.buffer$Conc.mM %&gt;% 
   factor(levels = rev(unique(df.buffer$Conc.mM)), ordered = T) # convert buffer conc. into factors
 
@@ -882,22 +880,21 @@ df.accuracy = df.inj.conc.accuracy %&gt;%
 df.accuracy</code></pre>
 <pre><code>## # A tibble: 147 x 15
 ## # Groups:   compounds [21]
-##    compounds Level conc.inj.mean conc.inj.sd SpikeDiluteFact… BackgroundDilut…
-##    &lt;chr&gt;     &lt;chr&gt;         &lt;dbl&gt;       &lt;dbl&gt;            &lt;dbl&gt;            &lt;dbl&gt;
-##  1 4-hydrox… A/a          3403.        62.9               1.8             2.25
-##  2 4-hydrox… B/b          2344.        23.9               2.6             1.62
-##  3 4-hydrox… C/c          1223.        21.4               5               1.25
-##  4 4-hydrox… D/d           681.         9.89              9               1.12
-##  5 4-hydrox… E/e           356.         3.48             17               1.06
-##  6 4-hydrox… F/f           146.         6.83             41               1.02
-##  7 4-hydrox… G/g            78.7        6.90             81               1.01
-##  8 alanine   A/a          2189.        59.7               1.8             2.25
-##  9 alanine   B/b          1625.        20.2               2.6             1.62
-## 10 alanine   C/c           952.        21.9               5               1.25
-## # … with 137 more rows, and 9 more variables: `Stock.conc.ug/mL` &lt;dbl&gt;,
-## #   QC.background.mean &lt;dbl&gt;, QC.background.sd &lt;dbl&gt;, QC.Spike.Expected &lt;dbl&gt;,
-## #   inj.conc.background.mean &lt;dbl&gt;, inj.conc.background.sd &lt;dbl&gt;,
-## #   inj.conc.Spike.Expected &lt;dbl&gt;, Accuracy &lt;dbl&gt;, Accuracy.sd &lt;dbl&gt;</code></pre>
+##    compounds Level conc.inj.mean conc.inj.sd SpikeDiluteFact… BackgroundDilut… `Stock.conc.ug/… QC.background.m…
+##    &lt;chr&gt;     &lt;chr&gt;         &lt;dbl&gt;       &lt;dbl&gt;            &lt;dbl&gt;            &lt;dbl&gt;            &lt;dbl&gt;            &lt;dbl&gt;
+##  1 4-hydrox… A/a          3403.        62.9               1.8             2.25             570.             12.5
+##  2 4-hydrox… B/b          2344.        23.9               2.6             1.62             570.             17.3
+##  3 4-hydrox… C/c          1223.        21.4               5               1.25             570.             22.5
+##  4 4-hydrox… D/d           681.         9.89              9               1.12             570.             25.0
+##  5 4-hydrox… E/e           356.         3.48             17               1.06             570.             26.4
+##  6 4-hydrox… F/f           146.         6.83             41               1.02             570.             27.4
+##  7 4-hydrox… G/g            78.7        6.90             81               1.01             570.             27.7
+##  8 alanine   A/a          2189.        59.7               1.8             2.25             350            8782. 
+##  9 alanine   B/b          1625.        20.2               2.6             1.62             350           12159. 
+## 10 alanine   C/c           952.        21.9               5               1.25             350           15807. 
+## # … with 137 more rows, and 7 more variables: QC.background.sd &lt;dbl&gt;, QC.Spike.Expected &lt;dbl&gt;,
+## #   inj.conc.background.mean &lt;dbl&gt;, inj.conc.background.sd &lt;dbl&gt;, inj.conc.Spike.Expected &lt;dbl&gt;,
+## #   Accuracy &lt;dbl&gt;, Accuracy.sd &lt;dbl&gt;</code></pre>
 <pre class="r"><code># Visualize accuracy
 dg.Acc = .6 # position_dodge value
 errorBarWidth = 1
@@ -1087,18 +1084,18 @@ df.accuracy.reportTable = df.accuracy %&gt;% select(compounds, Level, Accuracy, 
 df.accuracy.reportTable</code></pre>
 <pre><code>## # A tibble: 21 x 8
 ## # Groups:   compounds [21]
-##    compounds     `A/a`    `B/b`    `C/c`    `D/d`    `E/e`    `F/f`    `G/g`   
-##    &lt;chr&gt;         &lt;chr&gt;    &lt;chr&gt;    &lt;chr&gt;    &lt;chr&gt;    &lt;chr&gt;    &lt;chr&gt;    &lt;chr&gt;   
-##  1 4-hydroxypro… 107.4 ±… 106.9 ±… 107.3 ±… 107.5 ±… 106.1 ±… 105 ± 4… 111.4 ±…
-##  2 alanine       108.1 ±… 111.7 ±… 113.4 ±… 114.6 ±… 115.8 ±… 110.7 ±… 108.3 ±…
-##  3 arginine      109.9 ±… 106.2 ±… 108.4 ±… 109.4 ±… 111.6 ±… 114.3 ±… 108.4 ±…
-##  4 asparagine    110.1 ±… 108.8 ±… 111 ± 1… 112.6 ±… 104.9 ±… 117.8 ±… 104.3 ±…
-##  5 aspartic acid 116.9 ±… 115.6 ±… 114.9 ±… 110.7 ±… 111.6 ±… 108.4 ±… 98.7 ± …
-##  6 cysteine      106.8 ±… 110.9 ±… 108.5 ±… 109.8 ±… 104.6 ±… 103.8 ±… 106.5 ±…
-##  7 glutamic acid 102.8 ±… 95.3 ± … 93.3 ± … 96.7 ± … 92.6 ± … 93.1 ± … 75 ± 32…
-##  8 glutamine     100.4 ±… 101.4 ±… 101.3 ±… 106.1 ±… 104.4 ±… 100.7 ±… 110.5 ±…
-##  9 glycine       109.1 ±… 122.3 ±… 124.4 ±… 123.3 ±… 120.9 ±… 121.5 ±… 102.6 ±…
-## 10 histidine     111.8 ±… 102.9 ±… 109.1 ±… 111 ± 3… 105.1 ±… 94.3 ± … 121.2 ±…
+##    compounds        `A/a`       `B/b`       `C/c`       `D/d`       `E/e`        `F/f`        `G/g`       
+##    &lt;chr&gt;            &lt;chr&gt;       &lt;chr&gt;       &lt;chr&gt;       &lt;chr&gt;       &lt;chr&gt;        &lt;chr&gt;        &lt;chr&gt;       
+##  1 4-hydroxyproline 107.4 ± 2   106.9 ± 1.1 107.3 ± 1.9 107.5 ± 1.6 106.1 ± 1    105 ± 4.9    111.4 ± 9.8 
+##  2 alanine          108.1 ± 3.1 111.7 ± 1.5 113.4 ± 3.2 114.6 ± 2.3 115.8 ± 5.9  110.7 ± 8.5  108.3 ± 22.9
+##  3 arginine         109.9 ± 3.5 106.2 ± 1.7 108.4 ± 2.7 109.4 ± 2.2 111.6 ± 4.1  114.3 ± 13   108.4 ± 17.5
+##  4 asparagine       110.1 ± 2.7 108.8 ± 1.4 111 ± 1.9   112.6 ± 2.3 104.9 ± 9.4  117.8 ± 14.2 104.3 ± 17.4
+##  5 aspartic acid    116.9 ± 1.1 115.6 ± 0.7 114.9 ± 2.7 110.7 ± 3   111.6 ± 5.5  108.4 ± 18.4 98.7 ± 25.3 
+##  6 cysteine         106.8 ± 3   110.9 ± 1.8 108.5 ± 1.9 109.8 ± 1.9 104.6 ± 3.8  103.8 ± 3    106.5 ± 4.7 
+##  7 glutamic acid    102.8 ± 4   95.3 ± 5.3  93.3 ± 9.5  96.7 ± 3.8  92.6 ± 5.7   93.1 ± 21.8  75 ± 32.5   
+##  8 glutamine        100.4 ± 2.7 101.4 ± 0.9 101.3 ± 2.6 106.1 ± 3   104.4 ± 3.4  100.7 ± 5.3  110.5 ± 15.6
+##  9 glycine          109.1 ± 2.9 122.3 ± 1.1 124.4 ± 3.7 123.3 ± 4.2 120.9 ± 5.9  121.5 ± 24.1 102.6 ± 17.4
+## 10 histidine        111.8 ± 3   102.9 ± 2.4 109.1 ± 2.8 111 ± 3.2   105.1 ± 10.2 94.3 ± 17.2  121.2 ± 32.3
 ## # … with 11 more rows</code></pre>
 <pre class="r"><code>df.matirx.reportTable = df.matrix %&gt;% select(compounds, Level, matrixEffect, matrixEffect.sd) %&gt;%
   mutate(matrixEffect = paste(round(matrixEffect, 1), &quot;±&quot;, round(matrixEffect.sd, 1))) %&gt;%
@@ -1106,18 +1103,18 @@ df.accuracy.reportTable</code></pre>
 df.matirx.reportTable         </code></pre>
 <pre><code>## # A tibble: 21 x 8
 ## # Groups:   compounds [21]
-##    compounds     `A/a`     `B/b`     `C/c`    `D/d`    `E/e`    `F/f`  `G/g`   
-##    &lt;chr&gt;         &lt;chr&gt;     &lt;chr&gt;     &lt;chr&gt;    &lt;chr&gt;    &lt;chr&gt;    &lt;chr&gt;  &lt;chr&gt;   
-##  1 4-hydroxypro… 101.9 ± … 102.5 ± … 101.1 ±… 96.1 ± … 103.7 ±… NA ± … 112 ± 1…
-##  2 alanine       99.7 ± 3… 103.8 ± … 100.9 ±… 97.4 ± … 106.4 ±… NA ± … 102.7 ±…
-##  3 arginine      100.4 ± … 99.6 ± 4… 101.9 ±… 97.4 ± … 104.6 ±… NA ± … 99.8 ± …
-##  4 asparagine    100.2 ± … 102.7 ± … 100.4 ±… 98 ± 7   97.8 ± … NA ± … 116 ± 2…
-##  5 aspartic acid 99.7 ± 2… 100.7 ± … 102.7 ±… 96.9 ± … 98.5 ± 5 NA ± … NA ± NA 
-##  6 cysteine      99.3 ± 4… 105.4 ± … 100.8 ±… 98 ± 5.8 97.6 ± … NA ± … 107.3 ±…
-##  7 glutamic acid 106.4 ± … 109.2 ± … 100.5 ±… 115.2 ±… 105.7 ±… NA ± … 83.8 ± …
-##  8 glutamine     100.9 ± … 102.9 ± … 101.4 ±… 103.3 ±… 103.6 ±… NA ± … 124.8 ±…
-##  9 glycine       98.3 ± 3… 111.6 ± … 106.8 ±… 100.4 ±… 109.9 ±… NA ± … 110.1 ±…
-## 10 histidine     102.2 ± … 94.7 ± 6… 102.1 ±… 100.8 ±… 96.6 ± … NA ± … 82.9 ± …
+##    compounds        `A/a`       `B/b`       `C/c`        `D/d`        `E/e`        `F/f`   `G/g`       
+##    &lt;chr&gt;            &lt;chr&gt;       &lt;chr&gt;       &lt;chr&gt;        &lt;chr&gt;        &lt;chr&gt;        &lt;chr&gt;   &lt;chr&gt;       
+##  1 4-hydroxyproline 101.9 ± 3.3 102.5 ± 5.3 101.1 ± 3.5  96.1 ± 6.9   103.7 ± 3.3  NA ± NA 112 ± 16.3  
+##  2 alanine          99.7 ± 3.9  103.8 ± 4.6 100.9 ± 4.6  97.4 ± 6.1   106.4 ± 6    NA ± NA 102.7 ± 22.4
+##  3 arginine         100.4 ± 4.3 99.6 ± 4.7  101.9 ± 3.4  97.4 ± 7.9   104.6 ± 7.5  NA ± NA 99.8 ± 18.9 
+##  4 asparagine       100.2 ± 4.3 102.7 ± 4.6 100.4 ± 4.6  98 ± 7       97.8 ± 12.3  NA ± NA 116 ± 24.9  
+##  5 aspartic acid    99.7 ± 2.3  100.7 ± 4.2 102.7 ± 4.9  96.9 ± 9.8   98.5 ± 5     NA ± NA NA ± NA     
+##  6 cysteine         99.3 ± 4.2  105.4 ± 4.5 100.8 ± 3.3  98 ± 5.8     97.6 ± 4.7   NA ± NA 107.3 ± 13.9
+##  7 glutamic acid    106.4 ± 7.3 109.2 ± 6.4 100.5 ± 11.3 115.2 ± 22.8 105.7 ± 12.2 NA ± NA 83.8 ± 37.8 
+##  8 glutamine        100.9 ± 4.2 102.9 ± 4.8 101.4 ± 4.2  103.3 ± 8.2  103.6 ± 5.8  NA ± NA 124.8 ± 23.5
+##  9 glycine          98.3 ± 3.9  111.6 ± 4.6 106.8 ± 5.4  100.4 ± 7.6  109.9 ± 9.7  NA ± NA 110.1 ± 21.2
+## 10 histidine        102.2 ± 4.6 94.7 ± 6.1  102.1 ± 5.2  100.8 ± 10.3 96.6 ± 12.7  NA ± NA 82.9 ± 24.6 
 ## # … with 11 more rows</code></pre>
 <pre class="r"><code>df.precision.reportTable = df.precision %&gt;% select(compounds, Level, precision) %&gt;%
   spread(Level, precision)

@@ -34,6 +34,8 @@ library(readxl)
 
 # Machine learning packages
 library(MASS)
+library(rsample)
+library(viridis)
 library(glmnet)
 library(caret)
 library(rpart.plot) # for classification tree plot
@@ -385,8 +387,64 @@ cf.stats.randomForest = cf.randomForest$byClass %>%
 
 
 ## Support vector machine
+### Cross-validation 
 ```{r, message=F, warning=F}
-mdl.svm = svm(x = df.train[, -1], y = df.train$Category)
+# Tune hyper-parameters
+
+svm.gamma = 10^(seq(-5, 2, by = 1))
+svm.cost = 10^(seq(-2, 5, by = 1))
+
+cv.svm = df.train %>% 
+  vfold_cv(strata = Category, v = 5) %>%
+  mutate(train = map(.x = splits, .f = ~training(.x) ),
+         validate = map(.x = splits, .f = ~testing(.x) ))  %>%
+  select(-splits) %>%
+  crossing(gamma = svm.gamma, cost = svm.cost) %>%
+  mutate(hyper = map2(.x = gamma, .y = cost, .f = ~list(.x, .y))) %>% # 1st gamma; 2nd cost
+  # set up model CV tuning hyper-params
+  mutate(model = map2(.x = train, .y = hyper, 
+                      .f = ~svm(x = .x[, -1], y = .x[[1]],  gamma = .y[[1]], cost = .y[[2]] ) )) %>%
+  # predict on validation set
+  # note that here the CV is performed in a somewhat loose manner as the train-validation folds have been normalized upstream prior to train-validation split
+  mutate(fitted.validate = map2(.x = model, .y = validate, 
+                                .f = ~predict(.x,  newdata = .y[, -1] )),
+         actual.validate = map(.x = validate, .f = ~.x[[1]] %>% factor(ordered = F)),
+         accuracy = map2_dbl(.x = fitted.validate , .y = actual.validate, 
+                             .f = ~sum(.x == .y)/length(.x)))
+
+cv.svm.summary = cv.svm %>%
+  group_by(gamma, cost) %>%
+  summarise(accuracy.mean = mean(accuracy) * 100,
+            accuracy.sd = sd(accuracy) * 100 ) %>%
+  arrange(desc(accuracy.mean))
+```
+
+
+```{r, message=F, warning=F, fig.width=8, fig.height=8}
+cv.svm.summary %>% 
+  ggplot(aes(x = gamma, y = cost, z = accuracy.mean)) +
+  geom_tile(aes(fill = accuracy.mean)) + 
+  scale_fill_viridis(option = "A", alpha = .9)  + 
+  # stat_contour(color = "grey", size = .5) +
+  coord_fixed() +
+  theme(panel.grid.minor = element_line(colour = "black", size = 2),
+        panel.grid.major = element_blank()) +
+  scale_x_log10(breaks = svm.gamma, labels = log10(svm.gamma)) + 
+  scale_y_log10(breaks = svm.cost, labels = log10(svm.cost)) +
+  labs(x = "gamma, 10 ^ X", y = "cost, 10 ^ X", title = "SVM Radial Kernel") +
+  
+  geom_text(aes(label = accuracy.mean %>% round(1) ), color = "black")
+
+
+```
+
+
+### Train by entire training set
+```{r, message=F, warning=F}
+mdl.svm = svm(x = df.train[, -1], y = df.train$Category, 
+              gamma = cv.svm.summary$gamma[1],
+              cost = cv.svm.summary$cost[1])
+
 # predict
 fitted.svm = predict(mdl.svm, newdata = df.test[, -1])
 

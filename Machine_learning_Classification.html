@@ -405,6 +405,8 @@ library(readxl)
 
 # Machine learning packages
 library(MASS)
+library(rsample)
+library(viridis)
 library(glmnet)
 library(caret)
 library(rpart.plot) # for classification tree plot
@@ -710,7 +712,57 @@ cf.stats.randomForest = cf.randomForest$byClass %&gt;%
 </div>
 <div id="support-vector-machine" class="section level2">
 <h2><span class="header-section-number">4.6</span> Support vector machine</h2>
-<pre class="r"><code>mdl.svm = svm(x = df.train[, -1], y = df.train$Category)
+<div id="cross-validation" class="section level3">
+<h3><span class="header-section-number">4.6.1</span> Cross-validation</h3>
+<pre class="r"><code># Tune hyper-parameters
+
+svm.gamma = 10^(seq(-5, 2, by = 1))
+svm.cost = 10^(seq(-2, 5, by = 1))
+
+cv.svm = df.train %&gt;% 
+  vfold_cv(strata = Category, v = 5) %&gt;%
+  mutate(train = map(.x = splits, .f = ~training(.x) ),
+         validate = map(.x = splits, .f = ~testing(.x) ))  %&gt;%
+  select(-splits) %&gt;%
+  crossing(gamma = svm.gamma, cost = svm.cost) %&gt;%
+  mutate(hyper = map2(.x = gamma, .y = cost, .f = ~list(.x, .y))) %&gt;% # 1st gamma; 2nd cost
+  # set up model CV tuning hyper-params
+  mutate(model = map2(.x = train, .y = hyper, 
+                      .f = ~svm(x = .x[, -1], y = .x[[1]],  gamma = .y[[1]], cost = .y[[2]] ) )) %&gt;%
+  # predict on validation set
+  # note that here the CV is performed in a somewhat loose manner as the train-validation folds have been normalized upstream prior to train-validation split
+  mutate(fitted.validate = map2(.x = model, .y = validate, 
+                                .f = ~predict(.x,  newdata = .y[, -1] )),
+         actual.validate = map(.x = validate, .f = ~.x[[1]] %&gt;% factor(ordered = F)),
+         accuracy = map2_dbl(.x = fitted.validate , .y = actual.validate, 
+                             .f = ~sum(.x == .y)/length(.x)))
+
+cv.svm.summary = cv.svm %&gt;%
+  group_by(gamma, cost) %&gt;%
+  summarise(accuracy.mean = mean(accuracy) * 100,
+            accuracy.sd = sd(accuracy) * 100 ) %&gt;%
+  arrange(desc(accuracy.mean))</code></pre>
+<pre class="r"><code>cv.svm.summary %&gt;% 
+  ggplot(aes(x = gamma, y = cost, z = accuracy.mean)) +
+  geom_tile(aes(fill = accuracy.mean)) + 
+  scale_fill_viridis(option = &quot;A&quot;, alpha = .9)  + 
+  # stat_contour(color = &quot;grey&quot;, size = .5) +
+  coord_fixed() +
+  theme(panel.grid.minor = element_line(colour = &quot;black&quot;, size = 2),
+        panel.grid.major = element_blank()) +
+  scale_x_log10(breaks = svm.gamma, labels = log10(svm.gamma)) + 
+  scale_y_log10(breaks = svm.cost, labels = log10(svm.cost)) +
+  labs(x = &quot;gamma, 10 ^ X&quot;, y = &quot;cost, 10 ^ X&quot;, title = &quot;SVM Radial Kernel&quot;) +
+  
+  geom_text(aes(label = accuracy.mean %&gt;% round(1) ), color = &quot;black&quot;)</code></pre>
+<p><img src="Machine_learning_Classification_files/figure-html/unnamed-chunk-19-1.png" width="768" /></p>
+</div>
+<div id="train-by-entire-training-set" class="section level3">
+<h3><span class="header-section-number">4.6.2</span> Train by entire training set</h3>
+<pre class="r"><code>mdl.svm = svm(x = df.train[, -1], y = df.train$Category, 
+              gamma = cv.svm.summary$gamma[1],
+              cost = cv.svm.summary$cost[1])
+
 # predict
 fitted.svm = predict(mdl.svm, newdata = df.test[, -1])
 
@@ -725,6 +777,7 @@ cf.counts.svm = cf.svm$table %&gt;%
 # summary stats
 cf.stats.svm = cf.svm$byClass %&gt;% 
   func.tidy.cf.statsTable(ModelName = &quot;SVM&quot;)</code></pre>
+</div>
 </div>
 <div id="naive-bayes-benchmark" class="section level2">
 <h2><span class="header-section-number">4.7</span> Naive Bayes (benchmark)</h2>
@@ -842,7 +895,7 @@ df.confusionMatrix.all.tidy %&gt;%
   labs(x = &quot;\nReference&quot;, y = &quot;Prediction\n&quot;) +
 ggtitle(&quot;Confusion Matrix&quot;) +
   coord_fixed(ratio = 1)</code></pre>
-<p><img src="Machine_learning_Classification_files/figure-html/unnamed-chunk-24-1.png" width="1152" /></p>
+<p><img src="Machine_learning_Classification_files/figure-html/unnamed-chunk-26-1.png" width="1152" /></p>
 </div>
 <div id="sample-wise-heatmap" class="section level2">
 <h2><span class="header-section-number">5.3</span> Sample-wise heatmap</h2>
@@ -886,7 +939,7 @@ plt.heatmap.machineLearning =
 
 draw(plt.heatmap.machineLearning,
      heatmap_legend_side = &quot;bottom&quot;)</code></pre>
-<p><img src="Machine_learning_Classification_files/figure-html/unnamed-chunk-26-1.png" width="960" /></p>
+<p><img src="Machine_learning_Classification_files/figure-html/unnamed-chunk-28-1.png" width="960" /></p>
 </div>
 <div id="summary-statistics-1" class="section level2">
 <h2><span class="header-section-number">5.4</span> Summary statistics</h2>
@@ -940,7 +993,7 @@ df.stats.overal = func.tidy.cf.statsOveral(cf.LDA$overall, modelName = &quot;LDA
             color = &quot;black&quot;, size = 5) 
 
 plt.summaryStats </code></pre>
-<p><img src="Machine_learning_Classification_files/figure-html/unnamed-chunk-28-1.png" width="1152" /></p>
+<p><img src="Machine_learning_Classification_files/figure-html/unnamed-chunk-30-1.png" width="1152" /></p>
 </div>
 </div>
 
