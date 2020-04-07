@@ -420,7 +420,7 @@ cv.svm.summary = cv.svm %>%
 ```
 
 
-```{r, message=F, warning=F, fig.width=8, fig.height=8}
+```{r, message=F, warning=F, fig.width=6, fig.height=8}
 cv.svm.summary %>% 
   ggplot(aes(x = gamma, y = cost, z = accuracy.mean)) +
   geom_tile(aes(fill = accuracy.mean)) + 
@@ -709,4 +709,5 @@ plt.summaryStats =
 
 plt.summaryStats 
 ```
+
 
