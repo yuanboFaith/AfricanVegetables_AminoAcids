@@ -1,4 +1,4 @@
-# Free amino acids in African indigenous vegetables: Analysis with improved hydrophilic interaction ultra-high performance liquid chromatography tandem mass spectrometry and interactive machine learning
+## Free amino acids in African indigenous vegetables: Analysis with improved hydrophilic interaction ultra-high performance liquid chromatography tandem mass spectrometry and interactive machine learning
 
 See [original article](https://www.sciencedirect.com/science/article/abs/pii/S0021967320310074) published in J. Chroma A. 
 
