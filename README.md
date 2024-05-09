@@ -15,5 +15,5 @@ This work studied the free amino acids in African indigenous leafy vegetables (A
 The R code has been constructed with success with reference to many resources:
  - [R for Data Science (2e)](https://r4ds.hadley.nz/)
  - The official documentation of [tidyverse](https://www.tidyverse.org/).  
- - **DataBrewer.co**, with reference to data wrangling ([tidyr](https://www.databrewer.co/R/data-wrangling/tidyr/introduction), [dplyr](https://www.databrewer.co/R/data-wrangling/dplyr/0-introduction), [stringr](https://www.databrewer.co/R/data-wrangling/stringr/0-introduction), and [regular expression](https://www.databrewer.co/R/data-wrangling/regular-expression/0-introduction)) and [visualization with ggplot2](https://www.databrewer.co/R/visualization/introduction).
+ - [**DataBrewer.co**](https://www.databrewer.co/), with reference to data wrangling ([tidyr](https://www.databrewer.co/R/data-wrangling/tidyr/introduction), [dplyr](https://www.databrewer.co/R/data-wrangling/dplyr/0-introduction), [stringr](https://www.databrewer.co/R/data-wrangling/stringr/0-introduction), and [regular expression](https://www.databrewer.co/R/data-wrangling/regular-expression/0-introduction)) and [visualization with ggplot2](https://www.databrewer.co/R/visualization/introduction).
 
