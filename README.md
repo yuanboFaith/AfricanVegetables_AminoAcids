@@ -1,5 +1,4 @@
-# Free amino acids in African indigenous vegetables
-### Analysis with improved hydrophilic interaction ultra-high performance liquid chromatography tandem mass spectrometry and interactive machine learning
+# Free amino acids in African indigenous vegetables: Analysis with improved hydrophilic interaction ultra-high performance liquid chromatography tandem mass spectrometry and interactive machine learning
 
 See [original article](https://www.sciencedirect.com/science/article/abs/pii/S0021967320310074) published in J. Chroma A. 
 
@@ -12,8 +11,6 @@ This work studied the free amino acids in African indigenous leafy vegetables (A
 ##### Part III. AIV classification prediction based on machine learning (ML) methods
 
 ##### Part IV. ML-baed interactive prediction using R-Shiny.
-
-##### Follow the senior author of this work [Bo Yuan](https://scholar.google.com/citations?user=aFh0570AAAAJ&hl=en&authuser=1), and principle investigators & corresponding authors [Dr. Qingli Wu](https://plantbiology.rutgers.edu/faculty/wu/Qing-Li_Wu.html) and [Dr. James E. Simon](https://plantbiology.rutgers.edu/faculty/simon/James_Simon.html). Welcome to visit our [Laboratory Website](http://newuseag.rutgers.edu/). 
 
 The R code has been constructed with success with reference to many resources:
  - [R for Data Science (2e)](https://r4ds.hadley.nz/)
