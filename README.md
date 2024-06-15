@@ -4,16 +4,16 @@ See [original article](https://www.sciencedirect.com/science/article/abs/pii/S00
 
 This work studied the free amino acids in African indigenous leafy vegetables (AIVs). The R script constructed and presented here are for various analysis purpose in the four following parts:
 
-##### Part I. UHPLC HILIC - MS/MS method development and validation
- 
+##### Part I. UHPLC HILIC - MS/MS method development and validation 
 ##### Part II. Analysis of AIVs free amino acids with exploratory data analysis
 
 ##### Part III. AIV classification prediction based on machine learning (ML) methods
 
 ##### Part IV. ML-baed interactive prediction using R-Shiny.
 
-The R code has been constructed with success with reference to many resources:
- - [R for Data Science (2e)](https://r4ds.hadley.nz/)
- - The official documentation of [tidyverse](https://www.tidyverse.org/).  
- - [**DataBrewer.co**](https://www.databrewer.co/), with reference to data wrangling ([tidyr](https://www.databrewer.co/R/data-wrangling/tidyr/introduction), [dplyr](https://www.databrewer.co/R/data-wrangling/dplyr/0-introduction), [stringr](https://www.databrewer.co/R/data-wrangling/stringr/0-introduction), and [regular expression](https://www.databrewer.co/R/data-wrangling/regular-expression/0-introduction)) and [visualization with ggplot2](https://www.databrewer.co/R/visualization/introduction).
+The R code has been developed with reference to [R for Data Science (2e)](https://r4ds.hadley.nz/), and the official documentation of [tidyverse](https://www.tidyverse.org/), and [**DataBrewer.co**](https://www.databrewer.co/). See breakdown of modules below:
 
+- Data visualization with ggplot2 ([tutorial](https://www.databrewer.co/R/visualization/introduction) of the fundamentals; and [data viz. gallery](https://www.databrewer.co/R/gallery)).
+
+- [Data wrangling](https://www.databrewer.co/R/data-wrangling) with the following packages:
+[tidyr](https://www.databrewer.co/R/data-wrangling/tidyr/introduction): transform (e.g., pivoting) the dataset into tidy structure; [dplyr](https://www.databrewer.co/R/data-wrangling/dplyr/0-introduction): the basic tools to work with data frames; [stringr](https://www.databrewer.co/R/data-wrangling/stringr/0-introduction): work with strings; [regular expression](https://www.databrewer.co/R/data-wrangling/regular-expression/0-introduction): search and match a string pattern; [purrr](https://www.databrewer.co/R/data-wrangling/purrr/introduction): functional programming (e.g., iterating functions across elements of columns); and [tibble](https://www.databrewer.co/R/data-wrangling/tibble/introduction): work with data frames in the modern tibble structure.
